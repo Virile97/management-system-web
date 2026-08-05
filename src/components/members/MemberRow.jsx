@@ -14,6 +14,9 @@ const dotStyles = {
   Deceased: "bg-red-500",
 }
 
+const defaultStatusStyle = "bg-muted text-muted-foreground"
+const defaultDotStyle = "bg-muted-foreground"
+
 function initials(name) {
   return name
     .split(" ")
@@ -34,15 +37,12 @@ function MemberRow({ member, checked, onCheckedChange, onPrint }) {
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#1e2a4a] text-xs font-semibold text-white">
             {initials(member.name)}
           </div>
-          <div>
-            <p className="text-sm font-medium text-foreground/85">{member.name}</p>
-            <p className="text-xs text-muted-foreground">{member.gender}</p>
-          </div>
+          <p className="text-sm font-medium text-foreground/85">{member.name}</p>
         </div>
       </td>
       <td className="py-4 pr-4">
-        <p className="text-sm text-foreground/80">{member.email}</p>
-        <p className="text-xs text-muted-foreground">{member.phone}</p>
+        <p className="text-sm text-foreground/80">{member.email || "—"}</p>
+        <p className="text-xs text-muted-foreground">{member.phone || "—"}</p>
       </td>
       <td className="py-4 pr-4 text-sm text-foreground/80">{member.group}</td>
       <td className="py-4 pr-4 text-sm text-foreground/80">{member.joined}</td>
@@ -50,10 +50,10 @@ function MemberRow({ member, checked, onCheckedChange, onPrint }) {
         <span
           className={cn(
             "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium",
-            statusStyles[member.status]
+            statusStyles[member.status] || defaultStatusStyle
           )}
         >
-          <span className={cn("h-1.5 w-1.5 rounded-full", dotStyles[member.status])} />
+          <span className={cn("h-1.5 w-1.5 rounded-full", dotStyles[member.status] || defaultDotStyle)} />
           {member.status}
         </span>
       </td>

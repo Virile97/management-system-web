@@ -1,59 +1,163 @@
 "use client"
 
-import { useState } from "react"
+import { Suspense, useEffect, useRef, useState } from "react"
+import { useRouter, usePathname, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { MemberFilters } from "@/components/members/MemberFilters"
 import { MemberSearch } from "@/components/members/MemberSearch"
-import { MemberTable, members } from "@/components/members/MemberTable"
+import { MemberTable } from "@/components/members/MemberTable"
 import { AddMemberModal } from "@/components/members/AddMemberModal"
 import { PrintSlipModal } from "@/components/members/PrintSlipModal"
 import { PrintSelectedSlipsModal } from "@/components/members/PrintSelectedSlipsModal"
+import { useDebounce } from "@/hooks/useDebounce"
+import { listMembers } from "@/services/member.service"
 import { Plus, Printer } from "lucide-react"
 
 export default function MembersPage() {
-  const [activeFilter, setActiveFilter] = useState("All")
+  return (
+    <Suspense fallback={null}>
+      <MembersPageContent />
+    </Suspense>
+  )
+}
+
+const DEFAULT_STATUS = "All"
+const PAGE_SIZE = 10
+
+function MembersPageContent() {
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const page = Math.max(1, parseInt(searchParams.get("page"), 10) || 1)
+  const activeFilter = searchParams.get("status") || DEFAULT_STATUS
+
   const [search, setSearch] = useState("")
+  const debouncedSearch = useDebounce(search, 300)
+
+  const [members, setMembers] = useState([])
+  const [meta, setMeta] = useState({ total: 0, totalPages: 1 })
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState("")
+
+  // Accumulates every member ever fetched (any page/filter), so a new search
+  // can be answered from state first without hitting the API.
+  const cacheRef = useRef(new Map())
+
+  function searchCache(query, status) {
+    const needle = query.trim().toLowerCase()
+    if (!needle) return null
+
+    const matches = []
+    for (const member of cacheRef.current.values()) {
+      if (status !== DEFAULT_STATUS && member.status !== status) continue
+      const haystack = `${member.name} ${member.email || ""}`.toLowerCase()
+      if (haystack.includes(needle)) matches.push(member)
+    }
+    return matches.length > 0 ? matches : null
+  }
+
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false)
-  const [selectedEmails, setSelectedEmails] = useState(new Set())
+  const [selectedIds, setSelectedIds] = useState(new Set())
   const [printMember, setPrintMember] = useState(null)
   const [isPrintSelectedOpen, setIsPrintSelectedOpen] = useState(false)
 
-  const counts = {
-    All: members.length,
-    Active: members.filter((member) => member.status === "Active").length,
-    Inactive: members.filter((member) => member.status === "Inactive").length,
-    Deceased: members.filter((member) => member.status === "Deceased").length,
+  function updateParams(updates) {
+    const params = new URLSearchParams(searchParams)
+    for (const [key, value] of Object.entries(updates)) {
+      if (!value || value === DEFAULT_STATUS || (key === "page" && value <= 1)) {
+        params.delete(key)
+      } else {
+        params.set(key, String(value))
+      }
+    }
+    router.push(`${pathname}${params.toString() ? `?${params.toString()}` : ""}`, { scroll: false })
   }
 
-  const filteredMembers = members
-    .filter((member) => activeFilter === "All" || member.status === activeFilter)
-    .filter((member) =>
-      member.name.toLowerCase().includes(search.trim().toLowerCase())
-    )
+  function goToPage(nextPage) {
+    updateParams({ page: nextPage })
+  }
 
-  const selectedMembers = members.filter((member) => selectedEmails.has(member.email))
+  function updateFilter(nextFilter) {
+    updateParams({ status: nextFilter })
+  }
+
+  function updateSearch(nextSearch) {
+    setSearch(nextSearch)
+    goToPage(1)
+  }
+
+  useEffect(() => {
+    const controller = new AbortController()
+
+    async function loadMembers() {
+      // Search-only fast path: answer from the accumulated cache when possible,
+      // skipping the API call entirely. Pagination against the API is unaffected.
+      if (debouncedSearch) {
+        const cached = searchCache(debouncedSearch, activeFilter)
+        if (cached) {
+          setMembers(cached)
+          setMeta({ total: cached.length, totalPages: 1 })
+          setIsLoading(false)
+          setError("")
+          return
+        }
+      }
+
+      setIsLoading(true)
+      setError("")
+      try {
+        const { data, meta: responseMeta } = await listMembers(
+          {
+            page,
+            limit: PAGE_SIZE,
+            search: debouncedSearch,
+            status: activeFilter === DEFAULT_STATUS ? "" : activeFilter,
+          },
+          controller.signal
+        )
+        if (controller.signal.aborted) return
+
+        for (const member of data) {
+          cacheRef.current.set(member.id, member)
+        }
+
+        setMembers(data)
+        setMeta(responseMeta || { total: data.length, totalPages: 1 })
+      } catch (err) {
+        if (controller.signal.aborted) return
+        setError(err?.message || "Unable to load members")
+      } finally {
+        if (!controller.signal.aborted) setIsLoading(false)
+      }
+    }
+
+    loadMembers()
+    return () => controller.abort()
+  }, [page, activeFilter, debouncedSearch])
+
+  const selectedMembers = members.filter((member) => selectedIds.has(member.id))
 
   function toggleSelect(member) {
-    setSelectedEmails((prev) => {
+    setSelectedIds((prev) => {
       const next = new Set(prev)
-      if (next.has(member.email)) {
-        next.delete(member.email)
+      if (next.has(member.id)) {
+        next.delete(member.id)
       } else {
-        next.add(member.email)
+        next.add(member.id)
       }
       return next
     })
   }
 
   function toggleSelectAll(pageRows) {
-    setSelectedEmails((prev) => {
-      const allSelected = pageRows.every((member) => prev.has(member.email))
+    setSelectedIds((prev) => {
+      const allSelected = pageRows.every((member) => prev.has(member.id))
       const next = new Set(prev)
       pageRows.forEach((member) => {
         if (allSelected) {
-          next.delete(member.email)
+          next.delete(member.id)
         } else {
-          next.add(member.email)
+          next.add(member.id)
         }
       })
       return next
@@ -69,19 +173,19 @@ export default function MembersPage() {
               Church Members
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              {members.length} total members registered
+              {meta.total} total members registered
             </p>
           </div>
 
           <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
-            {selectedEmails.size > 0 && (
+            {selectedIds.size > 0 && (
               <Button
                 variant="outline"
                 className="h-10 gap-2 rounded-lg px-4"
                 onClick={() => setIsPrintSelectedOpen(true)}
               >
                 <Printer className="h-4 w-4" />
-                Print Selected ({selectedEmails.size})
+                Print Selected ({selectedIds.size})
               </Button>
             )}
 
@@ -96,17 +200,27 @@ export default function MembersPage() {
         </div>
 
         <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <MemberFilters active={activeFilter} counts={counts} onChange={setActiveFilter} />
-          <MemberSearch value={search} onChange={setSearch} />
+          <MemberFilters active={activeFilter} onChange={updateFilter} />
+          <MemberSearch value={search} onChange={updateSearch} />
         </div>
+
+        {error && (
+          <p className="mt-4 rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>
+        )}
 
         <div className="mt-6">
           <MemberTable
-            members={filteredMembers}
-            selected={selectedEmails}
+            members={members}
+            isLoading={isLoading}
+            selected={selectedIds}
             onToggleSelect={toggleSelect}
             onToggleSelectAll={toggleSelectAll}
             onPrintMember={setPrintMember}
+            page={page}
+            totalPages={meta.totalPages}
+            total={meta.total}
+            pageSize={PAGE_SIZE}
+            onPageChange={goToPage}
           />
         </div>
       </div>

@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { Suspense, useState } from "react"
+import { useRouter, usePathname, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { PeriodTabs } from "@/components/soul-winning/PeriodTabs"
 import { SoulStatsCards } from "@/components/soul-winning/SoulStatsCards"
@@ -160,9 +161,33 @@ const statusMap = {
   inactive: "Inactive",
 }
 
+const DEFAULT_SECTION = "records"
+
 export default function SoulWinningPage() {
+  return (
+    <Suspense fallback={null}>
+      <SoulWinningPageContent />
+    </Suspense>
+  )
+}
+
+function SoulWinningPageContent() {
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const activeTab = searchParams.get("section") || DEFAULT_SECTION
+
+  function setActiveTab(nextSection) {
+    const params = new URLSearchParams(searchParams)
+    if (nextSection === DEFAULT_SECTION) {
+      params.delete("section")
+    } else {
+      params.set("section", nextSection)
+    }
+    router.push(`${pathname}${params.toString() ? `?${params.toString()}` : ""}`, { scroll: false })
+  }
+
   const [period, setPeriod] = useState("This Month")
-  const [activeTab, setActiveTab] = useState("records")
   const [search, setSearch] = useState("")
   const [status, setStatus] = useState("all")
   const [soulWinner, setSoulWinner] = useState("all")

@@ -27,7 +27,7 @@ function MemberBreakdownChart({ total = 0, breakdown = [] }) {
           />
         ) : (
           <div className="flex items-center gap-6">
-            <ChartContainer config={{}} className="aspect-square h-40 w-40 shrink-0">
+            <ChartContainer config={{}} className="aspect-square size-34 shrink-0">
               <PieChart>
                 <Pie
                   data={breakdown}

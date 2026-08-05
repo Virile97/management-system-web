@@ -36,7 +36,7 @@ function FinanceChart({ data = [] }) {
             description="Income and expenses will show up here once transactions are recorded."
           />
         ) : (
-          <ChartContainer config={chartConfig} className="aspect-auto h-52 w-full">
+          <ChartContainer config={chartConfig} className="aspect-auto h-36 w-full">
             <BarChart data={data} margin={{ left: 0, right: 0, top: 8, bottom: 0 }}>
               <CartesianGrid vertical={false} stroke="transparent" />
               <XAxis

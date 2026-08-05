@@ -6,6 +6,7 @@ import { Users, Heart, UserX, DollarSign } from "lucide-react"
 
 import { StatCard } from "@/components/dashboard/StatsCards"
 import { MemberBreakdownChart } from "@/components/dashboard/MemberBreakdownChart"
+import { SoulWinningChart } from "@/components/dashboard/SoulWinningChart"
 import { FinanceChart } from "@/components/dashboard/FinanceChart"
 import { RecentActivity } from "@/components/dashboard/RecentActivity"
 import {
@@ -114,7 +115,7 @@ export default function DashboardPage() {
     },
     {
       label: "Monthly Income",
-      value: stats?.monthlyIncome,
+      value: stats?.monthlyIncomeFormatted,
       icon: DollarSign,
       iconClassName: "bg-muted text-muted-foreground",
     },
@@ -133,9 +134,16 @@ export default function DashboardPage() {
             {Array.from({ length: 4 }).map((_, i) => (
               <StatCardSkeleton key={i} />
             ))}
+          </div>
+
+          <div className="mt-4 grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-3">
             <ChartCardSkeleton />
             <ChartCardSkeleton />
-            <ListCardSkeleton className="rounded-2xl p-4 sm:p-6 md:col-span-2" />
+            <ChartCardSkeleton />
+          </div>
+
+          <div className="mt-4 sm:mt-6">
+            <ListCardSkeleton />
           </div>
         </div>
       </div>
@@ -160,17 +168,21 @@ export default function DashboardPage() {
           {statCards.map((card) => (
             <StatCard key={card.label} {...card} />
           ))}
+        </div>
 
+        <div className="mt-4 grid grid-cols-1 gap-4 sm:mt-6 sm:gap-6 lg:grid-cols-3">
           <MemberBreakdownChart
             total={memberBreakdown?.total ?? 0}
             breakdown={memberBreakdown?.breakdown ?? []}
           />
 
-          <FinanceChart data={financeSummary} />
+          <SoulWinningChart />
 
-          <div className="md:col-span-2">
-            <RecentActivity items={recentActivity} />
-          </div>
+          <FinanceChart data={financeSummary} />
+        </div>
+
+        <div className="mt-4 sm:mt-6">
+          <RecentActivity items={recentActivity} />
         </div>
       </div>
     </div>

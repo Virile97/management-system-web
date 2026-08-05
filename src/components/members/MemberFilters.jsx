@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils"
 
 const filters = ["All", "Active", "Inactive", "Deceased"]
 
-function MemberFilters({ active, counts, onChange }) {
+function MemberFilters({ active, onChange }) {
   return (
     <div className="flex h-8 items-center gap-1 overflow-x-auto rounded-lg bg-white p-1 ring-1 ring-border">
       {filters.map((filter) => (
@@ -17,7 +17,7 @@ function MemberFilters({ active, counts, onChange }) {
               : "font-normal text-muted-foreground hover:text-foreground"
           )}
         >
-          {filter} ({counts[filter]})
+          {filter}
         </button>
       ))}
     </div>

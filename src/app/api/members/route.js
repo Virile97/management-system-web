@@ -1,7 +1,32 @@
 import { NextResponse } from "next/server";
 
+import { api, withAuthHeader } from "@/lib/axios";
+import { getSessionToken } from "@/lib/session";
+import { API_ENDPOINTS } from "@/utils/constants";
+
 export async function GET(request) {
-  return NextResponse.json({ message: "Not implemented" }, { status: 501 });
+  const token = getSessionToken();
+  if (!token) {
+    return NextResponse.json({ success: false, message: "Not authenticated" }, { status: 401 });
+  }
+
+  const page = request.nextUrl.searchParams.get("page");
+  const limit = request.nextUrl.searchParams.get("limit");
+  const search = request.nextUrl.searchParams.get("search");
+  const status = request.nextUrl.searchParams.get("status");
+
+  try {
+    const { data } = await api.get(API_ENDPOINTS.MEMBERS, {
+      ...withAuthHeader(token),
+      params: { page, limit, search, status },
+    });
+    return NextResponse.json(data);
+  } catch (err) {
+    const responseStatus = err?.response?.status || 500;
+    const message = err?.response?.data?.message || "Unable to fetch members";
+
+    return NextResponse.json({ success: false, message }, { status: responseStatus });
+  }
 }
 
 export async function POST(request) {

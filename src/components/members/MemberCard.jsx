@@ -14,6 +14,9 @@ const dotStyles = {
   Deceased: "bg-red-500",
 }
 
+const defaultStatusStyle = "bg-muted text-muted-foreground"
+const defaultDotStyle = "bg-muted-foreground"
+
 function initials(name) {
   return name
     .split(" ")
@@ -34,17 +37,16 @@ function MemberCard({ member, checked, onCheckedChange, onPrint }) {
           </div>
           <div className="min-w-0">
             <p className="truncate text-sm font-medium text-foreground/85">{member.name}</p>
-            <p className="text-xs text-muted-foreground">{member.gender}</p>
           </div>
         </div>
 
         <span
           className={cn(
             "inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium",
-            statusStyles[member.status]
+            statusStyles[member.status] || defaultStatusStyle
           )}
         >
-          <span className={cn("h-1.5 w-1.5 rounded-full", dotStyles[member.status])} />
+          <span className={cn("h-1.5 w-1.5 rounded-full", dotStyles[member.status] || defaultDotStyle)} />
           {member.status}
         </span>
       </div>
@@ -52,8 +54,8 @@ function MemberCard({ member, checked, onCheckedChange, onPrint }) {
       <div className="grid grid-cols-2 gap-x-4 gap-y-2 pl-13 text-sm">
         <div className="min-w-0">
           <p className="text-xs text-muted-foreground">Contact</p>
-          <p className="truncate text-foreground/80">{member.email}</p>
-          <p className="text-xs text-muted-foreground">{member.phone}</p>
+          <p className="truncate text-foreground/80">{member.email || "—"}</p>
+          <p className="text-xs text-muted-foreground">{member.phone || "—"}</p>
         </div>
         <div className="min-w-0">
           <p className="text-xs text-muted-foreground">Group</p>

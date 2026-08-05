@@ -1,21 +1,16 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { EmptyState } from "@/components/common/EmptyState"
 import { cn } from "@/lib/utils"
-import { Users, DollarSign, Calendar, Clock } from "lucide-react"
+import { Users, UserCog, DollarSign, Calendar, Clock } from "lucide-react"
+
+const DEFAULT_META = { icon: Clock, iconClassName: "bg-muted text-muted-foreground" }
 
 const ACTIVITY_META = {
   MEMBER_REGISTERED: { icon: Users, iconClassName: "bg-muted text-muted-foreground" },
+  MEMBER_STATUS_CHANGED: { icon: UserCog, iconClassName: "bg-muted text-muted-foreground" },
+  MEMBER_UPDATED: { icon: UserCog, iconClassName: "bg-muted text-muted-foreground" },
   INCOME_RECORDED: { icon: DollarSign, iconClassName: "bg-amber-50/60 text-amber-500" },
   EXPENSE_RECORDED: { icon: DollarSign, iconClassName: "bg-amber-50/60 text-amber-500" },
-}
-
-const currencyFormatter = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" })
-
-function formatDetail(item) {
-  if (item.type === "INCOME_RECORDED" || item.type === "EXPENSE_RECORDED") {
-    return currencyFormatter.format(item.detail || 0)
-  }
-  return item.detail
 }
 
 function formatRelativeTime(timestamp) {
@@ -55,7 +50,7 @@ function RecentActivity({ items = [] }) {
         ) : (
           <div className="divide-y divide-border">
             {items.map((item, index) => {
-              const meta = ACTIVITY_META[item.type] ?? ACTIVITY_META.MEMBER_REGISTERED
+              const meta = ACTIVITY_META[item.type] ?? DEFAULT_META
 
               return (
                 <div
@@ -73,7 +68,7 @@ function RecentActivity({ items = [] }) {
                     </div>
                     <div className="min-w-0">
                       <p className="text-sm font-normal text-foreground/80">{item.message}</p>
-                      <p className="truncate text-xs text-muted-foreground">{formatDetail(item)}</p>
+                      <p className="truncate text-xs text-muted-foreground">{item.detail}</p>
                     </div>
                   </div>
 

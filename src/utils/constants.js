@@ -9,6 +9,9 @@ export const API_ENDPOINTS = {
   DASHBOARD_MEMBER_BREAKDOWN: `${API_V1}/dashboard/member-breakdown`,
   DASHBOARD_FINANCE_SUMMARY: `${API_V1}/dashboard/finance-summary`,
   DASHBOARD_RECENT_ACTIVITY: `${API_V1}/dashboard/recent-activity`,
+  USERS: `${API_V1}/users`,
+  USER_BY_ID: (id) => `${API_V1}/users/${id}`,
+  MEMBERS: `${API_V1}/members`,
 }
 
 // Our own Next.js route handlers, called client-side (via fetch in components)
@@ -21,6 +24,9 @@ export const APP_API_ENDPOINTS = {
   DASHBOARD_MEMBER_BREAKDOWN: "/api/dashboard/member-breakdown",
   DASHBOARD_FINANCE_SUMMARY: "/api/dashboard/finance-summary",
   DASHBOARD_RECENT_ACTIVITY: "/api/dashboard/recent-activity",
+  USERS: "/api/users",
+  USER_BY_ID: (id) => `/api/users/${id}`,
+  MEMBERS: "/api/members",
 }
 
 // auth_user: non-httpOnly, holds { id, email, name, role } — safe for client JS to read (no secret)

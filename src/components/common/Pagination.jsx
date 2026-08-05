@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 
-function Pagination({ page = 1, totalPages = 2, from = 1, to = 10, total = 12 }) {
+function Pagination({ page = 1, totalPages = 2, from = 1, to = 10, total = 12, onPageChange }) {
   return (
     <div className="flex flex-col gap-3 border-t border-border px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
       <p className="text-sm text-muted-foreground">
@@ -10,7 +10,13 @@ function Pagination({ page = 1, totalPages = 2, from = 1, to = 10, total = 12 })
       </p>
 
       <div className="flex items-center gap-1 overflow-x-auto">
-        <Button variant="outline" size="icon" className="rounded-lg">
+        <Button
+          variant="outline"
+          size="icon"
+          className="rounded-lg"
+          disabled={page <= 1}
+          onClick={() => onPageChange?.(page - 1)}
+        >
           <ChevronLeft className="h-4 w-4" />
         </Button>
 
@@ -22,12 +28,19 @@ function Pagination({ page = 1, totalPages = 2, from = 1, to = 10, total = 12 })
               "h-8 w-8 rounded-lg p-0",
               number === page && "bg-[#1e2a4a] text-white hover:bg-[#1e2a4a]/90"
             )}
+            onClick={() => onPageChange?.(number)}
           >
             {number}
           </Button>
         ))}
 
-        <Button variant="outline" size="icon" className="rounded-lg">
+        <Button
+          variant="outline"
+          size="icon"
+          className="rounded-lg"
+          disabled={page >= totalPages}
+          onClick={() => onPageChange?.(page + 1)}
+        >
           <ChevronRight className="h-4 w-4" />
         </Button>
       </div>

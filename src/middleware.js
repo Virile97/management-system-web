@@ -72,5 +72,6 @@ export const config = {
     "/api/finances/:path*",
     "/api/settings/:path*",
     "/api/upload/:path*",
+    "/api/users/:path*",
   ],
 }
