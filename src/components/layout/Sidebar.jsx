@@ -3,7 +3,7 @@
 import { usePathname, useRouter } from "next/navigation"
 import { SidebarItem } from "@/components/layout/SidebarItem"
 import { LayoutGrid, Users, DollarSign, Heart, Settings, Building2, X, LogOut } from "lucide-react"
-import { useAuth } from "@/hooks/useAuth"
+import { APP_API_ENDPOINTS } from "@/utils/constants"
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutGrid },
@@ -15,15 +15,14 @@ const navItems = [
 function Sidebar({ open = false, onClose }) {
   const pathname = usePathname()
   const router = useRouter()
-  const { logout } = useAuth()
 
   function goTo(href) {
     router.push(href)
     onClose?.()
   }
 
-  function handleLogout() {
-    logout()
+  async function handleLogout() {
+    await fetch(APP_API_ENDPOINTS.AUTH_LOGOUT, { method: "POST" })
     onClose?.()
     router.push("/login")
   }

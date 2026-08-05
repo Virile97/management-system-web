@@ -1,9 +1,76 @@
-import { NextResponse } from "next/server";
+import { NextResponse } from "next/server"
 
-export function middleware() {
-  return NextResponse.next();
+import { baseCookieOptions, clearSessionCookies, readValidTokenCookie } from "@/lib/session"
+import {
+  CSRF_COOKIE_NAME,
+  CSRF_HEADER_NAME,
+  AUTH_SESSION_MAX_AGE,
+  AUTH_USER_COOKIE_NAME,
+  AUTH_TOKEN_COOKIE_NAME,
+} from "@/utils/constants"
+
+const MUTATING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"])
+const CSRF_EXEMPT_PATHS = new Set(["/api/auth/login", "/api/auth/logout"])
+
+export function middleware(request) {
+  const tokenSession = readValidTokenCookie(request.cookies.get(AUTH_TOKEN_COOKIE_NAME)?.value)
+  const hasSession = Boolean(tokenSession)
+  const isLoginPage = request.nextUrl.pathname === "/login"
+
+  if (isLoginPage) {
+    if (!hasSession) {
+      return NextResponse.next()
+    }
+    return NextResponse.redirect(new URL("/dashboard", request.url))
+  }
+
+  if (!hasSession) {
+    const response = NextResponse.redirect(new URL("/login", request.url))
+    clearSessionCookies(response)
+    return response
+  }
+
+  if (
+    MUTATING_METHODS.has(request.method) &&
+    request.nextUrl.pathname.startsWith("/api/") &&
+    !CSRF_EXEMPT_PATHS.has(request.nextUrl.pathname)
+  ) {
+    const cookieToken = request.cookies.get(CSRF_COOKIE_NAME)?.value
+    const headerToken = request.headers.get(CSRF_HEADER_NAME)
+
+    if (!cookieToken || !headerToken || cookieToken !== headerToken) {
+      return NextResponse.json({ success: false, message: "Invalid or missing CSRF token" }, { status: 403 })
+    }
+  }
+
+  // Sliding expiry: any authenticated activity resets the 24h inactivity window,
+  // while loginAt (and therefore the 7-day absolute cap) is carried over unchanged.
+  const response = NextResponse.next()
+  const common = { ...baseCookieOptions(), maxAge: AUTH_SESSION_MAX_AGE }
+
+  response.cookies.set(AUTH_TOKEN_COOKIE_NAME, JSON.stringify(tokenSession), { ...common, httpOnly: true })
+
+  const rawUser = request.cookies.get(AUTH_USER_COOKIE_NAME)?.value
+  if (rawUser) response.cookies.set(AUTH_USER_COOKIE_NAME, rawUser, { ...common, httpOnly: false })
+
+  const csrfToken = request.cookies.get(CSRF_COOKIE_NAME)?.value
+  if (csrfToken) response.cookies.set(CSRF_COOKIE_NAME, csrfToken, { ...common, httpOnly: false })
+
+  return response
 }
 
 export const config = {
-  matcher: [],
-};
+  matcher: [
+    "/dashboard/:path*",
+    "/members/:path*",
+    "/finances/:path*",
+    "/soul-winning/:path*",
+    "/settings/:path*",
+    "/login",
+    "/api/dashboard/:path*",
+    "/api/members/:path*",
+    "/api/finances/:path*",
+    "/api/settings/:path*",
+    "/api/upload/:path*",
+  ],
+}

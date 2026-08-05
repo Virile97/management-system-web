@@ -1,5 +1,9 @@
-import { NextResponse } from "next/server";
+import { NextResponse } from "next/server"
 
-export async function POST(request) {
-  return NextResponse.json({ message: "Not implemented" }, { status: 501 });
+import { clearSessionCookies } from "@/lib/session"
+
+export async function POST() {
+  const res = NextResponse.json({ success: true })
+  clearSessionCookies(res)
+  return res
 }

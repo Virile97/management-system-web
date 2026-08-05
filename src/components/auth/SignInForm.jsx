@@ -1,32 +1,71 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 
 import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useAuth } from "@/hooks/useAuth"
+import { encryptWithPublicKey } from "@/lib/auth"
 import { cn } from "@/lib/utils"
+import { APP_API_ENDPOINTS } from "@/utils/constants"
 
 function SignInForm() {
   const router = useRouter()
-  const { login } = useAuth()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [keepSignedIn, setKeepSignedIn] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState("")
 
+  const [publicKey, setPublicKey] = useState(null)
+  const [isKeyLoading, setIsKeyLoading] = useState(true)
+  const [keyError, setKeyError] = useState("")
+
+  useEffect(() => {
+    let isMounted = true
+
+    async function fetchPublicKey() {
+      setIsKeyLoading(true)
+      setKeyError("")
+      try {
+        const res = await fetch(APP_API_ENDPOINTS.AUTH_PUBLIC_KEY)
+        const body = await res.json()
+        if (!res.ok || !body.success) throw new Error(body?.message)
+        if (isMounted) setPublicKey(body.data.publicKey)
+      } catch {
+        if (isMounted) setKeyError("Unable to reach the server. Please refresh the page to try again.")
+      } finally {
+        if (isMounted) setIsKeyLoading(false)
+      }
+    }
+
+    fetchPublicKey()
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
+  const isFormDisabled = isKeyLoading || Boolean(keyError) || !publicKey
+
   async function handleSubmit(e) {
     e.preventDefault()
+    if (isFormDisabled) return
+
     setError("")
     setIsSubmitting(true)
 
     try {
-      // TODO: replace with a real auth API call once the backend is ready
-      login({ email }, { keepSignedIn })
+      const encryptedPassword = await encryptWithPublicKey(publicKey, password)
+      const res = await fetch(APP_API_ENDPOINTS.AUTH_LOGIN, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password: encryptedPassword }),
+      })
+      const body = await res.json()
+      if (!res.ok || !body.success) {
+        throw new Error(body?.message || "Unable to sign in. Please check your credentials and try again.")
+      }
+
       router.push("/dashboard")
     } catch (err) {
       setError(err?.message || "Unable to sign in. Please check your credentials and try again.")
@@ -42,7 +81,11 @@ function SignInForm() {
         <p className="text-sm text-muted-foreground">Sign in to continue to your dashboard.</p>
       </div>
 
-      {error && (
+      {keyError && (
+        <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{keyError}</p>
+      )}
+
+      {!keyError && error && (
         <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>
       )}
 
@@ -59,6 +102,7 @@ function SignInForm() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            disabled={isFormDisabled}
             className="h-11 rounded-lg px-3.5 text-sm"
           />
         </div>
@@ -80,27 +124,20 @@ function SignInForm() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            disabled={isFormDisabled}
             className="h-11 rounded-lg px-3.5 text-sm"
           />
         </div>
       </div>
 
-      <label className="flex cursor-pointer items-center gap-2 text-sm text-foreground">
-        <Checkbox
-          checked={keepSignedIn}
-          onCheckedChange={(checked) => setKeepSignedIn(checked === true)}
-        />
-        Keep me signed in
-      </label>
-
       <Button
         type="submit"
-        disabled={isSubmitting}
+        disabled={isFormDisabled || isSubmitting}
         className={cn(
           "h-11 w-full rounded-lg bg-[#1e2a4a] text-sm font-semibold text-white hover:bg-[#1e2a4a]/90"
         )}
       >
-        {isSubmitting ? "Signing in…" : "Sign In"}
+        {isSubmitting ? "Signing in…" : isKeyLoading ? "Loading…" : "Sign In"}
       </Button>
 
       <p className="text-center text-sm text-muted-foreground">

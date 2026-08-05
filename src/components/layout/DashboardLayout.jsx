@@ -4,9 +4,8 @@ import { useState } from "react"
 import { Menu, Building2 } from "lucide-react"
 import { Sidebar } from "@/components/layout/Sidebar"
 import { SlipConfigProvider } from "@/components/settings/SlipConfigContext"
-import { withAuth } from "@/components/auth/withAuth"
 
-function DashboardLayoutBase({ children }) {
+function DashboardLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   return (
@@ -39,8 +38,6 @@ function DashboardLayoutBase({ children }) {
     </SlipConfigProvider>
   )
 }
-
-const DashboardLayout = withAuth(DashboardLayoutBase)
 
 export { DashboardLayout }
 export default DashboardLayout
