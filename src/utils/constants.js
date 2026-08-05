@@ -4,6 +4,7 @@ const API_V1 = "/api/v1"
 export const API_ENDPOINTS = {
   AUTH_PUBLIC_KEY: `${API_V1}/auth/public-key`,
   AUTH_LOGIN: `${API_V1}/auth/login`,
+  AUTH_LOGOUT: `${API_V1}/auth/logout`,
   DASHBOARD_STATS: `${API_V1}/dashboard/stats`,
 }
 

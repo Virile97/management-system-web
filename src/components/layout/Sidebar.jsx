@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { usePathname, useRouter } from "next/navigation"
 import { SidebarItem } from "@/components/layout/SidebarItem"
 import { LayoutGrid, Users, DollarSign, Heart, Settings, Building2, X, LogOut } from "lucide-react"
@@ -15,6 +16,8 @@ const navItems = [
 function Sidebar({ open = false, onClose }) {
   const pathname = usePathname()
   const router = useRouter()
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const [logoutError, setLogoutError] = useState("")
 
   function goTo(href) {
     router.push(href)
@@ -22,9 +25,20 @@ function Sidebar({ open = false, onClose }) {
   }
 
   async function handleLogout() {
-    await fetch(APP_API_ENDPOINTS.AUTH_LOGOUT, { method: "POST" })
-    onClose?.()
-    router.push("/login")
+    setLogoutError("")
+    setIsLoggingOut(true)
+
+    try {
+      const res = await fetch(APP_API_ENDPOINTS.AUTH_LOGOUT, { method: "POST" })
+      if (!res.ok) throw new Error()
+
+      onClose?.()
+      router.push("/login")
+    } catch {
+      setLogoutError("Something went wrong while signing out. Please try again.")
+    } finally {
+      setIsLoggingOut(false)
+    }
   }
 
   return (
@@ -92,13 +106,18 @@ function Sidebar({ open = false, onClose }) {
             <button
               type="button"
               onClick={handleLogout}
+              disabled={isLoggingOut}
               aria-label="Sign out"
               title="Sign out"
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-white/50 hover:bg-white/10 hover:text-white"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-white/50 hover:bg-white/10 hover:text-white disabled:pointer-events-none disabled:opacity-50"
             >
               <LogOut className="h-4 w-4" />
             </button>
           </div>
+
+          {logoutError && (
+            <p className="px-3 pt-2 text-xs text-red-300">{logoutError}</p>
+          )}
         </div>
       </aside>
     </>

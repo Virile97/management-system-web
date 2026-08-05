@@ -1,5 +1,5 @@
 import { StatCard } from "@/components/dashboard/StatsCards"
-import { AttendanceChart } from "@/components/dashboard/AttendanceChart"
+import { MemberBreakdownChart } from "@/components/dashboard/MemberBreakdownChart"
 import { FinanceChart } from "@/components/dashboard/FinanceChart"
 import { RecentActivity } from "@/components/dashboard/RecentActivity"
 import { Users, Heart, UserX, DollarSign } from "lucide-react"
@@ -53,7 +53,7 @@ export default function DashboardPage() {
             trend="+10.9% vs last month"
             trendDirection="up"
           />
-          <AttendanceChart />
+          <MemberBreakdownChart />
           <FinanceChart />
           <div className="md:col-span-2">
             <RecentActivity />

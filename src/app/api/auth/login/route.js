@@ -10,8 +10,17 @@ export async function POST(request) {
   try {
     const { data } = await api.post(API_ENDPOINTS.AUTH_LOGIN, { email, password })
 
-    const res = NextResponse.json({ success: true, message: data.message, data: { user: data.data.user } })
-    setSessionCookies(res, { token: data.data.token, user: data.data.user })
+    const res = NextResponse.json({ 
+      success: true, 
+      message: data.message, 
+      data: { user: data.data.user } 
+    })
+
+    setSessionCookies(res, { 
+      token: data.data.token, 
+      user: data.data.user 
+    })
+
     return res
   } catch (err) {
     const status = err?.response?.status || 500
