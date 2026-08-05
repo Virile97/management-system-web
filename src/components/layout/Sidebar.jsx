@@ -8,11 +8,17 @@ import { getCurrentUser } from "@/lib/auth"
 import { useDashboardStore } from "@/stores/dashboard.store"
 import { APP_API_ENDPOINTS } from "@/utils/constants"
 
-const navItems = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutGrid, restrictedFor: ["USER"] },
-  { href: "/members", label: "Members", icon: Users },
-  { href: "/finances", label: "Finances", icon: DollarSign, restrictedFor: ["USER"] },
-  { href: "/soul-winning", label: "Soul Winning", icon: Heart, restrictedFor: ["USER"] },
+const ALL_ROLES = ["ADMIN", "FINANCE_ADMIN", "USER"]
+
+// Every sidebar link in one place. `section` decides where it renders
+// (top nav list vs. bottom block); `allowedFor` is an explicit role
+// allow-list so a new role defaults to hidden unless granted access.
+const sidebarItems = [
+  { href: "/dashboard", label: "Dashboard", icon: LayoutGrid, section: "top", allowedFor: ["ADMIN", "FINANCE_ADMIN"] },
+  { href: "/members", label: "Members", icon: Users, section: "top", allowedFor: ALL_ROLES },
+  { href: "/finances", label: "Finances", icon: DollarSign, section: "top", allowedFor: ["ADMIN", "FINANCE_ADMIN"] },
+  { href: "/soul-winning", label: "Soul Winning", icon: Heart, section: "top", allowedFor: ["ADMIN", "FINANCE_ADMIN"] },
+  { href: "/settings", label: "Settings", icon: Settings, section: "bottom", allowedFor: ["ADMIN", "FINANCE_ADMIN"] },
 ]
 
 function Sidebar({ open = false, onClose }) {
@@ -27,7 +33,9 @@ function Sidebar({ open = false, onClose }) {
     setRole(getCurrentUser()?.role ?? null)
   }, [])
 
-  const visibleNavItems = navItems.filter((item) => !item.restrictedFor?.includes(role))
+  const visibleItems = sidebarItems.filter((item) => item.allowedFor.includes(role))
+  const topItems = visibleItems.filter((item) => item.section === "top")
+  const bottomItems = visibleItems.filter((item) => item.section === "bottom")
 
   function goTo(href) {
     router.push(href)
@@ -90,7 +98,7 @@ function Sidebar({ open = false, onClose }) {
         </div>
 
         <nav className="flex flex-col gap-1">
-          {role && visibleNavItems.map((item) => (
+          {role && topItems.map((item) => (
             <SidebarItem
               key={item.href}
               label={item.label}
@@ -102,14 +110,15 @@ function Sidebar({ open = false, onClose }) {
         </nav>
 
         <div className="mt-auto flex flex-col gap-1">
-          {role && role !== "USER" && (
+          {role && bottomItems.map((item) => (
             <SidebarItem
-              label="Settings"
-              icon={Settings}
-              active={pathname.startsWith("/settings")}
-              onClick={() => goTo("/settings")}
+              key={item.href}
+              label={item.label}
+              icon={item.icon}
+              active={pathname.startsWith(item.href)}
+              onClick={() => goTo(item.href)}
             />
-          )}
+          ))}
 
           <div className="mt-3 flex items-center gap-3 border-t border-white/10 px-3 pt-4">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-400 font-heading text-sm font-semibold text-[#1e2a4a]">
