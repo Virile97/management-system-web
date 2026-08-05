@@ -1,46 +1,42 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { EmptyState } from "@/components/common/EmptyState"
 import { cn } from "@/lib/utils"
-import { Users, DollarSign, Calendar } from "lucide-react"
+import { Users, DollarSign, Calendar, Clock } from "lucide-react"
 
-const activity = [
-  {
-    icon: Users,
-    iconClassName: "bg-muted text-muted-foreground",
-    title: "New member registered",
-    subtitle: "Margaret Osei",
-    time: "2 hours ago",
-  },
-  {
-    icon: DollarSign,
-    iconClassName: "bg-amber-50/60 text-amber-500",
-    title: "Tithe recorded",
-    subtitle: "$2,400 received",
-    time: "5 hours ago",
-  },
-  {
-    icon: Users,
-    iconClassName: "bg-muted text-muted-foreground",
-    title: "Status updated to Inactive",
-    subtitle: "David Asante",
-    time: "Yesterday",
-  },
-  {
-    icon: DollarSign,
-    iconClassName: "bg-amber-50/60 text-amber-500",
-    title: "Expense logged",
-    subtitle: "Building maintenance — $1,800",
-    time: "Yesterday",
-  },
-  {
-    icon: Users,
-    iconClassName: "bg-muted text-muted-foreground",
-    title: "New member registered",
-    subtitle: "Grace Mensah",
-    time: "2 days ago",
-  },
-]
+const ACTIVITY_META = {
+  MEMBER_REGISTERED: { icon: Users, iconClassName: "bg-muted text-muted-foreground" },
+  INCOME_RECORDED: { icon: DollarSign, iconClassName: "bg-amber-50/60 text-amber-500" },
+  EXPENSE_RECORDED: { icon: DollarSign, iconClassName: "bg-amber-50/60 text-amber-500" },
+}
 
-function RecentActivity() {
+const currencyFormatter = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" })
+
+function formatDetail(item) {
+  if (item.type === "INCOME_RECORDED" || item.type === "EXPENSE_RECORDED") {
+    return currencyFormatter.format(item.detail || 0)
+  }
+  return item.detail
+}
+
+function formatRelativeTime(timestamp) {
+  const date = new Date(timestamp)
+  const diffMs = Date.now() - date.getTime()
+  const diffMinutes = Math.round(diffMs / 60000)
+
+  if (diffMinutes < 1) return "Just now"
+  if (diffMinutes < 60) return `${diffMinutes} min${diffMinutes === 1 ? "" : "s"} ago`
+
+  const diffHours = Math.round(diffMinutes / 60)
+  if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? "" : "s"} ago`
+
+  const diffDays = Math.round(diffHours / 24)
+  if (diffDays === 1) return "Yesterday"
+  if (diffDays < 7) return `${diffDays} days ago`
+
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" })
+}
+
+function RecentActivity({ items = [] }) {
   return (
     <Card className="rounded-2xl p-4 sm:p-6">
       <CardHeader className="px-0">
@@ -50,34 +46,46 @@ function RecentActivity() {
       </CardHeader>
 
       <CardContent className="px-0">
-        <div className="divide-y divide-border">
-          {activity.map((item, index) => (
-            <div
-              key={index}
-              className="flex flex-col gap-2 py-4 first:pt-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
-            >
-              <div className="flex min-w-0 items-center gap-4">
-                <div
-                  className={cn(
-                    "flex h-10 w-10 shrink-0 items-center justify-center rounded-full",
-                    item.iconClassName
-                  )}
-                >
-                  <item.icon className="h-4 w-4" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-normal text-foreground/80">{item.title}</p>
-                  <p className="truncate text-xs text-muted-foreground">{item.subtitle}</p>
-                </div>
-              </div>
+        {items.length === 0 ? (
+          <EmptyState
+            icon={Clock}
+            title="No recent activity"
+            description="New members and transactions will show up here."
+          />
+        ) : (
+          <div className="divide-y divide-border">
+            {items.map((item, index) => {
+              const meta = ACTIVITY_META[item.type] ?? ACTIVITY_META.MEMBER_REGISTERED
 
-              <div className="flex shrink-0 items-center gap-1 pl-14 text-[11px] text-muted-foreground sm:pl-0">
-                <Calendar className="h-3 w-3" />
-                <span>{item.time}</span>
-              </div>
-            </div>
-          ))}
-        </div>
+              return (
+                <div
+                  key={index}
+                  className="flex flex-col gap-2 py-4 first:pt-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
+                >
+                  <div className="flex min-w-0 items-center gap-4">
+                    <div
+                      className={cn(
+                        "flex h-10 w-10 shrink-0 items-center justify-center rounded-full",
+                        meta.iconClassName
+                      )}
+                    >
+                      <meta.icon className="h-4 w-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-normal text-foreground/80">{item.message}</p>
+                      <p className="truncate text-xs text-muted-foreground">{formatDetail(item)}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex shrink-0 items-center gap-1 pl-14 text-[11px] text-muted-foreground sm:pl-0">
+                    <Calendar className="h-3 w-3" />
+                    <span>{formatRelativeTime(item.timestamp)}</span>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
       </CardContent>
     </Card>
   )

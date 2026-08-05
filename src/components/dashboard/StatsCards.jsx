@@ -25,15 +25,17 @@ function StatCard({ label, value, icon: Icon, iconClassName, trend, trendDirecti
         {value}
       </div>
 
-      <div
-        className={cn(
-          "mt-2 flex items-center gap-1 text-xs",
-          isUp ? "text-emerald-500/90" : "text-muted-foreground"
-        )}
-      >
-        {isUp ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
-        <span>{trend}</span>
-      </div>
+      {trend && (
+        <div
+          className={cn(
+            "mt-2 flex items-center gap-1 text-xs",
+            isUp ? "text-emerald-500/90" : "text-muted-foreground"
+          )}
+        >
+          {isUp ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
+          <span>{trend}</span>
+        </div>
+      )}
     </Card>
   )
 }
