@@ -20,24 +20,41 @@ import {
 } from "@/components/ui/select"
 import { MEMBER_FORM_VALIDATORS } from "@/utils/validators"
 
-const statusLabels = {
-  active: "Active",
-  inactive: "Inactive",
-  deceased: "Deceased",
-}
-
-const genderLabels = {
-  male: "Male",
-  female: "Female",
-}
-
-const groupLabels = {
-  choir: "Choir",
-  ushers: "Ushers",
-  youth: "Youth",
-  elders: "Elders",
-  "womens-ministry": "Women's Ministry",
-}
+// Select field config: each entry drives one dropdown via SelectField below.
+// `options` order determines the order items render in the dropdown.
+const SELECT_FIELDS = [
+  {
+    name: "status",
+    label: "Status",
+    defaultValue: "active",
+    options: {
+      active: "Active",
+      inactive: "Inactive",
+      deceased: "Deceased",
+    },
+  },
+  {
+    name: "gender",
+    label: "Gender",
+    defaultValue: "male",
+    options: {
+      male: "Male",
+      female: "Female",
+    },
+  },
+  {
+    name: "group",
+    label: "Group",
+    defaultValue: "choir",
+    options: {
+      choir: "Choir",
+      ushers: "Ushers",
+      youth: "Youth",
+      elders: "Elders",
+      "womens-ministry": "Women's Ministry",
+    },
+  },
+]
 
 const INITIAL_FORM = {
   firstName: "",
@@ -48,6 +65,7 @@ const INITIAL_FORM = {
   address: "",
   joinDate: "",
   age: "",
+  ...Object.fromEntries(SELECT_FIELDS.map((field) => [field.name, field.defaultValue])),
 }
 
 // Field config for the text/date inputs rendered via FormField below.
@@ -68,6 +86,28 @@ const DATE_AGE_FIELDS = [
   { name: "joinDate", label: "Join Date", type: "date", required: true },
   { name: "age", label: "Age", inputMode: "numeric", placeholder: "e.g. 34", required: true },
 ]
+
+function SelectField({ field, value, onChange }) {
+  const { name, label, options } = field
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      <Label>{label}</Label>
+      <Select value={value} onValueChange={(next) => onChange(name, next)}>
+        <SelectTrigger className="h-10 w-full rounded-lg">
+          <SelectValue>{(val) => options[val]}</SelectValue>
+        </SelectTrigger>
+        <SelectContent>
+          {Object.entries(options).map(([optionValue, optionLabel]) => (
+            <SelectItem key={optionValue} value={optionValue}>
+              {optionLabel}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  )
+}
 
 function FormField({ field, value, error, onChange, onBlur }) {
   const { name, label, required, ...inputProps } = field
@@ -165,48 +205,14 @@ function AddMemberModal({ open, onOpenChange }) {
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <div className="flex flex-col gap-1.5">
-              <Label>Status</Label>
-              <Select defaultValue="active">
-                <SelectTrigger className="h-10 w-full rounded-lg">
-                  <SelectValue>{(value) => statusLabels[value]}</SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
-                  <SelectItem value="deceased">Deceased</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <Label>Gender</Label>
-              <Select defaultValue="male">
-                <SelectTrigger className="h-10 w-full rounded-lg">
-                  <SelectValue>{(value) => genderLabels[value]}</SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="male">Male</SelectItem>
-                  <SelectItem value="female">Female</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <Label>Group</Label>
-              <Select defaultValue="choir">
-                <SelectTrigger className="h-10 w-full rounded-lg">
-                  <SelectValue>{(value) => groupLabels[value]}</SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="choir">Choir</SelectItem>
-                  <SelectItem value="ushers">Ushers</SelectItem>
-                  <SelectItem value="youth">Youth</SelectItem>
-                  <SelectItem value="elders">Elders</SelectItem>
-                  <SelectItem value="womens-ministry">Women's Ministry</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            {SELECT_FIELDS.map((field) => (
+              <SelectField
+                key={field.name}
+                field={field}
+                value={form[field.name]}
+                onChange={handleChange}
+              />
+            ))}
           </div>
         </div>
 
