@@ -1,23 +1,33 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { usePathname, useRouter } from "next/navigation"
 import { SidebarItem } from "@/components/layout/SidebarItem"
 import { LayoutGrid, Users, DollarSign, Heart, Settings, Building2, X, LogOut } from "lucide-react"
+import { getCurrentUser } from "@/lib/auth"
+import { useDashboardStore } from "@/stores/dashboard.store"
 import { APP_API_ENDPOINTS } from "@/utils/constants"
 
 const navItems = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutGrid },
+  { href: "/dashboard", label: "Dashboard", icon: LayoutGrid, restrictedFor: ["USER"] },
   { href: "/members", label: "Members", icon: Users },
-  { href: "/finances", label: "Finances", icon: DollarSign },
-  { href: "/soul-winning", label: "Soul Winning", icon: Heart },
+  { href: "/finances", label: "Finances", icon: DollarSign, restrictedFor: ["USER"] },
+  { href: "/soul-winning", label: "Soul Winning", icon: Heart, restrictedFor: ["USER"] },
 ]
 
 function Sidebar({ open = false, onClose }) {
   const pathname = usePathname()
   const router = useRouter()
+
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [logoutError, setLogoutError] = useState("")
+  const [role, setRole] = useState(null)
+
+  useEffect(() => {
+    setRole(getCurrentUser()?.role ?? null)
+  }, [])
+
+  const visibleNavItems = navItems.filter((item) => !item.restrictedFor?.includes(role))
 
   function goTo(href) {
     router.push(href)
@@ -30,7 +40,11 @@ function Sidebar({ open = false, onClose }) {
 
     try {
       const res = await fetch(APP_API_ENDPOINTS.AUTH_LOGOUT, { method: "POST" })
-      if (!res.ok) throw new Error()
+      const body = await res.json().catch(() => null)
+  
+      if (!res.ok || !body?.success) throw new Error()
+
+      useDashboardStore.getState().reset()
 
       onClose?.()
       router.push("/login")
@@ -76,7 +90,7 @@ function Sidebar({ open = false, onClose }) {
         </div>
 
         <nav className="flex flex-col gap-1">
-          {navItems.map((item) => (
+          {role && visibleNavItems.map((item) => (
             <SidebarItem
               key={item.href}
               label={item.label}
@@ -88,12 +102,14 @@ function Sidebar({ open = false, onClose }) {
         </nav>
 
         <div className="mt-auto flex flex-col gap-1">
-          <SidebarItem
-            label="Settings"
-            icon={Settings}
-            active={pathname.startsWith("/settings")}
-            onClick={() => goTo("/settings")}
-          />
+          {role && role !== "USER" && (
+            <SidebarItem
+              label="Settings"
+              icon={Settings}
+              active={pathname.startsWith("/settings")}
+              onClick={() => goTo("/settings")}
+            />
+          )}
 
           <div className="mt-3 flex items-center gap-3 border-t border-white/10 px-3 pt-4">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-400 font-heading text-sm font-semibold text-[#1e2a4a]">

@@ -12,6 +12,9 @@ import {
 const MUTATING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"])
 const CSRF_EXEMPT_PATHS = new Set(["/api/auth/login", "/api/auth/logout"])
 
+// Routes the plain USER role cannot view; they're bounced to /members instead.
+const RESTRICTED_FOR_USER_ROLE = ["/dashboard", "/finances", "/soul-winning", "/settings"]
+
 export function middleware(request) {
   const tokenSession = readValidTokenCookie(request.cookies.get(AUTH_TOKEN_COOKIE_NAME)?.value)
   const hasSession = Boolean(tokenSession)
@@ -28,6 +31,23 @@ export function middleware(request) {
     const response = NextResponse.redirect(new URL("/login", request.url))
     clearSessionCookies(response)
     return response
+  }
+
+  const rawUser = request.cookies.get(AUTH_USER_COOKIE_NAME)?.value
+
+  const user = (() => {
+    try {
+      return rawUser ? JSON.parse(rawUser) : null
+    } catch {
+      return null
+    }
+  })()
+
+  if (
+    user?.role === "USER" &&
+    RESTRICTED_FOR_USER_ROLE.some((path) => request.nextUrl.pathname.startsWith(path))
+  ) {
+    return NextResponse.redirect(new URL("/members", request.url))
   }
 
   if (
@@ -50,7 +70,6 @@ export function middleware(request) {
 
   response.cookies.set(AUTH_TOKEN_COOKIE_NAME, JSON.stringify(tokenSession), { ...common, httpOnly: true })
 
-  const rawUser = request.cookies.get(AUTH_USER_COOKIE_NAME)?.value
   if (rawUser) response.cookies.set(AUTH_USER_COOKIE_NAME, rawUser, { ...common, httpOnly: false })
 
   const csrfToken = request.cookies.get(CSRF_COOKIE_NAME)?.value

@@ -55,4 +55,20 @@ function getCsrfHeader() {
   return token ? { "x-csrf-token": token } : {}
 }
 
-export { encryptWithPublicKey, getCsrfHeader }
+/**
+ * Reads the signed-in user ({ id, email, name, role }) from the non-httpOnly
+ * auth_user cookie. Returns null if absent/unparseable (e.g. logged out).
+ */
+function getCurrentUser() {
+  const raw = readCookie("auth_user")
+
+  if (!raw) return null
+
+  try {
+    return JSON.parse(raw)
+  } catch {
+    return null
+  }
+}
+
+export { encryptWithPublicKey, getCsrfHeader, getCurrentUser }
