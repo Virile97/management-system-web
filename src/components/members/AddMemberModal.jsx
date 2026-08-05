@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import {
   Dialog,
   DialogContent,
@@ -17,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { MEMBER_FORM_VALIDATORS } from "@/utils/validators"
 
 const statusLabels = {
   active: "Active",
@@ -37,7 +39,81 @@ const groupLabels = {
   "womens-ministry": "Women's Ministry",
 }
 
+const INITIAL_FORM = {
+  firstName: "",
+  middleName: "",
+  lastName: "",
+  email: "",
+  phone: "",
+  address: "",
+  joinDate: "",
+  age: "",
+}
+
+// Field config for the text/date inputs rendered via FormField below.
+// Grouped into rows matching the layout (name row / stacked / date+age row).
+const NAME_FIELDS = [
+  { name: "firstName", label: "First Name", placeholder: "e.g. Juan", required: true },
+  { name: "middleName", label: "Middle Name", placeholder: "Optional" },
+  { name: "lastName", label: "Last Name", placeholder: "e.g. Dela Cruz", required: true },
+]
+
+const CONTACT_FIELDS = [
+  { name: "email", label: "Email", type: "email", placeholder: "name@gmail.com", required: true },
+  { name: "phone", label: "Phone", type: "tel", placeholder: "09171234567", required: true },
+  { name: "address", label: "Address", placeholder: "Street, City", required: true },
+]
+
+const DATE_AGE_FIELDS = [
+  { name: "joinDate", label: "Join Date", type: "date", required: true },
+  { name: "age", label: "Age", inputMode: "numeric", placeholder: "e.g. 34", required: true },
+]
+
+function FormField({ field, value, error, onChange, onBlur }) {
+  const { name, label, required, ...inputProps } = field
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      <Label htmlFor={`member-${name}`}>
+        {label} {required && <span className="text-red-500">*</span>}
+      </Label>
+      <Input
+        id={`member-${name}`}
+        className="h-10 rounded-lg"
+        value={value}
+        onChange={(e) => onChange(name, e.target.value)}
+        onBlur={() => onBlur(name)}
+        aria-invalid={Boolean(error)}
+        required={required}
+        {...inputProps}
+      />
+      {error && <p className="text-xs text-red-500">{error}</p>}
+    </div>
+  )
+}
+
 function AddMemberModal({ open, onOpenChange }) {
+  const [errors, setErrors] = useState({})
+  const [form, setForm] = useState(INITIAL_FORM)
+
+  function handleChange(field, value) {
+    setForm((prev) => ({ ...prev, [field]: value }))
+  }
+
+  function handleBlur(field) {
+    const value = form[field]
+    const { required, validate } = MEMBER_FORM_VALIDATORS[field]
+
+    let message = ""
+    if (!value) {
+      message = required ?? ""
+    } else if (validate) {
+      message = validate(value)
+    }
+
+    setErrors((prev) => ({ ...prev, [field]: message }))
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
@@ -51,29 +127,41 @@ function AddMemberModal({ open, onOpenChange }) {
         </DialogHeader>
 
         <div className="flex flex-col gap-5 overflow-y-auto px-4 py-5 sm:px-6">
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="member-name">Full Name</Label>
-            <Input id="member-name" placeholder="e.g. Kwame Mensah" className="h-10 rounded-lg" />
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            {NAME_FIELDS.map((field) => (
+              <FormField
+                key={field.name}
+                field={field}
+                value={form[field.name]}
+                error={errors[field.name]}
+                onChange={handleChange}
+                onBlur={handleBlur}
+              />
+            ))}
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="member-email">Email</Label>
-            <Input id="member-email" placeholder="email@example.com" className="h-10 rounded-lg" />
-          </div>
+          {CONTACT_FIELDS.map((field) => (
+            <FormField
+              key={field.name}
+              field={field}
+              value={form[field.name]}
+              error={errors[field.name]}
+              onChange={handleChange}
+              onBlur={handleBlur}
+            />
+          ))}
 
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="member-phone">Phone</Label>
-            <Input id="member-phone" placeholder="+233 24 000 0000" className="h-10 rounded-lg" />
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="member-address">Address</Label>
-            <Input id="member-address" placeholder="Street, City" className="h-10 rounded-lg" />
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="member-joined">Join Date</Label>
-            <Input id="member-joined" type="date" className="h-10 rounded-lg" />
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {DATE_AGE_FIELDS.map((field) => (
+              <FormField
+                key={field.name}
+                field={field}
+                value={form[field.name]}
+                error={errors[field.name]}
+                onChange={handleChange}
+                onBlur={handleBlur}
+              />
+            ))}
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">

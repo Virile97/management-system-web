@@ -1,0 +1,103 @@
+// Standard email shape, RFC 5322-ish (simplified, no consecutive dots, no leading/trailing dot in local part)
+const EMAIL_REGEX = /^[a-zA-Z0-9](?:[a-zA-Z0-9._%+-]*[a-zA-Z0-9])?@gmail\.com$/
+
+// PH mobile numbers: 09XXXXXXXXX (11 digits) or +639XXXXXXXXX / 639XXXXXXXXX
+const PH_PHONE_REGEX = /^(?:\+?63|0)9\d{9}$/
+
+/**
+ * Validates that a value is a syntactically correct email address AND
+ * belongs to the gmail.com domain specifically (case-insensitive).
+ */
+function isValidEmail(value) {
+  if (typeof value !== "string") return false
+
+  const trimmed = value.trim()
+  if (!trimmed || trimmed.length > 254) return false
+
+  return EMAIL_REGEX.test(trimmed.toLowerCase())
+}
+
+/**
+ * Validates that a value is a Philippine mobile number, accepting the
+ * 09XXXXXXXXX, 639XXXXXXXXX, and +639XXXXXXXXX formats.
+ */
+function isValidPhilippinePhoneNumber(value) {
+  if (typeof value !== "string") return false
+
+  const trimmed = value.trim().replace(/[\s-]/g, "")
+  if (!trimmed) return false
+
+  return PH_PHONE_REGEX.test(trimmed)
+}
+
+/**
+ * Validates that a value is a whole number age (digits only, no letters,
+ * decimals, or signs), within a sane human range.
+ */
+function isValidAge(value) {
+  if (typeof value === "number") return Number.isInteger(value) && value >= 0 && value <= 120
+
+  if (typeof value !== "string") return false
+
+  const trimmed = value.trim()
+  if (!/^\d+$/.test(trimmed)) return false
+
+  const age = Number(trimmed)
+  return age >= 0 && age <= 120
+}
+
+// Letters, spaces, hyphens, and apostrophes only (covers names like "Mary Anne" or "D'Souza") — no digits or other symbols
+const NAME_REGEX = /^[a-zA-Z]+(?:[ '-][a-zA-Z]+)*$/
+
+/**
+ * Validates that a value contains only letters (plus spaces/hyphens/apostrophes
+ * between words) — no numbers or other special characters. Pass
+ * { optional: true } to allow an empty value (e.g. for an optional middle name).
+ */
+function isValidName(value, { optional = false } = {}) {
+  if (typeof value !== "string") return false
+
+  const trimmed = value.trim()
+  if (!trimmed) return optional
+
+  return NAME_REGEX.test(trimmed)
+}
+
+// Per-field validation for the Add/Edit Member forms: `required` supplies the
+// empty-value message, `validate` checks non-empty values and returns an
+// error message (or "" when valid).
+const MEMBER_FORM_VALIDATORS = {
+  firstName: {
+    required: "First name is required",
+    validate: (value) => (!isValidName(value) ? "Letters only, no numbers or symbols" : ""),
+  },
+  middleName: {
+    validate: (value) =>
+      !isValidName(value, { optional: true }) ? "Letters only, no numbers or symbols" : "",
+  },
+  lastName: {
+    required: "Last name is required",
+    validate: (value) => (!isValidName(value) ? "Letters only, no numbers or symbols" : ""),
+  },
+  email: {
+    required: "Email is required",
+    validate: (value) => (!isValidEmail(value) ? "Enter a valid Gmail address (e.g. name@gmail.com)" : ""),
+  },
+  phone: {
+    required: "Phone number is required",
+    validate: (value) =>
+      !isValidPhilippinePhoneNumber(value) ? "Enter a valid PH mobile number (e.g. 09171234567)" : "",
+  },
+  address: {
+    required: "Address is required",
+  },
+  joinDate: {
+    required: "Join date is required",
+  },
+  age: {
+    required: "Age is required",
+    validate: (value) => (!isValidAge(value) ? "Enter a valid age (numbers only)" : ""),
+  },
+}
+
+export { isValidEmail, isValidPhilippinePhoneNumber, isValidAge, isValidName, MEMBER_FORM_VALIDATORS }
