@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useRef, useState } from "react"
 import { useRouter, usePathname, useSearchParams } from "next/navigation"
+import { useShallow } from "zustand/react/shallow"
 import { Button } from "@/components/ui/button"
 import { MemberFilters } from "@/components/members/MemberFilters"
 import { MemberSearch } from "@/components/members/MemberSearch"
@@ -11,6 +12,7 @@ import { PrintSlipModal } from "@/components/members/PrintSlipModal"
 import { PrintSelectedSlipsModal } from "@/components/members/PrintSelectedSlipsModal"
 import { useDebounce } from "@/hooks/useDebounce"
 import { listMembers } from "@/services/member.service"
+import { useMembersStore } from "@/stores/members.store"
 import { Plus, Printer } from "lucide-react"
 
 export default function MembersPage() {
@@ -24,6 +26,10 @@ export default function MembersPage() {
 const DEFAULT_STATUS = "All"
 const PAGE_SIZE = 10
 
+function queriesMatch(a, b) {
+  return a.page === b.page && a.status === b.status && a.search === b.search
+}
+
 function MembersPageContent() {
   const router = useRouter()
   const pathname = usePathname()
@@ -34,21 +40,28 @@ function MembersPageContent() {
   const [search, setSearch] = useState("")
   const debouncedSearch = useDebounce(search, 300)
 
-  const [members, setMembers] = useState([])
-  const [meta, setMeta] = useState({ total: 0, totalPages: 1 })
+  const { members, meta, query, setMembers, cacheMembers, getCachedMembers } = useMembersStore(
+    useShallow((state) => ({
+      members: state.members,
+      meta: state.meta,
+      query: state.query,
+      setMembers: state.setMembers,
+      cacheMembers: state.cacheMembers,
+      getCachedMembers: state.getCachedMembers,
+    }))
+  )
+
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState("")
 
   // Accumulates every member ever fetched (any page/filter), so a new search
   // can be answered from state first without hitting the API.
-  const cacheRef = useRef(new Map())
-
   function searchCache(query, status) {
     const needle = query.trim().toLowerCase()
     if (!needle) return null
 
     const matches = []
-    for (const member of cacheRef.current.values()) {
+    for (const member of getCachedMembers()) {
       if (status !== DEFAULT_STATUS && member.status !== status) continue
       const haystack = `${member.name} ${member.email || ""}`.toLowerCase()
       if (haystack.includes(needle)) matches.push(member)
@@ -57,6 +70,7 @@ function MembersPageContent() {
   }
 
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0)
   const [selectedIds, setSelectedIds] = useState(new Set())
   const [printMember, setPrintMember] = useState(null)
   const [isPrintSelectedOpen, setIsPrintSelectedOpen] = useState(false)
@@ -86,7 +100,24 @@ function MembersPageContent() {
     goToPage(1)
   }
 
+  const isFirstRun = useRef(true)
+
   useEffect(() => {
+    const currentQuery = { page, status: activeFilter, search: debouncedSearch }
+
+    // On mount only: if the persisted store already holds members for this
+    // exact page/filter/search, reuse them and skip the API call entirely.
+    if (isFirstRun.current) {
+      isFirstRun.current = false
+
+      if (query && members.length > 0 && queriesMatch(query, currentQuery)) {
+        setIsLoading(false)
+        setError("")
+
+        return
+      }
+    }
+
     const controller = new AbortController()
 
     async function loadMembers() {
@@ -95,8 +126,7 @@ function MembersPageContent() {
       if (debouncedSearch) {
         const cached = searchCache(debouncedSearch, activeFilter)
         if (cached) {
-          setMembers(cached)
-          setMeta({ total: cached.length, totalPages: 1 })
+          setMembers(cached, { total: cached.length, totalPages: 1 }, currentQuery)
           setIsLoading(false)
           setError("")
           return
@@ -117,12 +147,8 @@ function MembersPageContent() {
         )
         if (controller.signal.aborted) return
 
-        for (const member of data) {
-          cacheRef.current.set(member.id, member)
-        }
-
-        setMembers(data)
-        setMeta(responseMeta || { total: data.length, totalPages: 1 })
+        cacheMembers(data)
+        setMembers(data, responseMeta || { total: data.length, totalPages: 1 }, currentQuery)
       } catch (err) {
         if (controller.signal.aborted) return
         setError(err?.message || "Unable to load members")
@@ -133,7 +159,7 @@ function MembersPageContent() {
 
     loadMembers()
     return () => controller.abort()
-  }, [page, activeFilter, debouncedSearch])
+  }, [page, activeFilter, debouncedSearch, refreshKey])
 
   const selectedMembers = members.filter((member) => selectedIds.has(member.id))
 
@@ -225,7 +251,11 @@ function MembersPageContent() {
         </div>
       </div>
 
-      <AddMemberModal open={isAddMemberOpen} onOpenChange={setIsAddMemberOpen} />
+      <AddMemberModal
+        open={isAddMemberOpen}
+        onOpenChange={setIsAddMemberOpen}
+        onCreated={() => setRefreshKey((key) => key + 1)}
+      />
       <PrintSlipModal
         open={printMember !== null}
         onOpenChange={(open) => !open && setPrintMember(null)}

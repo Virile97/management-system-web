@@ -55,7 +55,7 @@ function MemberTable({
                   Group
                 </th>
                 <th className="py-3 pr-4 text-left text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                  Joined
+                  Baptized
                 </th>
                 <th className="py-3 pr-4 text-left text-xs font-medium tracking-wide text-muted-foreground uppercase">
                   Status

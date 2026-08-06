@@ -6,6 +6,8 @@ import { SidebarItem } from "@/components/layout/SidebarItem"
 import { LayoutGrid, Users, DollarSign, Heart, Settings, Building2, X, LogOut } from "lucide-react"
 import { getCurrentUser } from "@/lib/auth"
 import { useDashboardStore } from "@/stores/dashboard.store"
+import { useMemberFormStore } from "@/stores/memberForm.store"
+import { useMembersStore } from "@/stores/members.store"
 import { APP_API_ENDPOINTS } from "@/utils/constants"
 
 const ALL_ROLES = ["ADMIN", "FINANCE_ADMIN", "USER"]
@@ -53,6 +55,8 @@ function Sidebar({ open = false, onClose }) {
       if (!res.ok || !body?.success) throw new Error()
 
       useDashboardStore.getState().reset()
+      useMemberFormStore.getState().reset()
+      useMembersStore.getState().reset()
 
       onClose?.()
       router.push("/login")

@@ -80,23 +80,33 @@ const MEMBER_FORM_VALIDATORS = {
     validate: (value) => (!isValidName(value) ? "Letters only, no numbers or symbols" : ""),
   },
   email: {
-    required: "Email is required",
     validate: (value) => (!isValidEmail(value) ? "Enter a valid Gmail address (e.g. name@gmail.com)" : ""),
   },
   contact: {
-    required: "Phone number is required",
     validate: (value) =>
       !isValidPhilippinePhoneNumber(value) ? "Enter a valid PH mobile number (e.g. 09171234567)" : "",
   },
   address: {
     required: "Address is required",
   },
-  joinedAt: {
-    required: "Join date is required",
+  birthDate: {
+    required: "Birth date is required",
+  },
+  baptizedAt: {
+    required: "Baptized date is required",
   },
   age: {
     required: "Age is required",
     validate: (value) => (!isValidAge(value) ? "Enter a valid age (numbers only)" : ""),
+  },
+  status: {
+    required: "Status is required",
+  },
+  gender: {
+    required: "Gender is required",
+  },
+  level: {
+    required: "Level is required",
   },
 }
 

@@ -1,3 +1,4 @@
+import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 import { cn } from "@/lib/utils"
 import { QrCode, Printer } from "lucide-react"
@@ -44,8 +45,20 @@ function MemberRow({ member, checked, onCheckedChange, onPrint }) {
         <p className="text-sm text-foreground/80">{member.email || "—"}</p>
         <p className="text-xs text-muted-foreground">{member.phone || "—"}</p>
       </td>
-      <td className="py-4 pr-4 text-sm text-foreground/80">{member.group}</td>
-      <td className="py-4 pr-4 text-sm text-foreground/80">{member.joined}</td>
+      <td className="py-4 pr-4">
+        {member.groups?.length > 0 ? (
+          <div className="flex flex-wrap gap-1">
+            {member.groups.map((g) => (
+              <Badge key={g.role} variant="outline" className="text-muted-foreground">
+                {g.role}
+              </Badge>
+            ))}
+          </div>
+        ) : (
+          <span className="text-sm text-foreground/80">—</span>
+        )}
+      </td>
+      <td className="py-4 pr-4 text-sm text-foreground/80">{member.baptized}</td>
       <td className="py-4 pr-4">
         <span
           className={cn(
