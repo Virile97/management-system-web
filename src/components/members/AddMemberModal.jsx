@@ -21,29 +21,32 @@ import {
 import { MEMBER_FORM_VALIDATORS } from "@/utils/validators"
 
 // Select field config: each entry drives one dropdown via SelectField below.
-// `options` order determines the order items render in the dropdown.
+// `options` order determines the order items render in the dropdown. Option
+// values match what the backend expects (status: Status.name, gender: enum).
 const SELECT_FIELDS = [
   {
     name: "status",
     label: "Status",
-    defaultValue: "active",
+    defaultValue: "Active",
     options: {
-      active: "Active",
-      inactive: "Inactive",
-      deceased: "Deceased",
+      Active: "Active",
+      Inactive: "Inactive",
+      Deceased: "Deceased",
     },
   },
   {
     name: "gender",
     label: "Gender",
-    defaultValue: "male",
+    defaultValue: "MALE",
     options: {
-      male: "Male",
-      female: "Female",
+      MALE: "Male",
+      FEMALE: "Female",
     },
   },
   {
-    name: "group",
+    // TODO: backend expects groupId (UUID) — swap these slug options for a
+    // real groups list once GET /groups is wired in.
+    name: "groupId",
     label: "Group",
     defaultValue: "choir",
     options: {
@@ -61,15 +64,16 @@ const INITIAL_FORM = {
   middleName: "",
   lastName: "",
   email: "",
-  phone: "",
+  contact: "",
   address: "",
-  joinDate: "",
+  joinedAt: "",
   age: "",
   ...Object.fromEntries(SELECT_FIELDS.map((field) => [field.name, field.defaultValue])),
 }
 
-// Field config for the text/date inputs rendered via FormField below.
-// Grouped into rows matching the layout (name row / stacked / date+age row).
+// Field config for the text/date inputs rendered via FormField below. Names
+// match the backend's createMemberSchema field names. Grouped into rows
+// matching the layout (name row / stacked / date+age row).
 const NAME_FIELDS = [
   { name: "firstName", label: "First Name", placeholder: "e.g. Juan", required: true },
   { name: "middleName", label: "Middle Name", placeholder: "Optional" },
@@ -78,12 +82,12 @@ const NAME_FIELDS = [
 
 const CONTACT_FIELDS = [
   { name: "email", label: "Email", type: "email", placeholder: "name@gmail.com", required: true },
-  { name: "phone", label: "Phone", type: "tel", placeholder: "09171234567", required: true },
+  { name: "contact", label: "Phone", type: "tel", placeholder: "09171234567", required: true },
   { name: "address", label: "Address", placeholder: "Street, City", required: true },
 ]
 
 const DATE_AGE_FIELDS = [
-  { name: "joinDate", label: "Join Date", type: "date", required: true },
+  { name: "joinedAt", label: "Join Date", type: "date", required: true },
   { name: "age", label: "Age", inputMode: "numeric", placeholder: "e.g. 34", required: true },
 ]
 

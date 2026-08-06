@@ -83,7 +83,7 @@ const MEMBER_FORM_VALIDATORS = {
     required: "Email is required",
     validate: (value) => (!isValidEmail(value) ? "Enter a valid Gmail address (e.g. name@gmail.com)" : ""),
   },
-  phone: {
+  contact: {
     required: "Phone number is required",
     validate: (value) =>
       !isValidPhilippinePhoneNumber(value) ? "Enter a valid PH mobile number (e.g. 09171234567)" : "",
@@ -91,7 +91,7 @@ const MEMBER_FORM_VALIDATORS = {
   address: {
     required: "Address is required",
   },
-  joinDate: {
+  joinedAt: {
     required: "Join date is required",
   },
   age: {
