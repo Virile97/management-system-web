@@ -2,7 +2,7 @@
 
 import { useEffect } from "react"
 import { useShallow } from "zustand/react/shallow"
-import { Users, Heart, UserX, DollarSign } from "lucide-react"
+import { Users, Heart, UserX, PhilippinePeso } from "lucide-react"
 
 import { StatCard } from "@/components/dashboard/StatsCards"
 import { MemberBreakdownChart } from "@/components/dashboard/MemberBreakdownChart"
@@ -116,7 +116,7 @@ export default function DashboardPage() {
     {
       label: "Monthly Income",
       value: stats?.monthlyIncomeFormatted,
-      icon: DollarSign,
+      icon: PhilippinePeso,
       iconClassName: "bg-muted text-muted-foreground",
     },
   ]
