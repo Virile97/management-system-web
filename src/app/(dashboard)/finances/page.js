@@ -18,7 +18,7 @@ import { CategoryChart } from "@/components/finances/CategoryChart"
 import { TransactionTable } from "@/components/finances/TransactionTable"
 import { ScanQRModal } from "@/components/finances/ScanQRModal"
 import { RecordTransactionModal } from "@/components/finances/RecordTransactionModal"
-import { useDebounce } from "@/hooks/useDebounce"
+import { useDebounce } from "@/hooks/use-debounce"
 import {
   getFinanceStats,
   getFinanceByCategory,

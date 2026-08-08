@@ -1,59 +1,77 @@
 const API_V1 = "/api/v1"
 
-// Backend endpoints, called server-side (via lib/axios.js) from our own /api/auth/* route handlers
 export const API_ENDPOINTS = {
-  AUTH_PUBLIC_KEY: `${API_V1}/auth/public-key`,
+  //Auth endpoints
   AUTH_LOGIN: `${API_V1}/auth/login`,
   AUTH_LOGOUT: `${API_V1}/auth/logout`,
+  AUTH_PUBLIC_KEY: `${API_V1}/auth/public-key`,
+
+  // Dashboard endpoints
   DASHBOARD_STATS: `${API_V1}/dashboard/stats`,
-  DASHBOARD_MEMBER_BREAKDOWN: `${API_V1}/dashboard/member-breakdown`,
   DASHBOARD_FINANCE_SUMMARY: `${API_V1}/dashboard/finance-summary`,
   DASHBOARD_RECENT_ACTIVITY: `${API_V1}/dashboard/recent-activity`,
+  DASHBOARD_MEMBER_BREAKDOWN: `${API_V1}/dashboard/member-breakdown`,
+
+  // Users endpoints
   USERS: `${API_V1}/users`,
   USER_BY_ID: (id) => `${API_V1}/users/${id}`,
+
+  // Members endpoints
   MEMBERS: `${API_V1}/members`,
   MEMBERS_CONFIG: `${API_V1}/members/config`,
   MEMBER_BY_ID: (id) => `${API_V1}/members/${id}`,
   MEMBERS_BULK_DELETE: `${API_V1}/members/bulk-delete`,
+
+  // Finances endpoints
   TRANSACTIONS: `${API_V1}/transactions`,
-  TRANSACTIONS_STATS: `${API_V1}/transactions/stats`,
-  TRANSACTIONS_BY_CATEGORY: `${API_V1}/transactions/by-category`,
   TRANSACTIONS_TREND: `${API_V1}/transactions/trend`,
+  TRANSACTIONS_STATS: `${API_V1}/transactions/stats`,
   TRANSACTION_BY_ID: (id) => `${API_V1}/transactions/${id}`,
+  TRANSACTIONS_BY_CATEGORY: `${API_V1}/transactions/by-category`,
   TRANSACTIONS_BULK_DELETE: `${API_V1}/transactions/bulk-delete`,
 }
 
-// Our own Next.js route handlers, called client-side (via fetch in components)
 export const APP_API_ENDPOINTS = {
-  AUTH_PUBLIC_KEY: "/api/auth/public-key",
+  // App Auth endpoints
+  AUTH_ME: "/api/auth/me",
   AUTH_LOGIN: "/api/auth/login",
   AUTH_LOGOUT: "/api/auth/logout",
-  AUTH_ME: "/api/auth/me",
+  AUTH_PUBLIC_KEY: "/api/auth/public-key",
+
+  // App Dashboard endpoints
   DASHBOARD_STATS: "/api/dashboard",
-  DASHBOARD_MEMBER_BREAKDOWN: "/api/dashboard/member-breakdown",
   DASHBOARD_FINANCE_SUMMARY: "/api/dashboard/finance-summary",
   DASHBOARD_RECENT_ACTIVITY: "/api/dashboard/recent-activity",
+  DASHBOARD_MEMBER_BREAKDOWN: "/api/dashboard/member-breakdown",
+
+  // App Users endpoints
   USERS: "/api/users",
   USER_BY_ID: (id) => `/api/users/${id}`,
+
+  // App Members endpoints
   MEMBERS: "/api/members",
   MEMBERS_CONFIG: "/api/members/config",
   MEMBER_BY_ID: (id) => `/api/members/${id}`,
   MEMBERS_BULK_DELETE: "/api/members/bulk-delete",
+
+  // App Finances endpoints
   TRANSACTIONS: "/api/finances",
   TRANSACTIONS_STATS: "/api/finances/stats",
-  TRANSACTIONS_BY_CATEGORY: "/api/finances/by-category",
   TRANSACTIONS_TREND: "/api/finances/trend",
   TRANSACTION_BY_ID: (id) => `/api/finances/${id}`,
+  TRANSACTIONS_BY_CATEGORY: "/api/finances/by-category",
   TRANSACTIONS_BULK_DELETE: "/api/finances/bulk-delete",
 }
 
-// auth_user: non-httpOnly, holds { id, email, name, role } — safe for client JS to read (no secret)
-// auth_token: httpOnly, holds the raw JWT used as the Authorization bearer token against the backend
-// csrf_token: non-httpOnly, double-submitted as the X-CSRF-Token header on mutating /api/* requests
-export const AUTH_USER_COOKIE_NAME = "auth_user"
-export const AUTH_TOKEN_COOKIE_NAME = "auth_token"
+/**
+ * auth_user: non-httpOnly, holds { id, email, name, role } — safe for client JS to read (no secret)
+ * auth_token: httpOnly, holds the raw JWT used as the Authorization bearer token against the backend
+ * csrf_token: non-httpOnly, double-submitted as the X-CSRF-Token header on mutating /api/* requests
+ */
 export const CSRF_COOKIE_NAME = "csrf_token"
 export const CSRF_HEADER_NAME = "x-csrf-token"
+export const AUTH_USER_COOKIE_NAME = "auth_user"
+export const AUTH_TOKEN_COOKIE_NAME = "auth_token"
 
 export const AUTH_SESSION_MAX_AGE = 60 * 60 * 24 // 24 hours, slides forward on each authenticated request
 export const AUTH_SESSION_ABSOLUTE_MAX_AGE = 60 * 60 * 24 * 7 // 7 days, hard cap regardless of activity

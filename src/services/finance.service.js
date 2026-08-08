@@ -15,9 +15,11 @@ function getFinanceTrend({ range = "6m" } = {}, signal) {
   return fetchJson(`${APP_API_ENDPOINTS.TRANSACTIONS_TREND}?${params.toString()}`, { signal })
 }
 
-// Flattens the API's nested { type: {name}, category: {name}, recordedByUser }
-// shape into flat fields the table renders directly, and signs the amount by
-// type (Income positive, Expense negative) to match existing UI conventions.
+/**
+ * Flattens the API's nested { type: {name}, category: {name}, recordedByUser }
+ * shape into flat fields the table renders directly, and signs the amount by
+ * type (Income positive, Expense negative) to match existing UI conventions.
+ */
 function normalizeTransaction(transaction) {
   const amount = Number(transaction.amount)
   const type = transaction.type?.name ?? "—"

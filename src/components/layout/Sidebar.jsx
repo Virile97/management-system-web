@@ -10,6 +10,7 @@ import { useMemberFormStore } from "@/stores/memberForm.store"
 import { useMembersStore } from "@/stores/members.store"
 import { useFinanceStore } from "@/stores/finance.store"
 import { APP_API_ENDPOINTS } from "@/utils/constants"
+import { ERROR_MESSAGES } from "@/utils/errors"
 
 const ALL_ROLES = ["ADMIN", "FINANCE_ADMIN", "USER"]
 
@@ -76,7 +77,7 @@ function Sidebar({ open = false, onClose }) {
       onClose?.()
       router.push("/login")
     } catch {
-      setLogoutError("Something went wrong while signing out. Please try again.")
+      setLogoutError(ERROR_MESSAGES.LOGOUT)
     } finally {
       setIsLoggingOut(false)
     }

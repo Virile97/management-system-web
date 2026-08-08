@@ -8,10 +8,12 @@ const initialState = {
   query: null, // { page, status, search } the persisted `members` list was fetched for
 }
 
-// Persisted to sessionStorage so the members list (and the search-fast-path
-// cache) survives a page reload without an extra fetch, but clears with the
-// browser session — reset() is also called explicitly on logout so it never
-// leaks into the next signed-in user.
+/**
+ * Persisted to sessionStorage so the members list (and the search-fast-path
+ * cache) survives a page reload without an extra fetch, but clears with the
+ * browser session — reset() is also called explicitly on logout so it never
+ * leaks into the next signed-in user.
+ */
 const useMembersStore = create(
   persist(
     (set, get) => ({

@@ -46,7 +46,10 @@ function isValidAge(value) {
   return age >= 0 && age <= 120
 }
 
-// Letters, spaces, hyphens, and apostrophes only (covers names like "Mary Anne" or "D'Souza") — no digits or other symbols
+/**
+ * Letters, spaces, hyphens, and apostrophes only (covers names like "Mary Anne" or "D'Souza") 
+ * — no digits or other symbols
+ */
 const NAME_REGEX = /^[a-zA-Z]+(?:[ '-][a-zA-Z]+)*$/
 
 /**
@@ -63,9 +66,11 @@ function isValidName(value, { optional = false } = {}) {
   return NAME_REGEX.test(trimmed)
 }
 
-// Per-field validation for the Add/Edit Member forms: `required` supplies the
-// empty-value message, `validate` checks non-empty values and returns an
-// error message (or "" when valid).
+/**
+ * Per-field validation for the Add/Edit Member forms: `required` supplies the
+ * empty-value message, `validate` checks non-empty values and returns an
+ * error message (or "" when valid).
+ */
 const MEMBER_FORM_VALIDATORS = {
   firstName: {
     required: "First name is required",

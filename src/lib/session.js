@@ -19,6 +19,7 @@ function baseCookieOptions() {
 function generateCsrfToken() {
   const bytes = new Uint8Array(32)
   globalThis.crypto.getRandomValues(bytes)
+
   return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("")
 }
 
@@ -82,6 +83,7 @@ function readValidTokenCookie(rawValue) {
  */
 function getSessionToken() {
   const raw = cookies().get(AUTH_TOKEN_COOKIE_NAME)?.value
+
   return readValidTokenCookie(raw)?.token ?? null
 }
 

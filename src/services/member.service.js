@@ -42,10 +42,12 @@ async function listMembers({ page = 1, limit = 20, search = "", status = "" } = 
   return { data: data.map(normalizeMember), meta }
 }
 
-// Maps Add Member form state into the backend's createMemberSchema shape.
-// The form already stores config option ids (statusId/levelId/lighthouseGroupId/
-// groupIds) since <Select>/checkbox values are the config item ids directly —
-// no lookup needed, just forward them under the field names the API expects.
+/**
+ * Maps Add Member form state into the backend's createMemberSchema shape.
+ * The form already stores config option ids (statusId/levelId/lighthouseGroupId/
+ * groupIds) since <Select>/checkbox values are the config item ids directly —
+ * no lookup needed, just forward them under the field names the API expects.
+ */
 function toCreateMemberPayload(form) {
   const payload = {
     firstName: form.firstName,
@@ -76,10 +78,12 @@ function createMember(form) {
   })
 }
 
-// Maps Edit Member form state into the backend's updateMemberSchema shape.
-// Every field is optional on this endpoint, but groupIds always replaces the
-// full group selection (not an append) — including it as [] intentionally
-// clears all groups rather than leaving them untouched, so it's always sent.
+/**
+ * Maps Edit Member form state into the backend's updateMemberSchema shape.
+ * Every field is optional on this endpoint, but groupIds always replaces the
+ * full group selection (not an append) — including it as [] intentionally
+ * clears all groups rather than leaving them untouched, so it's always sent.
+ */
 function toUpdateMemberPayload(form) {
   const payload = {}
 

@@ -24,12 +24,14 @@ export function middleware(request) {
     if (!hasSession) {
       return NextResponse.next()
     }
+
     return NextResponse.redirect(new URL("/dashboard", request.url))
   }
 
   if (!hasSession) {
     const response = NextResponse.redirect(new URL("/login", request.url))
     clearSessionCookies(response)
+
     return response
   }
 
@@ -63,8 +65,10 @@ export function middleware(request) {
     }
   }
 
-  // Sliding expiry: any authenticated activity resets the 24h inactivity window,
-  // while loginAt (and therefore the 7-day absolute cap) is carried over unchanged.
+  /**
+   * Sliding expiry: any authenticated activity resets the 24h inactivity window,
+   * while loginAt (and therefore the 7-day absolute cap) is carried over unchanged.
+   */
   const response = NextResponse.next()
   const common = { ...baseCookieOptions(), maxAge: AUTH_SESSION_MAX_AGE }
 
