@@ -53,7 +53,7 @@ function CategoryChart({ data = [], isLoading }) {
                         <div className="flex flex-1 items-center justify-between gap-2 leading-none">
                           <div className="flex items-center gap-1.5">
                             <div
-                              className="h-2.5 w-2.5 shrink-0 rounded-[2px]"
+                              className="h-2.5 w-2.5 shrink-0 rounded-xs"
                               style={{ backgroundColor: item.payload?.color }}
                             />
                             <span className="text-muted-foreground">{name}</span>
