@@ -24,9 +24,6 @@ function toDateInputValue(value) {
   return new Date(value).toISOString().slice(0, 10)
 }
 
-// Maps a fetched member (GET /members/:id shape) into the flat form-state
-// shape the shared field components/validators expect — the mirror image of
-// member.service.js's toUpdateMemberPayload.
 function memberToForm(member) {
   return {
     firstName: member.firstName || "",
@@ -70,6 +67,7 @@ function EditMemberModal({ open, onOpenChange, memberId, onUpdated }) {
           config ? Promise.resolve(config) : getMemberFormConfig(controller.signal),
           getMemberById(memberId, controller.signal),
         ])
+
         if (controller.signal.aborted) return
 
         if (!config) setConfig(configData)
@@ -124,6 +122,7 @@ function EditMemberModal({ open, onOpenChange, memberId, onUpdated }) {
 
     setSubmitError("")
     setIsSubmitting(true)
+
     try {
       await updateMember(memberId, form)
       resetState()
@@ -138,6 +137,7 @@ function EditMemberModal({ open, onOpenChange, memberId, onUpdated }) {
 
   function handleOpenChange(next) {
     if (!next) resetState()
+
     onOpenChange(next)
   }
 
