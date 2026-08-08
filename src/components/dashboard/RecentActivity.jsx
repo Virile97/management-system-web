@@ -57,7 +57,7 @@ function RecentActivity({ items = [] }) {
                   key={index}
                   className="flex flex-col gap-2 py-4 first:pt-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
                 >
-                  <div className="flex min-w-0 items-center gap-4">
+                  <div className="flex min-w-0 flex-1 items-center gap-4">
                     <div
                       className={cn(
                         "flex h-10 w-10 shrink-0 items-center justify-center rounded-full",

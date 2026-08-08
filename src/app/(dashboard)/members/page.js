@@ -169,8 +169,18 @@ function MembersPageContent() {
         )
         if (controller.signal.aborted) return
 
+        const resolvedMeta = responseMeta || { total: data.length, totalPages: 1 }
+
+        // The current page can outlive its own data (e.g. deleting members
+        // shrinks the total page count) — snap back to a valid page instead
+        // of getting stuck on one that no longer exists.
+        if (page > 1 && page > resolvedMeta.totalPages) {
+          goToPage(Math.max(1, resolvedMeta.totalPages))
+          return
+        }
+
         cacheMembers(data)
-        setMembers(data, responseMeta || { total: data.length, totalPages: 1 }, currentQuery)
+        setMembers(data, resolvedMeta, currentQuery)
       } catch (err) {
         if (controller.signal.aborted) return
         setError(err?.message || "Unable to load members")
