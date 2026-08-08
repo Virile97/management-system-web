@@ -4,27 +4,24 @@ import { api, withAuthHeader } from "@/lib/axios"
 import { getSessionToken } from "@/lib/session"
 import { API_ENDPOINTS } from "@/utils/constants"
 
-export async function GET(request, { params }) {
+export async function GET(request) {
   const token = getSessionToken()
   if (!token) {
     return NextResponse.json({ success: false, message: "Not authenticated" }, { status: 401 })
   }
 
+  const range = request.nextUrl.searchParams.get("range") || "6m"
+
   try {
-    const { data } = await api.get(API_ENDPOINTS.TRANSACTION_BY_ID(params.id), withAuthHeader(token))
+    const { data } = await api.get(API_ENDPOINTS.TRANSACTIONS_TREND, {
+      ...withAuthHeader(token),
+      params: { range },
+    })
     return NextResponse.json(data)
   } catch (err) {
     const status = err?.response?.status || 500
-    const message = err?.response?.data?.message || "Unable to fetch transaction"
+    const message = err?.response?.data?.message || "Unable to fetch monthly trend"
 
     return NextResponse.json({ success: false, message }, { status })
   }
-}
-
-export async function PUT(request, { params }) {
-  return NextResponse.json({ message: "Not implemented" }, { status: 501 })
-}
-
-export async function DELETE(request, { params }) {
-  return NextResponse.json({ message: "Not implemented" }, { status: 501 })
 }

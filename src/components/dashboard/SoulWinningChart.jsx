@@ -1,10 +1,10 @@
 "use client"
 
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import { ChartContainer, ChartLegend, ChartLegendContent } from "@/components/ui/chart"
+import { ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { EmptyState } from "@/components/common/EmptyState"
 import { BarChart, Bar, XAxis, CartesianGrid } from "recharts"
-import { Heart, TrendingUp } from "lucide-react"
+import { Heart } from "lucide-react"
 
 const chartConfig = {
   soulsWon: {
@@ -62,6 +62,7 @@ function SoulWinningChart({ data = chartData }) {
                 tickMargin={12}
                 fontSize={12}
               />
+              <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
               <Bar dataKey="soulsWon" fill="var(--color-soulsWon)" radius={[4, 4, 0, 0]} isAnimationActive={false} />
               <Bar dataKey="becameActive" fill="var(--color-becameActive)" radius={[4, 4, 0, 0]} isAnimationActive={false} />
               <ChartLegend content={<ChartLegendContent />} />

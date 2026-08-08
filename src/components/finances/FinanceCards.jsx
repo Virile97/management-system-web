@@ -1,32 +1,51 @@
 import { Card } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
-import { TrendingUp, TrendingDown, DollarSign } from "lucide-react"
+import { StatCardSkeleton } from "@/components/dashboard/DashboardSkeletons"
+import { TrendingUp, TrendingDown, PhilippinePeso } from "lucide-react"
 
-const cards = [
-  {
-    label: "Total Income",
-    value: "$21,400",
-    icon: TrendingUp,
-    iconClassName: "bg-emerald-50 text-emerald-600",
-    valueClassName: "text-emerald-600",
-  },
-  {
-    label: "Total Expenses",
-    value: "$7,770",
-    icon: TrendingDown,
-    iconClassName: "bg-red-50 text-red-500",
-    valueClassName: "text-red-500",
-  },
-  {
-    label: "Net Balance",
-    value: "$14,740",
-    icon: DollarSign,
-    iconClassName: "bg-emerald-50 text-emerald-600",
-    valueClassName: "text-emerald-600",
-  },
-]
+const currencyFormatter = new Intl.NumberFormat("en-PH", {
+  style: "currency",
+  currency: "PHP",
+  maximumFractionDigits: 0,
+})
 
-function FinanceCards() {
+function FinanceCards({ stats, isLoading }) {
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-6">
+        <StatCardSkeleton />
+        <StatCardSkeleton />
+        <StatCardSkeleton />
+      </div>
+    )
+  }
+
+  const netBalance = stats?.netBalance ?? 0
+
+  const cards = [
+    {
+      label: "Total Income",
+      value: currencyFormatter.format(stats?.totalIncome ?? 0),
+      icon: TrendingUp,
+      iconClassName: "bg-emerald-50 text-emerald-600",
+      valueClassName: "text-emerald-600",
+    },
+    {
+      label: "Total Expenses",
+      value: currencyFormatter.format(stats?.totalExpenses ?? 0),
+      icon: TrendingDown,
+      iconClassName: "bg-red-50 text-red-500",
+      valueClassName: "text-red-500",
+    },
+    {
+      label: "Net Balance",
+      value: currencyFormatter.format(netBalance),
+      icon: PhilippinePeso,
+      iconClassName: netBalance >= 0 ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-500",
+      valueClassName: netBalance >= 0 ? "text-emerald-600" : "text-red-500",
+    },
+  ]
+
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-6">
       {cards.map((card) => (

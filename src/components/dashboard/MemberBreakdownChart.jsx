@@ -1,7 +1,7 @@
 "use client"
 
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import { ChartContainer } from "@/components/ui/chart"
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { EmptyState } from "@/components/common/EmptyState"
 import { PieChart, Pie, Cell } from "recharts"
 import { Users } from "lucide-react"
@@ -9,6 +9,11 @@ import { Users } from "lucide-react"
 const STATUS_COLORS = ["#3f6a4e", "#c9a24b", "#a3392f", "#4a5568", "#6b46c1"]
 
 function MemberBreakdownChart({ total = 0, breakdown = [] }) {
+  const chartConfig = breakdown.reduce((config, entry, index) => {
+    config[entry.status] = { label: entry.status, color: STATUS_COLORS[index % STATUS_COLORS.length] }
+    return config
+  }, {})
+
   return (
     <Card className="rounded-2xl p-4 sm:p-6">
       <CardHeader className="flex-row items-center justify-between px-0">
@@ -27,8 +32,9 @@ function MemberBreakdownChart({ total = 0, breakdown = [] }) {
           />
         ) : (
           <div className="flex items-center gap-6">
-            <ChartContainer config={{}} className="aspect-square size-34 shrink-0">
+            <ChartContainer config={chartConfig} className="aspect-square size-34 shrink-0">
               <PieChart>
+                <ChartTooltip content={<ChartTooltipContent hideLabel />} />
                 <Pie
                   data={breakdown}
                   dataKey="count"

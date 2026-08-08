@@ -8,6 +8,7 @@ import { getCurrentUser } from "@/lib/auth"
 import { useDashboardStore } from "@/stores/dashboard.store"
 import { useMemberFormStore } from "@/stores/memberForm.store"
 import { useMembersStore } from "@/stores/members.store"
+import { useFinanceStore } from "@/stores/finance.store"
 import { APP_API_ENDPOINTS } from "@/utils/constants"
 
 const ALL_ROLES = ["ADMIN", "FINANCE_ADMIN", "USER"]
@@ -57,6 +58,7 @@ function Sidebar({ open = false, onClose }) {
       useDashboardStore.getState().reset()
       useMemberFormStore.getState().reset()
       useMembersStore.getState().reset()
+      useFinanceStore.getState().reset()
 
       onClose?.()
       router.push("/login")

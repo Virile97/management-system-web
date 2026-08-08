@@ -15,6 +15,11 @@ export const API_ENDPOINTS = {
   MEMBERS_CONFIG: `${API_V1}/members/config`,
   MEMBER_BY_ID: (id) => `${API_V1}/members/${id}`,
   MEMBERS_BULK_DELETE: `${API_V1}/members/bulk-delete`,
+  TRANSACTIONS: `${API_V1}/transactions`,
+  TRANSACTIONS_STATS: `${API_V1}/transactions/stats`,
+  TRANSACTIONS_BY_CATEGORY: `${API_V1}/transactions/by-category`,
+  TRANSACTIONS_TREND: `${API_V1}/transactions/trend`,
+  TRANSACTION_BY_ID: (id) => `${API_V1}/transactions/${id}`,
 }
 
 // Our own Next.js route handlers, called client-side (via fetch in components)
@@ -33,6 +38,11 @@ export const APP_API_ENDPOINTS = {
   MEMBERS_CONFIG: "/api/members/config",
   MEMBER_BY_ID: (id) => `/api/members/${id}`,
   MEMBERS_BULK_DELETE: "/api/members/bulk-delete",
+  TRANSACTIONS: "/api/finances",
+  TRANSACTIONS_STATS: "/api/finances/stats",
+  TRANSACTIONS_BY_CATEGORY: "/api/finances/by-category",
+  TRANSACTIONS_TREND: "/api/finances/trend",
+  TRANSACTION_BY_ID: (id) => `/api/finances/${id}`,
 }
 
 // auth_user: non-httpOnly, holds { id, email, name, role } — safe for client JS to read (no secret)
