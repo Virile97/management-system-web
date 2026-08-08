@@ -14,6 +14,9 @@ const inter = Inter({
 export const metadata = {
   title: process.env.NEXT_PUBLIC_APP_NAME,
   description: "Management System",
+  icons: {
+    icon: "/images/logo.png",
+  },
 }
 
 export default function RootLayout({ children }) {

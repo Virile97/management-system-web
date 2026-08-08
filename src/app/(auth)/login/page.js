@@ -1,5 +1,3 @@
-import { Home } from "lucide-react"
-
 import { SignInForm } from "@/components/auth/SignInForm"
 
 export const metadata = {
@@ -11,9 +9,11 @@ export default function LoginPage() {
     <div className="flex min-h-screen">
       <div className="relative hidden w-1/2 flex-col justify-between overflow-hidden bg-[#1e2a4a] px-16 py-12 lg:flex">
         <div className="flex items-center gap-3">
-          <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-[#c9a24b]">
-            <Home className="size-6 text-[#1e2a4a]" strokeWidth={2} />
-          </div>
+          <img
+            src="/images/logo.png"
+            alt="Lighthouse BBC"
+            className="size-[5em] shrink-0 rounded-xl object-cover"
+          />
           <div>
             <p className="font-heading text-xl font-medium text-white">Lighthouse BBC</p>
             <p className="text-sm text-white/60">Management System</p>
@@ -22,11 +22,11 @@ export default function LoginPage() {
 
         <blockquote className="max-w-md space-y-4">
           <p className="font-heading text-3xl leading-snug text-white">
-            &ldquo;Manage with wisdom. Steward with faithfulness.&rdquo;
+            &ldquo;Let all things be done decently and in order.&rdquo;
           </p>
-          {/* <cite className="block text-sm font-semibold tracking-wide text-white/60 not-italic uppercase">
-            — Malachi 3:10
-          </cite> */}
+          <cite className="block text-sm font-semibold tracking-wide text-white/60 not-italic uppercase">
+          ⸺ 1 Corinthians 14:40
+          </cite>
         </blockquote>
 
         <p className="text-sm text-white/50">© 2026 Lighthouse BBC. All rights reserved.</p>

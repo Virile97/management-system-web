@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { usePathname, useRouter } from "next/navigation"
 import { SidebarItem } from "@/components/layout/SidebarItem"
-import { LayoutGrid, Users, PhilippinePeso, Heart, Settings, Building2, X, LogOut } from "lucide-react"
+import { LayoutGrid, Users, PhilippinePeso, Heart, Settings, X, LogOut } from "lucide-react"
 import { getCurrentUser } from "@/lib/auth"
 import { useDashboardStore } from "@/stores/dashboard.store"
 import { useMemberFormStore } from "@/stores/memberForm.store"
@@ -99,9 +99,11 @@ function Sidebar({ open = false, onClose }) {
         }`}
       >
         <div className="flex items-center gap-3 px-2 pb-6">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-400">
-            <Building2 className="h-5 w-5 text-[#1e2a4a]" strokeWidth={2} />
-          </div>
+          <img
+            src="/images/logo.png"
+            alt="Lighthouse BBC"
+            className="size-[3em] shrink-0 rounded-xl object-cover"
+          />
           <div className="min-w-0 flex-1">
             <p className="font-heading text-base font-semibold leading-tight text-white">
               Lighthouse BBC
