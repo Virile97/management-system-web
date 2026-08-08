@@ -1,15 +1,14 @@
 "use client"
 
 import { useState } from "react"
-import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Pagination } from "@/components/common/Pagination"
-import { EmptyState } from "@/components/common/EmptyState"
+import { Checkbox } from "@/components/ui/checkbox"
+import { DataTableShell } from "@/components/common/DataTableShell"
+import { FilterPills } from "@/components/common/FilterPills"
 import { DateRangeFilterModal } from "@/components/soul-winning/DateRangeFilterModal"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { Search, ArrowUpRight, ArrowDownRight, Receipt, X, Calendar } from "lucide-react"
+import { Search, ArrowUpRight, ArrowDownRight, Receipt, X, Calendar, Trash2 } from "lucide-react"
 
 const FILTERS = ["All", "Income", "Expense"]
 
@@ -75,6 +74,10 @@ function TransactionTable({
   onDateFromChange,
   onDateToChange,
   onClearDateRange,
+  selected,
+  onToggleSelect,
+  onToggleSelectAll,
+  onDeleteSelected,
   page,
   totalPages,
   total,
@@ -83,9 +86,13 @@ function TransactionTable({
 }) {
   const [isDateRangeOpen, setIsDateRangeOpen] = useState(false)
 
-  const from = total === 0 ? 0 : (page - 1) * pageSize + 1
-  const to = (page - 1) * pageSize + transactions.length
+  const selectedCount = selected?.size ?? 0
   const hasDateRange = Boolean(dateFrom || dateTo)
+  const hasActiveFilters = activeFilter !== "All" || Boolean(search) || hasDateRange
+  // Nothing to filter — no transactions exist at all (not just for the
+  // current filter combination) — so disable the controls rather than let
+  // the user open filters with no possible effect.
+  const filtersDisabled = total === 0 && !hasActiveFilters
 
   function handleApplyDateRange(range) {
     const { from: nextFrom, to: nextTo } = toDateStrings(range)
@@ -93,31 +100,21 @@ function TransactionTable({
     onDateToChange(nextTo)
   }
 
-  return (
-    <Card className="overflow-hidden rounded-2xl p-0">
+  const toolbar = (
+    <>
       <div className="flex flex-col gap-3 p-4 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
-        <div className="flex h-8 items-center gap-1 overflow-x-auto rounded-lg bg-white p-1 ring-1 ring-border">
-          {FILTERS.map((filter) => (
-            <button
-              key={filter}
-              type="button"
-              onClick={() => onFilterChange(filter)}
-              className={cn(
-                "flex h-full shrink-0 items-center rounded-md px-3 text-sm transition-colors",
-                activeFilter === filter
-                  ? "bg-[#1e2a4a] font-medium text-white"
-                  : "font-normal text-muted-foreground hover:text-foreground"
-              )}
-            >
-              {filter}
-            </button>
-          ))}
-        </div>
+        <FilterPills
+          options={FILTERS}
+          active={activeFilter}
+          onChange={onFilterChange}
+          disabled={filtersDisabled}
+        />
 
         <div className="flex items-center gap-1">
           <Button
             type="button"
             variant="outline"
+            disabled={filtersDisabled}
             className={cn(
               "h-8 gap-1.5 rounded-lg px-3 text-sm",
               hasDateRange && "border-[#1e2a4a] text-[#1e2a4a]"
@@ -146,9 +143,22 @@ function TransactionTable({
             placeholder="Search transactions..."
             className="h-8 rounded-lg bg-white pl-9"
             value={search}
+            disabled={filtersDisabled}
             onChange={(event) => onSearchChange(event.target.value)}
           />
         </div>
+
+        {selectedCount > 0 && (
+          <Button
+            type="button"
+            variant="outline"
+            className="h-8 gap-1.5 rounded-lg border-destructive/30 px-3 text-sm text-destructive hover:bg-destructive/10 hover:text-destructive sm:ml-auto"
+            onClick={onDeleteSelected}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            Delete Selected ({selectedCount})
+          </Button>
+        )}
       </div>
 
       <DateRangeFilterModal
@@ -157,168 +167,165 @@ function TransactionTable({
         range={toModalRange(dateFrom, dateTo)}
         onApply={handleApplyDateRange}
       />
+    </>
+  )
 
-      {isLoading ? (
-        <div className="flex flex-col gap-4 p-4 sm:p-6">
-          {Array.from({ length: pageSize }).map((_, index) => (
-            <div key={index} className="flex items-center gap-4">
-              <div className="min-w-0 flex-1 space-y-2">
-                <Skeleton className="h-3.5 w-40" />
-                <Skeleton className="h-3 w-24" />
-              </div>
-              <Skeleton className="h-5 w-16 shrink-0 rounded-full" />
-              <Skeleton className="h-4 w-20 shrink-0" />
-            </div>
-          ))}
-        </div>
-      ) : transactions.length === 0 ? (
-        <EmptyState
-          icon={Receipt}
-          title="No transactions found"
-          description="Try adjusting your search or type filter."
-          className="py-16"
-        />
-      ) : (
-        <>
-          <table className="hidden w-full border-collapse md:table">
-            <thead>
-              <tr className="border-y border-border bg-muted/60">
-                <th className="py-3 pl-4 text-left text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                  Date
-                </th>
-                <th className="py-3 pr-4 text-left text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                  Description
-                </th>
-                <th className="py-3 pr-4 text-left text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                  Category
-                </th>
-                <th className="py-3 pr-4 text-left text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                  Recorded By
-                </th>
-                <th className="py-3 pr-4 text-left text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                  Type
-                </th>
-                <th className="py-3 pr-4 text-right text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                  Amount
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {transactions.map((transaction) => (
-                <tr key={transaction.id} className="border-b border-border last:border-0">
-                  <td className="py-4 pl-4 text-sm text-foreground/80">
-                    {formatDate(transaction.createdAt)}
-                  </td>
-                  <td className="py-4 pr-4 text-sm font-medium text-foreground/85">
-                    {transaction.description}
-                  </td>
-                  <td className="py-4 pr-4">
-                    <span
-                      className={cn(
-                        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium",
-                        categoryStyles[transaction.category] || defaultCategoryStyle
-                      )}
-                    >
-                      <span className="h-1.5 w-1.5 rounded-full bg-current" />
-                      {transaction.category}
-                    </span>
-                  </td>
-                  <td className="py-4 pr-4 text-sm text-foreground/80">{transaction.recordedBy}</td>
-                  <td className="py-4 pr-4">
-                    <span
-                      className={cn(
-                        "inline-flex items-center gap-1 text-sm font-medium",
-                        transaction.type === "Income" ? "text-emerald-600" : "text-red-500"
-                      )}
-                    >
-                      {transaction.type === "Income" ? (
-                        <ArrowUpRight className="h-3.5 w-3.5" />
-                      ) : (
-                        <ArrowDownRight className="h-3.5 w-3.5" />
-                      )}
-                      {transaction.type}
-                    </span>
-                  </td>
-                  <td
-                    className={cn(
-                      "py-4 pr-4 text-right text-sm font-semibold",
-                      transaction.amount > 0 ? "text-emerald-600" : "text-red-500"
-                    )}
-                  >
-                    {transaction.amount > 0 ? "+" : "-"}
-                    {currencyFormatter.format(Math.abs(transaction.amount))}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          <div className="md:hidden">
-            {transactions.map((transaction) => (
-              <div
-                key={transaction.id}
-                className="flex flex-col gap-2 border-b border-border p-4 last:border-0"
+  return (
+    <DataTableShell
+      rows={transactions}
+      isLoading={isLoading}
+      toolbar={toolbar}
+      emptyIcon={Receipt}
+      emptyTitle="No transactions found"
+      emptyDescription="Try adjusting your search or type filter."
+      enableSelection
+      selected={selected}
+      onToggleSelect={onToggleSelect}
+      onToggleSelectAll={onToggleSelectAll}
+      renderTableHead={(selection) => (
+        <tr className="border-y border-border bg-muted/60">
+          <th className="w-10 py-3 pl-4">
+            <Checkbox checked={selection.allSelected} onCheckedChange={selection.onToggleAll} />
+          </th>
+          <th className="py-3 pr-4 text-left text-xs font-medium tracking-wide text-muted-foreground uppercase">
+            Date
+          </th>
+          <th className="py-3 pr-4 text-left text-xs font-medium tracking-wide text-muted-foreground uppercase">
+            Note
+          </th>
+          <th className="py-3 pr-4 text-left text-xs font-medium tracking-wide text-muted-foreground uppercase">
+            Category
+          </th>
+          <th className="py-3 pr-4 text-left text-xs font-medium tracking-wide text-muted-foreground uppercase">
+            Recorded By
+          </th>
+          <th className="py-3 pr-4 text-left text-xs font-medium tracking-wide text-muted-foreground uppercase">
+            Type
+          </th>
+          <th className="py-3 pr-4 text-right text-xs font-medium tracking-wide text-muted-foreground uppercase">
+            Amount
+          </th>
+        </tr>
+      )}
+      renderDesktopRows={(rows, selection) =>
+        rows.map((transaction) => (
+          <tr key={transaction.id} className="border-b border-border last:border-0">
+            <td className="w-10 py-4 pl-4">
+              <Checkbox
+                checked={selection.isSelected(transaction)}
+                onCheckedChange={() => selection.toggle(transaction)}
+              />
+            </td>
+            <td className="py-4 pr-4 text-sm text-foreground/80">
+              {formatDate(transaction.createdAt)}
+            </td>
+            <td className="py-4 pr-4 text-sm font-medium text-foreground/85">
+              {transaction.description}
+            </td>
+            <td className="py-4 pr-4">
+              <span
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium",
+                  categoryStyles[transaction.category] || defaultCategoryStyle
+                )}
               >
-                <div className="flex items-start justify-between gap-3">
-                  <p className="text-sm font-medium text-foreground/85">{transaction.description}</p>
-                  <span
-                    className={cn(
-                      "shrink-0 text-right text-sm font-semibold",
-                      transaction.amount > 0 ? "text-emerald-600" : "text-red-500"
-                    )}
-                  >
-                    {transaction.amount > 0 ? "+" : "-"}
-                    {currencyFormatter.format(Math.abs(transaction.amount))}
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between gap-3">
-                  <span
-                    className={cn(
-                      "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium",
-                      categoryStyles[transaction.category] || defaultCategoryStyle
-                    )}
-                  >
-                    <span className="h-1.5 w-1.5 rounded-full bg-current" />
-                    {transaction.category}
-                  </span>
-
-                  <span
-                    className={cn(
-                      "inline-flex items-center gap-1 text-xs font-medium",
-                      transaction.type === "Income" ? "text-emerald-600" : "text-red-500"
-                    )}
-                  >
-                    {transaction.type === "Income" ? (
-                      <ArrowUpRight className="h-3.5 w-3.5" />
-                    ) : (
-                      <ArrowDownRight className="h-3.5 w-3.5" />
-                    )}
-                    {transaction.type}
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
-                  <span>{formatDate(transaction.createdAt)}</span>
-                  <span>{transaction.recordedBy}</span>
-                </div>
+                <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                {transaction.category}
+              </span>
+            </td>
+            <td className="py-4 pr-4 text-sm text-foreground/80">{transaction.recordedBy}</td>
+            <td className="py-4 pr-4">
+              <span
+                className={cn(
+                  "inline-flex items-center gap-1 text-sm font-medium",
+                  transaction.type === "Income" ? "text-emerald-600" : "text-red-500"
+                )}
+              >
+                {transaction.type === "Income" ? (
+                  <ArrowUpRight className="h-3.5 w-3.5" />
+                ) : (
+                  <ArrowDownRight className="h-3.5 w-3.5" />
+                )}
+                {transaction.type}
+              </span>
+            </td>
+            <td
+              className={cn(
+                "py-4 pr-4 text-right text-sm font-semibold",
+                transaction.amount > 0 ? "text-emerald-600" : "text-red-500"
+              )}
+            >
+              {transaction.amount > 0 ? "+" : "-"}
+              {currencyFormatter.format(Math.abs(transaction.amount))}
+            </td>
+          </tr>
+        ))
+      }
+      renderMobileRows={(rows, selection) =>
+        rows.map((transaction) => (
+          <div
+            key={transaction.id}
+            className="flex flex-col gap-2 border-b border-border p-4 last:border-0"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex min-w-0 items-start gap-2">
+                <Checkbox
+                  className="mt-0.5"
+                  checked={selection.isSelected(transaction)}
+                  onCheckedChange={() => selection.toggle(transaction)}
+                />
+                <p className="text-sm font-medium text-foreground/85">{transaction.description}</p>
               </div>
-            ))}
-          </div>
-        </>
-      )}
+              <span
+                className={cn(
+                  "shrink-0 text-right text-sm font-semibold",
+                  transaction.amount > 0 ? "text-emerald-600" : "text-red-500"
+                )}
+              >
+                {transaction.amount > 0 ? "+" : "-"}
+                {currencyFormatter.format(Math.abs(transaction.amount))}
+              </span>
+            </div>
 
-      {total > 0 && (
-        <Pagination
-          page={page}
-          totalPages={totalPages}
-          from={from}
-          to={to}
-          total={total}
-          onPageChange={onPageChange}
-        />
-      )}
-    </Card>
+            <div className="flex items-center justify-between gap-3">
+              <span
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium",
+                  categoryStyles[transaction.category] || defaultCategoryStyle
+                )}
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                {transaction.category}
+              </span>
+
+              <span
+                className={cn(
+                  "inline-flex items-center gap-1 text-xs font-medium",
+                  transaction.type === "Income" ? "text-emerald-600" : "text-red-500"
+                )}
+              >
+                {transaction.type === "Income" ? (
+                  <ArrowUpRight className="h-3.5 w-3.5" />
+                ) : (
+                  <ArrowDownRight className="h-3.5 w-3.5" />
+                )}
+                {transaction.type}
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
+              <span>{formatDate(transaction.createdAt)}</span>
+              <span>{transaction.recordedBy}</span>
+            </div>
+          </div>
+        ))
+      }
+      page={page}
+      totalPages={totalPages}
+      total={total}
+      pageSize={pageSize}
+      onPageChange={onPageChange}
+    />
   )
 }
 

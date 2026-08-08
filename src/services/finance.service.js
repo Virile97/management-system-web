@@ -1,3 +1,4 @@
+import { getCsrfHeader } from "@/lib/auth"
 import { fetchJson, fetchWithMeta } from "@/services/api"
 import { APP_API_ENDPOINTS } from "@/utils/constants"
 
@@ -54,4 +55,19 @@ function getTransactionById(id, signal) {
   return fetchJson(APP_API_ENDPOINTS.TRANSACTION_BY_ID(id), { signal })
 }
 
-export { getFinanceStats, getFinanceByCategory, getFinanceTrend, listTransactions, getTransactionById }
+function bulkDeleteTransactions(ids) {
+  return fetchJson(APP_API_ENDPOINTS.TRANSACTIONS_BULK_DELETE, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getCsrfHeader() },
+    body: JSON.stringify({ ids }),
+  })
+}
+
+export {
+  getFinanceStats,
+  getFinanceByCategory,
+  getFinanceTrend,
+  listTransactions,
+  getTransactionById,
+  bulkDeleteTransactions,
+}

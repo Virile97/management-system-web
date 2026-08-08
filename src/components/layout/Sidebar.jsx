@@ -31,10 +31,23 @@ function Sidebar({ open = false, onClose }) {
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [logoutError, setLogoutError] = useState("")
   const [role, setRole] = useState(null)
+  const [user, setUser] = useState(null)
+  const [userLoaded, setUserLoaded] = useState(false)
 
   useEffect(() => {
-    setRole(getCurrentUser()?.role ?? null)
+    const currentUser = getCurrentUser()
+    setRole(currentUser?.role ?? null)
+    setUser(currentUser)
+    setUserLoaded(true)
   }, [])
+
+  const displayName = user?.name || user?.email || "User"
+  const initials = displayName
+    .split(/[\s@]+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0].toUpperCase())
+    .join("")
 
   const visibleItems = sidebarItems.filter((item) => item.allowedFor.includes(role))
   const topItems = visibleItems.filter((item) => item.section === "top")
@@ -127,13 +140,25 @@ function Sidebar({ open = false, onClose }) {
           ))}
 
           <div className="mt-3 flex items-center gap-3 border-t border-white/10 px-3 pt-4">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-400 font-heading text-sm font-semibold text-[#1e2a4a]">
-              PA
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold text-white">Pastor Admin</p>
-              <p className="text-xs text-white/50">Administrator</p>
-            </div>
+            {userLoaded ? (
+              <>
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-400 font-heading text-sm font-semibold text-[#1e2a4a]">
+                  {initials || "U"}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold text-white">{displayName}</p>
+                  <p className="text-xs text-white/50">{user?.email && user?.name ? user.email : "Administrator"}</p>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="h-10 w-10 shrink-0 animate-pulse rounded-full bg-white/10" />
+                <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+                  <div className="h-3.5 w-24 animate-pulse rounded bg-white/10" />
+                  <div className="h-3 w-16 animate-pulse rounded bg-white/10" />
+                </div>
+              </>
+            )}
             <button
               type="button"
               onClick={handleLogout}

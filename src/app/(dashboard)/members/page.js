@@ -195,6 +195,12 @@ function MembersPageContent() {
 
   const selectedMembers = members.filter((member) => selectedIds.has(member.id))
 
+  const hasActiveFilters = activeFilter !== DEFAULT_STATUS || Boolean(search)
+  // Nothing to filter — no members exist at all (not just for the current
+  // filter combination) — so disable the controls rather than let the user
+  // open filters with no possible effect.
+  const filtersDisabled = meta.total === 0 && !hasActiveFilters
+
   function toggleSelect(member) {
     setSelectedIds((prev) => {
       const next = new Set(prev)
@@ -283,8 +289,8 @@ function MembersPageContent() {
         </div>
 
         <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <MemberFilters active={activeFilter} onChange={updateFilter} />
-          <MemberSearch value={search} onChange={updateSearch} />
+          <MemberFilters active={activeFilter} onChange={updateFilter} disabled={filtersDisabled} />
+          <MemberSearch value={search} onChange={updateSearch} disabled={filtersDisabled} />
         </div>
 
         {error && (
