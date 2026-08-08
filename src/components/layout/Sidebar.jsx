@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { usePathname, useRouter } from "next/navigation"
 import { SidebarItem } from "@/components/layout/SidebarItem"
-import { LayoutGrid, Users, DollarSign, Heart, Settings, Building2, X, LogOut } from "lucide-react"
+import { LayoutGrid, Users, PhilippinePeso, Heart, Settings, Building2, X, LogOut } from "lucide-react"
 import { getCurrentUser } from "@/lib/auth"
 import { useDashboardStore } from "@/stores/dashboard.store"
 import { useMemberFormStore } from "@/stores/memberForm.store"
@@ -18,7 +18,7 @@ const ALL_ROLES = ["ADMIN", "FINANCE_ADMIN", "USER"]
 const sidebarItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutGrid, section: "top", allowedFor: ["ADMIN", "FINANCE_ADMIN"] },
   { href: "/members", label: "Members", icon: Users, section: "top", allowedFor: ALL_ROLES },
-  { href: "/finances", label: "Finances", icon: DollarSign, section: "top", allowedFor: ["ADMIN", "FINANCE_ADMIN"] },
+  { href: "/finances", label: "Finances", icon: PhilippinePeso, section: "top", allowedFor: ["ADMIN", "FINANCE_ADMIN"] },
   { href: "/soul-winning", label: "Soul Winning", icon: Heart, section: "top", allowedFor: ["ADMIN", "FINANCE_ADMIN"] },
   { href: "/settings", label: "Settings", icon: Settings, section: "bottom", allowedFor: ["ADMIN", "FINANCE_ADMIN"] },
 ]
