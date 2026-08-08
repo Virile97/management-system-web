@@ -22,15 +22,30 @@ export function middleware(request) {
 
   if (isLoginPage) {
     if (!hasSession) {
-      return NextResponse.next()
+      const response = NextResponse.next()
+      response.headers.set("Cache-Control", "no-store, must-revalidate")
+
+      return response
     }
 
-    return NextResponse.redirect(new URL("/dashboard", request.url))
+    const response = NextResponse.redirect(new URL("/dashboard", request.url))
+    response.headers.set("Cache-Control", "no-store, must-revalidate")
+
+    return response
   }
 
   if (!hasSession) {
-    const response = NextResponse.redirect(new URL("/login", request.url))
+    /**
+     * API requests get a JSON 401 instead of an HTML redirect: fetch() follows
+     * redirects transparently, so a redirect here would hand the caller the
+     * /login page's HTML where JSON was expected (res.json() would throw).
+     */
+    const response = request.nextUrl.pathname.startsWith("/api/")
+      ? NextResponse.json({ success: false, message: "Unauthenticated" }, { status: 401 })
+      : NextResponse.redirect(new URL("/login", request.url))
+
     clearSessionCookies(response)
+    response.headers.set("Cache-Control", "no-store, must-revalidate")
 
     return response
   }
@@ -78,6 +93,13 @@ export function middleware(request) {
 
   const csrfToken = request.cookies.get(CSRF_COOKIE_NAME)?.value
   if (csrfToken) response.cookies.set(CSRF_COOKIE_NAME, csrfToken, { ...common, httpOnly: false })
+
+  // Authenticated pages must never be served from the browser's back/forward
+  // cache: without this, hitting Back after logout can flash the last-rendered
+  // authenticated UI before any request re-checks the (now-cleared) session.
+  if (!request.nextUrl.pathname.startsWith("/api/")) {
+    response.headers.set("Cache-Control", "no-store, must-revalidate")
+  }
 
   return response
 }

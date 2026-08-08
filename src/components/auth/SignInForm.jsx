@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label"
 import { encryptWithPublicKey } from "@/lib/auth"
 import { cn } from "@/lib/utils"
 import { APP_API_ENDPOINTS } from "@/utils/constants"
+import { useAuthGuard } from "@/hooks/use-auth-guard"
 
 function SignInForm() {
   const router = useRouter()
@@ -20,6 +21,8 @@ function SignInForm() {
   const [publicKey, setPublicKey] = useState(null)
   const [isKeyLoading, setIsKeyLoading] = useState(true)
   const [keyError, setKeyError] = useState("")
+
+  useAuthGuard("guest", "/dashboard")
 
   useEffect(() => {
     let isMounted = true

@@ -4,9 +4,12 @@ import { useState } from "react"
 import { Menu, Building2 } from "lucide-react"
 import { Sidebar } from "@/components/layout/Sidebar"
 import { SlipConfigProvider } from "@/components/settings/SlipConfigContext"
+import { useAuthGuard } from "@/hooks/use-auth-guard"
 
 function DashboardLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+
+  useAuthGuard("authenticated", "/login")
 
   return (
     <SlipConfigProvider>

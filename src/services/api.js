@@ -3,6 +3,11 @@ import { ERROR_MESSAGES } from "@/utils/errors"
 async function fetchWithMeta(url, options) {
   const res = await fetch(url, options)
 
+  if (res.status === 401) {
+    if (typeof window !== "undefined") window.location.href = "/login"
+    throw new Error(ERROR_MESSAGES.GENERIC)
+  }
+
   if (res.status === 204) {
     if (!res.ok) throw new Error(ERROR_MESSAGES.GENERIC)
     return { data: null, meta: undefined }
