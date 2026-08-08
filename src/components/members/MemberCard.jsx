@@ -27,7 +27,7 @@ function initials(name) {
     .toUpperCase()
 }
 
-function MemberCard({ member, checked, onCheckedChange, onPrint }) {
+function MemberCard({ member, checked, onCheckedChange, onPrint, onEdit }) {
   return (
     <div className="flex flex-col gap-3 border-b border-border p-4 last:border-0">
       <div className="flex items-start justify-between gap-3">
@@ -79,7 +79,11 @@ function MemberCard({ member, checked, onCheckedChange, onPrint }) {
       </div>
 
       <div className="flex items-center gap-3 pl-13">
-        <button type="button" className="text-sm font-medium text-foreground/80 hover:text-foreground">
+        <button
+          type="button"
+          onClick={() => onEdit?.(member)}
+          className="text-sm font-medium text-foreground/80 hover:text-foreground"
+        >
           Edit
         </button>
         <button

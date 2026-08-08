@@ -1,0 +1,200 @@
+"use client"
+
+import { X } from "lucide-react"
+import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
+import { Checkbox } from "@/components/ui/checkbox"
+import { DialogClose } from "@/components/ui/dialog"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { MEMBER_FORM_VALIDATORS } from "@/utils/validators"
+
+// Same header background/style as AddUserDialog's dark navy band, so every
+// modal in the app (Add User, Add Member, Edit Member) reads consistently.
+function MemberDialogHeader({ title }) {
+  return (
+    <div className="relative flex items-center gap-2.5 rounded-t-xl bg-[#1e2a4a] px-4 py-4 sm:px-6 sm:py-5">
+      <span className="font-heading text-base font-medium text-white sm:text-lg">{title}</span>
+      <DialogClose className="absolute top-1/2 right-4 -translate-y-1/2 text-white/70 hover:text-white">
+        <X className="h-4 w-4" />
+        <span className="sr-only">Close</span>
+      </DialogClose>
+    </div>
+  )
+}
+
+// Builds the Status/Gender/Level/Lighthouse Group select configs from
+// GET /members/config. Option values are the config item ids (per the
+// backend contract); Gender is the one fixed enum, since it isn't part of
+// the config response.
+function buildSelectFields(config) {
+  const toOptions = (items) => Object.fromEntries(items.map((item) => [item.id, item.name]))
+
+  return [
+    { name: "status", label: "Status", required: true, options: toOptions(config.statuses) },
+    {
+      name: "gender",
+      label: "Gender",
+      required: true,
+      options: { MALE: "Male", FEMALE: "Female" },
+    },
+    { name: "level", label: "Level", required: true, options: toOptions(config.levels) },
+    {
+      name: "lighthouseGroup",
+      label: "Lighthouse Group",
+      options: toOptions(config.lighthouseGroups),
+    },
+  ]
+}
+
+function buildGroupOptions(config) {
+  return Object.fromEntries(config.groups.map((item) => [item.id, item.role]))
+}
+
+function buildInitialForm(selectFields) {
+  return {
+    firstName: "",
+    middleName: "",
+    lastName: "",
+    email: "",
+    contact: "",
+    address: "",
+    birthDate: "",
+    baptizedAt: "",
+    age: "",
+    groupIds: [],
+    ...Object.fromEntries(selectFields.map((field) => [field.name, ""])),
+  }
+}
+
+// Field config for the text/date inputs rendered via FormField below. Names
+// match the backend's member schema field names. Grouped into rows matching
+// the layout (name row / stacked / date+age row).
+const NAME_FIELDS = [
+  { name: "firstName", label: "First Name", placeholder: "e.g. Juan", required: true },
+  { name: "middleName", label: "Middle Name", placeholder: "Optional" },
+  { name: "lastName", label: "Last Name", placeholder: "e.g. Dela Cruz", required: true },
+]
+
+const CONTACT_FIELDS = [
+  { name: "email", label: "Email", type: "email", placeholder: "name@gmail.com" },
+  {
+    name: "contact",
+    label: "Phone",
+    type: "tel",
+    placeholder: "09171234567",
+    digitsOnly: true,
+    maxDigits: 11,
+    startsWith: "0",
+  },
+  { name: "address", label: "Address", placeholder: "Street, City", required: true },
+]
+
+const DATE_AGE_FIELDS = [
+  { name: "birthDate", label: "Birth Date", type: "date", required: true },
+  { name: "baptizedAt", label: "Baptized Date", type: "date", required: true },
+  { name: "age", label: "Age", inputMode: "numeric", placeholder: "e.g. 34", required: true },
+]
+
+function SelectField({ field, value, onChange }) {
+  const { name, label, required, options } = field
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      <Label>
+        {label} {required && <span className="text-red-500">*</span>}
+      </Label>
+      <Select value={value} onValueChange={(next) => onChange(name, next)}>
+        <SelectTrigger className="h-10 w-full rounded-lg">
+          <SelectValue>{(val) => options[val]}</SelectValue>
+        </SelectTrigger>
+        <SelectContent>
+          {Object.entries(options).map(([optionValue, optionLabel]) => (
+            <SelectItem key={optionValue} value={optionValue}>
+              {optionLabel}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  )
+}
+
+function MultiSelectField({ label, options, value, onToggle }) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <Label>{label}</Label>
+      <div className="flex flex-col gap-2 rounded-lg border border-input px-3 py-2.5">
+        {Object.entries(options).map(([optionValue, optionLabel]) => (
+          <label key={optionValue} className="flex items-center gap-2 text-sm">
+            <Checkbox
+              checked={value.includes(optionValue)}
+              onCheckedChange={() => onToggle(optionValue)}
+            />
+            {optionLabel}
+          </label>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function FormField({ field, value, error, onChange, onBlur }) {
+  const { name, label, required, digitsOnly, maxDigits, startsWith, ...inputProps } = field
+
+  function handleChange(e) {
+    let next = e.target.value
+
+    if (digitsOnly) next = next.replace(/\D/g, "")
+    if (startsWith && next && !next.startsWith(startsWith)) return
+    if (maxDigits) next = next.slice(0, maxDigits)
+
+    onChange(name, next)
+  }
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      <Label htmlFor={`member-${name}`}>
+        {label} {required && <span className="text-red-500">*</span>}
+      </Label>
+      <Input
+        id={`member-${name}`}
+        className="h-10 rounded-lg"
+        value={value}
+        onChange={handleChange}
+        onBlur={() => onBlur(name)}
+        aria-invalid={Boolean(error)}
+        required={required}
+        {...inputProps}
+      />
+      {error && <p className="text-xs text-red-500">{error}</p>}
+    </div>
+  )
+}
+
+function getFieldError(field, value) {
+  const { required, validate } = MEMBER_FORM_VALIDATORS[field]
+
+  if (!value) return required ?? ""
+  if (validate) return validate(value)
+  return ""
+}
+
+export {
+  MemberDialogHeader,
+  buildSelectFields,
+  buildGroupOptions,
+  buildInitialForm,
+  NAME_FIELDS,
+  CONTACT_FIELDS,
+  DATE_AGE_FIELDS,
+  SelectField,
+  MultiSelectField,
+  FormField,
+  getFieldError,
+}

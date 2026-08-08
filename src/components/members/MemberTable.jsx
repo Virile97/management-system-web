@@ -14,6 +14,7 @@ function MemberTable({
   onToggleSelect,
   onToggleSelectAll,
   onPrintMember,
+  onEditMember,
   page = 1,
   totalPages = 1,
   total = 0,
@@ -71,6 +72,7 @@ function MemberTable({
                   checked={selected.has(member.id)}
                   onCheckedChange={() => onToggleSelect(member)}
                   onPrint={onPrintMember}
+                  onEdit={onEditMember}
                 />
               ))}
             </tbody>
@@ -91,6 +93,7 @@ function MemberTable({
                 checked={selected.has(member.id)}
                 onCheckedChange={() => onToggleSelect(member)}
                 onPrint={onPrintMember}
+                onEdit={onEditMember}
               />
             ))}
           </div>

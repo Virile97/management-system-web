@@ -22,14 +22,14 @@ export default function LoginPage() {
 
         <blockquote className="max-w-md space-y-4">
           <p className="font-heading text-3xl leading-snug text-white">
-            &ldquo;Bring the whole tithe into the storehouse.&rdquo;
+            &ldquo;Manage with wisdom. Steward with faithfulness.&rdquo;
           </p>
-          <cite className="block text-sm font-semibold tracking-wide text-white/60 not-italic uppercase">
+          {/* <cite className="block text-sm font-semibold tracking-wide text-white/60 not-italic uppercase">
             — Malachi 3:10
-          </cite>
+          </cite> */}
         </blockquote>
 
-        <p className="text-sm text-white/50">© 2026 Grace Fellowship Church. All rights reserved.</p>
+        <p className="text-sm text-white/50">© 2026 Lighthouse BBC. All rights reserved.</p>
       </div>
 
       <div className="flex w-full flex-col items-center justify-center bg-background px-6 py-12 lg:w-1/2">

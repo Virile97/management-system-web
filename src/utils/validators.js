@@ -1,8 +1,8 @@
 // Standard email shape, RFC 5322-ish (simplified, no consecutive dots, no leading/trailing dot in local part)
 const EMAIL_REGEX = /^[a-zA-Z0-9](?:[a-zA-Z0-9._%+-]*[a-zA-Z0-9])?@gmail\.com$/
 
-// PH mobile numbers: 09XXXXXXXXX (11 digits) or +639XXXXXXXXX / 639XXXXXXXXX
-const PH_PHONE_REGEX = /^(?:\+?63|0)9\d{9}$/
+// Exactly 11 digits, no letters/symbols (e.g. 09171234567)
+const PH_PHONE_REGEX = /^\d{11}$/
 
 /**
  * Validates that a value is a syntactically correct email address AND
@@ -18,8 +18,8 @@ function isValidEmail(value) {
 }
 
 /**
- * Validates that a value is a Philippine mobile number, accepting the
- * 09XXXXXXXXX, 639XXXXXXXXX, and +639XXXXXXXXX formats.
+ * Validates that a value is an 11-digit phone number (e.g. 09171234567) —
+ * digits only, no letters or symbols.
  */
 function isValidPhilippinePhoneNumber(value) {
   if (typeof value !== "string") return false
@@ -84,7 +84,7 @@ const MEMBER_FORM_VALIDATORS = {
   },
   contact: {
     validate: (value) =>
-      !isValidPhilippinePhoneNumber(value) ? "Enter a valid PH mobile number (e.g. 09171234567)" : "",
+      !isValidPhilippinePhoneNumber(value) ? "Enter an 11-digit phone number (e.g. 09171234567)" : "",
   },
   address: {
     required: "Address is required",

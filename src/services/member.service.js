@@ -6,6 +6,10 @@ function getMemberFormConfig(signal) {
   return fetchJson(APP_API_ENDPOINTS.MEMBERS_CONFIG, { signal })
 }
 
+function getMemberById(id, signal) {
+  return fetchJson(APP_API_ENDPOINTS.MEMBER_BY_ID(id), { signal })
+}
+
 function formatMemberName(member) {
   return [member.firstName, member.middleName, member.lastName].filter(Boolean).join(" ") || "—"
 }
@@ -72,4 +76,52 @@ function createMember(form) {
   })
 }
 
-export { listMembers, createMember, getMemberFormConfig }
+// Maps Edit Member form state into the backend's updateMemberSchema shape.
+// Every field is optional on this endpoint, but groupIds always replaces the
+// full group selection (not an append) — including it as [] intentionally
+// clears all groups rather than leaving them untouched, so it's always sent.
+function toUpdateMemberPayload(form) {
+  const payload = {}
+
+  if (form.firstName) payload.firstName = form.firstName
+  if (form.lastName) payload.lastName = form.lastName
+  if (form.middleName) payload.middleName = form.middleName
+  if (form.email) payload.email = form.email
+  if (form.contact) payload.contact = form.contact
+  if (form.address) payload.address = form.address
+  if (form.age) payload.age = Number(form.age)
+  if (form.gender) payload.gender = form.gender
+  if (form.birthDate) payload.birthDate = form.birthDate
+  if (form.baptizedAt) payload.baptizedAt = form.baptizedAt
+  if (form.status) payload.statusId = form.status
+  if (form.level) payload.levelId = form.level
+  if (form.lighthouseGroup) payload.lighthouseGroupId = form.lighthouseGroup
+  payload.groupIds = form.groupIds
+
+  return payload
+}
+
+function updateMember(id, form) {
+  return fetchJson(APP_API_ENDPOINTS.MEMBER_BY_ID(id), {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...getCsrfHeader() },
+    body: JSON.stringify(toUpdateMemberPayload(form)),
+  })
+}
+
+function bulkDeleteMembers(ids) {
+  return fetchJson(APP_API_ENDPOINTS.MEMBERS_BULK_DELETE, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getCsrfHeader() },
+    body: JSON.stringify({ ids }),
+  })
+}
+
+export {
+  listMembers,
+  createMember,
+  updateMember,
+  bulkDeleteMembers,
+  getMemberFormConfig,
+  getMemberById,
+}

@@ -27,7 +27,7 @@ function initials(name) {
     .toUpperCase()
 }
 
-function MemberRow({ member, checked, onCheckedChange, onPrint }) {
+function MemberRow({ member, checked, onCheckedChange, onPrint, onEdit }) {
   return (
     <tr className="border-b border-border last:border-0">
       <td className="w-10 py-4 pl-4">
@@ -72,7 +72,11 @@ function MemberRow({ member, checked, onCheckedChange, onPrint }) {
       </td>
       <td className="py-4 pr-4">
         <div className="flex items-center gap-3">
-          <button type="button" className="text-sm font-medium text-foreground/80 hover:text-foreground">
+          <button
+            type="button"
+            onClick={() => onEdit?.(member)}
+            className="text-sm font-medium text-foreground/80 hover:text-foreground"
+          >
             Edit
           </button>
           <button

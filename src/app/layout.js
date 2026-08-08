@@ -1,7 +1,7 @@
-import { Source_Serif_4, Inter } from "next/font/google"
+import { Plus_Jakarta_Sans, Inter } from "next/font/google"
 import "../globals.css"
 
-const sourceSerif = Source_Serif_4({
+const headingFont = Plus_Jakarta_Sans({
   subsets: ["latin"],
   variable: "--font-serif",
 })
@@ -18,7 +18,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={`${sourceSerif.variable} ${inter.variable}`}>
+    <html lang="en" className={`${headingFont.variable} ${inter.variable}`}>
       <body>{children}</body>
     </html>
   )

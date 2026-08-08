@@ -4,16 +4,25 @@ import { Suspense, useEffect, useRef, useState } from "react"
 import { useRouter, usePathname, useSearchParams } from "next/navigation"
 import { useShallow } from "zustand/react/shallow"
 import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { MemberFilters } from "@/components/members/MemberFilters"
 import { MemberSearch } from "@/components/members/MemberSearch"
 import { MemberTable } from "@/components/members/MemberTable"
 import { AddMemberModal } from "@/components/members/AddMemberModal"
+import { EditMemberModal } from "@/components/members/EditMemberModal"
 import { PrintSlipModal } from "@/components/members/PrintSlipModal"
 import { PrintSelectedSlipsModal } from "@/components/members/PrintSelectedSlipsModal"
 import { useDebounce } from "@/hooks/useDebounce"
-import { listMembers } from "@/services/member.service"
+import { listMembers, bulkDeleteMembers } from "@/services/member.service"
 import { useMembersStore } from "@/stores/members.store"
-import { Plus, Printer } from "lucide-react"
+import { Plus, Printer, Trash2 } from "lucide-react"
 
 export default function MembersPage() {
   return (
@@ -36,6 +45,8 @@ function MembersPageContent() {
   const searchParams = useSearchParams()
   const page = Math.max(1, parseInt(searchParams.get("page"), 10) || 1)
   const activeFilter = searchParams.get("status") || DEFAULT_STATUS
+  const isEditParam = searchParams.get("isEdit") === "true"
+  const editMemberIdParam = searchParams.get("memberId")
 
   const [search, setSearch] = useState("")
   const debouncedSearch = useDebounce(search, 300)
@@ -74,6 +85,9 @@ function MembersPageContent() {
   const [selectedIds, setSelectedIds] = useState(new Set())
   const [printMember, setPrintMember] = useState(null)
   const [isPrintSelectedOpen, setIsPrintSelectedOpen] = useState(false)
+  const [isDeleteSelectedOpen, setIsDeleteSelectedOpen] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState("")
 
   function updateParams(updates) {
     const params = new URLSearchParams(searchParams)
@@ -98,6 +112,14 @@ function MembersPageContent() {
   function updateSearch(nextSearch) {
     setSearch(nextSearch)
     goToPage(1)
+  }
+
+  function openEditMember(member) {
+    updateParams({ isEdit: "true", memberId: member.id })
+  }
+
+  function closeEditMember() {
+    updateParams({ isEdit: "", memberId: "" })
   }
 
   const isFirstRun = useRef(true)
@@ -190,6 +212,21 @@ function MembersPageContent() {
     })
   }
 
+  async function handleConfirmBulkDelete() {
+    setDeleteError("")
+    setIsDeleting(true)
+    try {
+      await bulkDeleteMembers(Array.from(selectedIds))
+      setSelectedIds(new Set())
+      setIsDeleteSelectedOpen(false)
+      setRefreshKey((key) => key + 1)
+    } catch (err) {
+      setDeleteError(err?.message || "Unable to delete selected members")
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-background p-4 sm:p-6 md:p-8">
       <div className="mx-auto max-w-6xl">
@@ -205,14 +242,24 @@ function MembersPageContent() {
 
           <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
             {selectedIds.size > 0 && (
-              <Button
-                variant="outline"
-                className="h-10 gap-2 rounded-lg px-4"
-                onClick={() => setIsPrintSelectedOpen(true)}
-              >
-                <Printer className="h-4 w-4" />
-                Print Selected ({selectedIds.size})
-              </Button>
+              <>
+                <Button
+                  variant="outline"
+                  className="h-10 gap-2 rounded-lg px-4"
+                  onClick={() => setIsPrintSelectedOpen(true)}
+                >
+                  <Printer className="h-4 w-4" />
+                  Print Selected ({selectedIds.size})
+                </Button>
+                <Button
+                  variant="outline"
+                  className="h-10 gap-2 rounded-lg border-destructive/30 px-4 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                  onClick={() => setIsDeleteSelectedOpen(true)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Delete Selected ({selectedIds.size})
+                </Button>
+              </>
             )}
 
             <Button
@@ -242,6 +289,7 @@ function MembersPageContent() {
             onToggleSelect={toggleSelect}
             onToggleSelectAll={toggleSelectAll}
             onPrintMember={setPrintMember}
+            onEditMember={openEditMember}
             page={page}
             totalPages={meta.totalPages}
             total={meta.total}
@@ -256,6 +304,12 @@ function MembersPageContent() {
         onOpenChange={setIsAddMemberOpen}
         onCreated={() => setRefreshKey((key) => key + 1)}
       />
+      <EditMemberModal
+        open={isEditParam && Boolean(editMemberIdParam)}
+        onOpenChange={(open) => !open && closeEditMember()}
+        memberId={editMemberIdParam}
+        onUpdated={() => setRefreshKey((key) => key + 1)}
+      />
       <PrintSlipModal
         open={printMember !== null}
         onOpenChange={(open) => !open && setPrintMember(null)}
@@ -266,6 +320,41 @@ function MembersPageContent() {
         onOpenChange={setIsPrintSelectedOpen}
         members={selectedMembers}
       />
+
+      <Dialog
+        open={isDeleteSelectedOpen}
+        onOpenChange={(open) => {
+          if (!open) setDeleteError("")
+          setIsDeleteSelectedOpen(open)
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete {selectedIds.size} member{selectedIds.size === 1 ? "" : "s"}?</DialogTitle>
+            <DialogDescription>
+              This will permanently remove the selected member{selectedIds.size === 1 ? "" : "s"} from
+              the system. This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          {deleteError && <p className="text-sm text-destructive">{deleteError}</p>}
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteSelectedOpen(false)}
+              disabled={isDeleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="bg-destructive text-white hover:bg-destructive/90"
+              onClick={handleConfirmBulkDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Deleting…" : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
