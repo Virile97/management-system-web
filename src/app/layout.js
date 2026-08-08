@@ -12,7 +12,7 @@ const inter = Inter({
 })
 
 export const metadata = {
-  title: "Management System",
+  title: process.env.NEXT_PUBLIC_APP_NAME,
   description: "Management System",
 }
 
