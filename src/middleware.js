@@ -13,7 +13,7 @@ const MUTATING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"])
 const CSRF_EXEMPT_PATHS = new Set(["/api/auth/login", "/api/auth/logout"])
 
 // Routes the plain USER role cannot view; they're bounced to /members instead.
-const RESTRICTED_FOR_USER_ROLE = ["/dashboard", "/finances", "/soul-winning", "/settings"]
+const RESTRICTED_FOR_USER_ROLE = ["/dashboard", "/attendance", "/finances", "/soul-winning", "/settings"]
 
 export function middleware(request) {
   const tokenSession = readValidTokenCookie(request.cookies.get(AUTH_TOKEN_COOKIE_NAME)?.value)
@@ -108,6 +108,7 @@ export const config = {
   matcher: [
     "/dashboard/:path*",
     "/members/:path*",
+    "/attendance/:path*",
     "/finances/:path*",
     "/soul-winning/:path*",
     "/settings/:path*",
