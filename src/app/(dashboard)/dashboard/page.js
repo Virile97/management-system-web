@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect } from "react"
+import { useCallback } from "react"
 import { useShallow } from "zustand/react/shallow"
 import { Users, Heart, UserX, PhilippinePeso } from "lucide-react"
 
@@ -21,6 +21,7 @@ import {
   getFinanceSummary,
   getRecentActivity,
 } from "@/services/dashboard.service"
+import { useAsyncData } from "@/hooks/use-async-data"
 
 const today = new Date().toLocaleDateString("en-US", {
   weekday: "long",
@@ -30,69 +31,28 @@ const today = new Date().toLocaleDateString("en-US", {
 })
 
 export default function DashboardPage() {
-  const {
-    stats,
-    memberBreakdown,
-    financeSummary,
-    recentActivity,
-    isLoading,
-    error,
-  } = useDashboardStore(
+  const { stats, memberBreakdown, financeSummary, recentActivity } = useDashboardStore(
     useShallow((state) => ({
       stats: state.stats,
       memberBreakdown: state.memberBreakdown,
       financeSummary: state.financeSummary,
       recentActivity: state.recentActivity,
-      isLoading: state.isLoading,
-      error: state.error,
     }))
   )
 
-  useEffect(() => {
-    const controller = new AbortController()
+  const buildTasks = useCallback(() => {
+    const { setStats, setMemberBreakdown, setFinanceSummary, setRecentActivity } =
+      useDashboardStore.getState()
 
-    const {
-      setStats,
-      setMemberBreakdown,
-      setFinanceSummary,
-      setRecentActivity,
-      setLoading,
-      setError,
-    } = useDashboardStore.getState()
-
-    const requests = [
-      [() => getStats(controller.signal), setStats],
-      [() => getMemberBreakdown(controller.signal), setMemberBreakdown],
-      [() => getFinanceSummary("6m", controller.signal), setFinanceSummary],
-      [() => getRecentActivity(5, controller.signal), setRecentActivity],
+    return [
+      [getStats, setStats],
+      [getMemberBreakdown, setMemberBreakdown],
+      [(signal) => getFinanceSummary("6m", signal), setFinanceSummary],
+      [(signal) => getRecentActivity(5, signal), setRecentActivity],
     ]
-
-    async function loadDashboard() {
-      setLoading(true)
-      setError("")
-
-      const results = await Promise.allSettled(requests.map(([fetchFn]) => fetchFn()))
-
-      if (controller.signal.aborted) return
-
-      results.forEach((result, index) => {
-        if (result.status === "fulfilled") {
-          requests[index][1](result.value)
-        }
-      })
-
-      const failed = results.find((r) => r.status === "rejected")
-      if (failed?.status === "rejected") {
-        setError(failed.reason.message)
-      }
-
-      setLoading(false)
-    }
-
-    loadDashboard()
-
-    return () => controller.abort()
   }, [])
+
+  const { isLoading, error, retry } = useAsyncData(buildTasks)
 
   const statCards = [
     {
@@ -159,9 +119,16 @@ export default function DashboardPage() {
         <p className="mt-1 text-sm text-muted-foreground">{today}</p>
 
         {error && (
-          <p className="mt-4 rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
-            {error}
-          </p>
+          <div className="mt-4 flex items-center justify-between gap-3 rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            <span>{error}</span>
+            <button
+              type="button"
+              onClick={retry}
+              className="shrink-0 font-semibold underline underline-offset-2 hover:no-underline"
+            >
+              Retry
+            </button>
+          </div>
         )}
 
         <div className="mt-6 grid grid-cols-1 gap-4 sm:mt-8 sm:gap-6 md:grid-cols-2">

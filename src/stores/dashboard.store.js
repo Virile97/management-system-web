@@ -5,8 +5,6 @@ const initialState = {
   memberBreakdown: null,
   financeSummary: [],
   recentActivity: [],
-  isLoading: true,
-  error: "",
 }
 
 const useDashboardStore = create((set) => ({
@@ -16,8 +14,6 @@ const useDashboardStore = create((set) => ({
   setMemberBreakdown: (memberBreakdown) => set({ memberBreakdown }),
   setFinanceSummary: (financeSummary) => set({ financeSummary }),
   setRecentActivity: (recentActivity) => set({ recentActivity }),
-  setLoading: (isLoading) => set({ isLoading }),
-  setError: (error) => set({ error }),
   reset: () => set(initialState),
 }))
 
