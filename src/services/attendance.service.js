@@ -18,6 +18,14 @@ const MOCK_MEMBERS = [
   { id: 10, name: "Joseph Owusu", level: "Men", morningIn: null, morningOut: null, afternoonIn: null, afternoonOut: null, status: "Absent" },
 ]
 
+const MOCK_MEMBER_ATTENDANCE = [
+  { id: 1, event: "Sunday Worship", daysAgo: 6, status: "Present" },
+  { id: 2, event: "Sunday Worship", daysAgo: 13, status: "Present" },
+  { id: 3, event: "Sunday Worship", daysAgo: 20, status: "Absent" },
+  { id: 4, event: "Prayer Night", daysAgo: 27, status: "Present" },
+  { id: 5, event: "Sunday Worship", daysAgo: 34, status: "Absent" },
+]
+
 const MOCK_STATS = {
   total: 12,
   present: 11,
@@ -44,4 +52,20 @@ function getAttendanceMembers(dateRange, signal) {
   return mockResolve(MOCK_MEMBERS, signal)
 }
 
-export { getAttendanceStats, getAttendanceMembers }
+/**
+ * The last few services a single member was checked in/out for, newest first.
+ * Dates are derived from today so the mock stays plausible over time.
+ */
+function getMemberRecentAttendance(memberId, signal) {
+  const now = Date.now()
+  const records = MOCK_MEMBER_ATTENDANCE.map((record) => ({
+    id: record.id,
+    event: record.event,
+    status: record.status,
+    date: new Date(now - record.daysAgo * 24 * 60 * 60 * 1000).toISOString(),
+  }))
+
+  return mockResolve(records, signal)
+}
+
+export { getAttendanceStats, getAttendanceMembers, getMemberRecentAttendance }

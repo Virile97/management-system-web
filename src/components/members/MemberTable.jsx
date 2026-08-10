@@ -12,6 +12,7 @@ function MemberTable({
   onToggleSelectAll,
   onPrintMember,
   onEditMember,
+  onOpenMember,
   page = 1,
   totalPages = 1,
   total = 0,
@@ -61,6 +62,7 @@ function MemberTable({
             onCheckedChange={() => selection.toggle(member)}
             onPrint={onPrintMember}
             onEdit={onEditMember}
+            onOpen={onOpenMember}
           />
         ))
       }
@@ -73,6 +75,7 @@ function MemberTable({
             onCheckedChange={() => selection.toggle(member)}
             onPrint={onPrintMember}
             onEdit={onEditMember}
+            onOpen={onOpenMember}
           />
         ))
       }

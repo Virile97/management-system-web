@@ -14,11 +14,13 @@ export async function GET(request) {
   const limit = request.nextUrl.searchParams.get("limit");
   const search = request.nextUrl.searchParams.get("search");
   const status = request.nextUrl.searchParams.get("status");
+  const from = request.nextUrl.searchParams.get("from");
+  const to = request.nextUrl.searchParams.get("to");
 
   try {
     const { data } = await api.get(API_ENDPOINTS.MEMBERS, {
       ...withAuthHeader(token),
-      params: { page, limit, search, status },
+      params: { page, limit, search, status, from, to },
     });
     return NextResponse.json(data);
   } catch (err) {

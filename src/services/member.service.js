@@ -27,19 +27,36 @@ function normalizeMember(member) {
   }
 }
 
-async function listMembers({ page = 1, limit = 20, search = "", status = "" } = {}, signal) {
+async function listMembers({ page = 1, limit = 20, search = "", status = "", from = "", to = "" } = {}, signal) {
   const params = new URLSearchParams()
 
   params.set("page", String(page))
   params.set("limit", String(limit))
 
   if (search) params.set("search", search)
-
   if (status) params.set("status", status)
+  if (from) params.set("from", from)
+  if (to) params.set("to", to)
 
   const { data, meta } = await fetchWithMeta(`${APP_API_ENDPOINTS.MEMBERS}?${params.toString()}`, { signal })
 
   return { data: data.map(normalizeMember), meta }
+}
+
+/**
+ * Member status breakdown (donut chart) — pass the same search/status/from/to
+ * as listMembers so the breakdown matches whatever's in the table.
+ */
+function getMemberBreakdown({ search = "", status = "", from = "", to = "" } = {}, signal) {
+  const params = new URLSearchParams()
+
+  if (search) params.set("search", search)
+  if (status) params.set("status", status)
+  if (from) params.set("from", from)
+  if (to) params.set("to", to)
+
+  const query = params.toString()
+  return fetchJson(`${APP_API_ENDPOINTS.MEMBERS_BREAKDOWN}${query ? `?${query}` : ""}`, { signal })
 }
 
 /**
@@ -122,7 +139,9 @@ function bulkDeleteMembers(ids) {
 }
 
 export {
+  normalizeMember,
   listMembers,
+  getMemberBreakdown,
   createMember,
   updateMember,
   bulkDeleteMembers,

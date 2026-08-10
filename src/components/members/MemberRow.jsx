@@ -27,10 +27,20 @@ function initials(name) {
     .toUpperCase()
 }
 
-function MemberRow({ member, checked, onCheckedChange, onPrint, onEdit }) {
+function MemberRow({ member, checked, onCheckedChange, onPrint, onEdit, onOpen }) {
   return (
-    <tr className="border-b border-border last:border-0">
-      <td className="w-10 py-4 pl-4">
+    <tr
+      className={cn("border-b border-border last:border-0", onOpen && "cursor-pointer hover:bg-muted/40")}
+      onClick={() => onOpen?.(member)}
+      role={onOpen ? "link" : undefined}
+      tabIndex={onOpen ? 0 : undefined}
+      onKeyDown={(event) => {
+        if (event.key === "Enter") onOpen?.(member)
+      }}
+    >
+      {/* Checkbox and the action buttons sit inside the row, so their clicks
+          must not also trigger the row's navigation. */}
+      <td className="w-10 py-4 pl-4" onClick={(event) => event.stopPropagation()}>
         <Checkbox checked={checked} onCheckedChange={onCheckedChange} />
       </td>
       <td className="py-4 pr-4">
@@ -70,7 +80,7 @@ function MemberRow({ member, checked, onCheckedChange, onPrint, onEdit }) {
           {member.status}
         </span>
       </td>
-      <td className="py-4 pr-4">
+      <td className="py-4 pr-4" onClick={(event) => event.stopPropagation()}>
         <div className="flex items-center gap-3">
           <button
             type="button"

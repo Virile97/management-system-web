@@ -1,8 +1,8 @@
 import { cn } from "@/lib/utils"
 
-const periods = ["Today", "This Month", "This Year", "All Time", "Custom"]
+const DEFAULT_PERIODS = ["Today", "This Month", "This Year", "All Time", "Custom"]
 
-function PeriodTabs({ active, onChange, recordCount, onCustomClick }) {
+function PeriodTabs({ active, onChange, recordCount, onCustomClick, periods = DEFAULT_PERIODS }) {
   function handleClick(period) {
     if (period === "Custom") {
       onCustomClick()

@@ -3,16 +3,27 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { EmptyState } from "@/components/common/EmptyState"
+import { ChartCardSkeleton } from "@/components/dashboard/DashboardSkeletons"
 import { PieChart, Pie, Cell } from "recharts"
 import { Users } from "lucide-react"
 
 const STATUS_COLORS = ["#3f6a4e", "#c9a24b", "#a3392f", "#4a5568", "#6b46c1"]
 
-function MemberBreakdownChart({ total = 0, breakdown = [], title = "Member Breakdown", totalLabel = "total" }) {
+function MemberBreakdownChart({
+  total = 0,
+  breakdown = [],
+  title = "Member Breakdown",
+  totalLabel = "total",
+  isLoading = false,
+}) {
   const chartConfig = breakdown.reduce((config, entry, index) => {
     config[entry.status] = { label: entry.status, color: STATUS_COLORS[index % STATUS_COLORS.length] }
     return config
   }, {})
+
+  if (isLoading) {
+    return <ChartCardSkeleton />
+  }
 
   return (
     <Card className="rounded-2xl p-4 sm:p-6">

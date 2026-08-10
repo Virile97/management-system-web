@@ -23,31 +23,10 @@ import { MemberBreakdownChart } from "@/components/dashboard/MemberBreakdownChar
 import { DateRangeButton } from "@/components/common/DateRangeButton"
 import { DateRangeFilterModal } from "@/components/soul-winning/DateRangeFilterModal"
 import { useDebounce } from "@/hooks/use-debounce"
-import { formatDateRangeLabel } from "@/utils/helpers"
-import { listMembers, bulkDeleteMembers } from "@/services/member.service"
+import { formatDateRangeLabel, toDateRangeStrings } from "@/utils/helpers"
+import { listMembers, getMemberBreakdown, bulkDeleteMembers } from "@/services/member.service"
 import { useMembersStore } from "@/stores/members.store"
 import { Plus, Printer, Trash2 } from "lucide-react"
-
-const STATUS_ORDER = ["Active", "Inactive", "Deceased"]
-
-// Client-side breakdown of only the currently loaded/visible members (the
-// current page's rows) — there's no members-stats endpoint yet, so this
-// intentionally does not represent the full member population.
-function buildVisibleBreakdown(members) {
-  const counts = {}
-  for (const member of members) {
-    counts[member.status] = (counts[member.status] ?? 0) + 1
-  }
-
-  const total = members.length
-  const statuses = [...STATUS_ORDER.filter((status) => counts[status]), ...Object.keys(counts).filter((status) => !STATUS_ORDER.includes(status))]
-
-  return statuses.map((status) => ({
-    status,
-    count: counts[status],
-    percentage: total > 0 ? Math.round((counts[status] / total) * 100) : 0,
-  }))
-}
 
 export default function MembersPage() {
   return (
@@ -61,7 +40,7 @@ const DEFAULT_STATUS = "All"
 const PAGE_SIZE = 10
 
 function queriesMatch(a, b) {
-  return a.page === b.page && a.status === b.status && a.search === b.search
+  return a.page === b.page && a.status === b.status && a.search === b.search && a.from === b.from && a.to === b.to
 }
 
 function MembersPageContent() {
@@ -114,8 +93,8 @@ function MembersPageContent() {
   const [isDeleting, setIsDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState("")
 
-  // UI only — member.service.js's listMembers has no date param yet, so this
-  // range isn't wired into any fetch call until the backend supports it.
+  // Filters both the table (listMembers) and the breakdown chart
+  // (getMemberBreakdown) — same from/to sent to both so they stay in sync.
   const [isDateRangeOpen, setIsDateRangeOpen] = useState(false)
   const [dateRange, setDateRange] = useState(null)
   const dateRangeModalRange = dateRange ?? {
@@ -127,6 +106,7 @@ function MembersPageContent() {
     endTime: "11:59 PM",
     utc: true,
   }
+  const { from: dateFrom, to: dateTo } = dateRange ? toDateRangeStrings(dateRange) : { from: "", to: "" }
 
   function updateParams(updates) {
     const params = new URLSearchParams(searchParams)
@@ -153,6 +133,10 @@ function MembersPageContent() {
     goToPage(1)
   }
 
+  function openMember(member) {
+    router.push(`/members/${member.id}`)
+  }
+
   function openEditMember(member) {
     updateParams({ isEdit: "true", memberId: member.id })
   }
@@ -164,10 +148,11 @@ function MembersPageContent() {
   const isFirstRun = useRef(true)
 
   useEffect(() => {
-    const currentQuery = { page, status: activeFilter, search: debouncedSearch }
+    const currentQuery = { page, status: activeFilter, search: debouncedSearch, from: dateFrom, to: dateTo }
+    const hasDateRange = Boolean(dateFrom || dateTo)
 
     // On mount only: if the persisted store already holds members for this
-    // exact page/filter/search, reuse them and skip the API call entirely.
+    // exact page/filter/search/range, reuse them and skip the API call entirely.
     if (isFirstRun.current) {
       isFirstRun.current = false
 
@@ -184,7 +169,9 @@ function MembersPageContent() {
     async function loadMembers() {
       // Search-only fast path: answer from the accumulated cache when possible,
       // skipping the API call entirely. Pagination against the API is unaffected.
-      if (debouncedSearch) {
+      // Disabled while a date range is active — the cache was accumulated
+      // without any date filtering, so it can't answer a ranged query correctly.
+      if (debouncedSearch && !hasDateRange) {
         const cached = searchCache(debouncedSearch, activeFilter)
         if (cached) {
           setMembers(cached, { total: cached.length, totalPages: 1 }, currentQuery)
@@ -203,6 +190,8 @@ function MembersPageContent() {
             limit: PAGE_SIZE,
             search: debouncedSearch,
             status: activeFilter === DEFAULT_STATUS ? "" : activeFilter,
+            from: dateFrom,
+            to: dateTo,
           },
           controller.signal
         )
@@ -218,7 +207,9 @@ function MembersPageContent() {
           return
         }
 
-        cacheMembers(data)
+        // Only cache when unranged — ranged results are a subset that would
+        // otherwise pollute the cache used by the (range-free) search fast path.
+        if (!hasDateRange) cacheMembers(data)
         setMembers(data, resolvedMeta, currentQuery)
       } catch (err) {
         if (controller.signal.aborted) return
@@ -230,15 +221,47 @@ function MembersPageContent() {
 
     loadMembers()
     return () => controller.abort()
-  }, [page, activeFilter, debouncedSearch, refreshKey])
+  }, [page, activeFilter, debouncedSearch, dateFrom, dateTo, refreshKey])
+
+  const [breakdown, setBreakdown] = useState({ total: 0, breakdown: [] })
+  const [isBreakdownLoading, setIsBreakdownLoading] = useState(true)
+
+  useEffect(() => {
+    const controller = new AbortController()
+
+    async function loadBreakdown() {
+      setIsBreakdownLoading(true)
+      try {
+        const data = await getMemberBreakdown(
+          {
+            search: debouncedSearch,
+            status: activeFilter === DEFAULT_STATUS ? "" : activeFilter,
+            from: dateFrom,
+            to: dateTo,
+          },
+          controller.signal
+        )
+        if (controller.signal.aborted) return
+        setBreakdown(data)
+      } catch {
+        if (controller.signal.aborted) return
+      } finally {
+        if (!controller.signal.aborted) setIsBreakdownLoading(false)
+      }
+    }
+
+    loadBreakdown()
+    return () => controller.abort()
+  }, [activeFilter, debouncedSearch, dateFrom, dateTo, refreshKey])
 
   const selectedMembers = members.filter((member) => selectedIds.has(member.id))
-  const visibleBreakdown = { total: members.length, breakdown: buildVisibleBreakdown(members) }
 
-  const hasActiveFilters = activeFilter !== DEFAULT_STATUS || Boolean(search)
+  const hasActiveFilters = activeFilter !== DEFAULT_STATUS || Boolean(search) || Boolean(dateRange)
   // Nothing to filter — no members exist at all (not just for the current
   // filter combination) — so disable the controls rather than let the user
-  // open filters with no possible effect.
+  // open filters with no possible effect. Never disable while a filter is
+  // already active, though: a filter that itself produced zero results (e.g.
+  // an empty date range) must stay open/clearable, not lock itself out.
   const filtersDisabled = meta.total === 0 && !hasActiveFilters
 
   function toggleSelect(member) {
@@ -330,10 +353,9 @@ function MembersPageContent() {
 
         <div className="mt-6">
           <MemberBreakdownChart
-            total={visibleBreakdown.total}
-            breakdown={visibleBreakdown.breakdown}
-            title="Member Breakdown — This Page"
-            totalLabel="on this page"
+            total={breakdown.total}
+            breakdown={breakdown.breakdown}
+            isLoading={isBreakdownLoading}
           />
         </div>
 
@@ -365,6 +387,7 @@ function MembersPageContent() {
             onToggleSelectAll={toggleSelectAll}
             onPrintMember={setPrintMember}
             onEditMember={openEditMember}
+            onOpenMember={openMember}
             page={page}
             totalPages={meta.totalPages}
             total={meta.total}

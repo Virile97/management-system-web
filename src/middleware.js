@@ -60,11 +60,26 @@ export function middleware(request) {
     }
   })()
 
-  if (
-    user?.role === "USER" &&
-    RESTRICTED_FOR_USER_ROLE.some((path) => request.nextUrl.pathname.startsWith(path))
-  ) {
-    return NextResponse.redirect(new URL("/members", request.url))
+  if (user?.role === "USER") {
+    if (RESTRICTED_FOR_USER_ROLE.some((path) => request.nextUrl.pathname.startsWith(path))) {
+      return NextResponse.redirect(new URL("/members", request.url))
+    }
+
+    // A member's financial breakdown is admin-only too, even though the member
+    // page itself is not: block both the view and the code check behind it.
+    if (request.nextUrl.pathname.startsWith("/api/members/finance-access")) {
+      return NextResponse.json({ success: false, message: "Not allowed" }, { status: 403 })
+    }
+
+    if (
+      request.nextUrl.pathname.startsWith("/members") &&
+      request.nextUrl.searchParams.get("view") === "finance"
+    ) {
+      const url = request.nextUrl.clone()
+      url.searchParams.delete("view")
+
+      return NextResponse.redirect(url)
+    }
   }
 
   if (

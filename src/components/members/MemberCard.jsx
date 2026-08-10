@@ -27,12 +27,21 @@ function initials(name) {
     .toUpperCase()
 }
 
-function MemberCard({ member, checked, onCheckedChange, onPrint, onEdit }) {
+function MemberCard({ member, checked, onCheckedChange, onPrint, onEdit, onOpen }) {
   return (
-    <div className="flex flex-col gap-3 border-b border-border p-4 last:border-0">
+    <div
+      className={cn(
+        "flex flex-col gap-3 border-b border-border p-4 last:border-0",
+        onOpen && "cursor-pointer active:bg-muted/40"
+      )}
+      onClick={() => onOpen?.(member)}
+    >
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
-          <Checkbox checked={checked} onCheckedChange={onCheckedChange} />
+          {/* Stops the checkbox tap from also opening the member. */}
+          <span onClick={(event) => event.stopPropagation()}>
+            <Checkbox checked={checked} onCheckedChange={onCheckedChange} />
+          </span>
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#1e2a4a] text-xs font-semibold text-white">
             {initials(member.name)}
           </div>
@@ -78,7 +87,7 @@ function MemberCard({ member, checked, onCheckedChange, onPrint, onEdit }) {
         </div>
       </div>
 
-      <div className="flex items-center gap-3 pl-13">
+      <div className="flex items-center gap-3 pl-13" onClick={(event) => event.stopPropagation()}>
         <button
           type="button"
           onClick={() => onEdit?.(member)}
