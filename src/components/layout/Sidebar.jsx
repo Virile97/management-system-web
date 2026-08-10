@@ -107,9 +107,9 @@ function Sidebar({ open = false, onClose }) {
           />
           <div className="min-w-0 flex-1">
             <p className="font-heading text-base font-semibold leading-tight text-white">
-              Lighthouse BBC
+              Lighthouse BBC Goa
             </p>
-            <p className="text-xs text-white/50">Management System</p>
+            <p className="text-xs text-white/50">Data Management System</p>
           </div>
           <button
             type="button"

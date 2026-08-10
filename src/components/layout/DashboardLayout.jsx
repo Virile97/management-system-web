@@ -30,7 +30,7 @@ function DashboardLayout({ children }) {
                 <Building2 className="h-4 w-4 text-[#1e2a4a]" strokeWidth={2} />
               </div>
               <p className="font-heading text-sm font-semibold leading-tight text-foreground">
-                Lighthouse BBC
+                Lighthouse BBC Goa
               </p>
             </div>
           </header>

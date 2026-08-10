@@ -15,7 +15,7 @@ function RetentionBar() {
     <Card className="rounded-2xl p-4 sm:p-6">
       <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
         <h2 className="font-heading text-lg font-normal text-foreground/80">
-          Souls Saved vs. Active Retention
+          Souls Won vs. Active Retention
         </h2>
         <p className="text-sm font-medium text-emerald-600">
           {retentionRate}% active retention rate

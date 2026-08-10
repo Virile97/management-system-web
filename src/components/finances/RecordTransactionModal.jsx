@@ -21,12 +21,7 @@ import {
 import { cn } from "@/lib/utils"
 
 const categoryLabels = {
-  tithe: "Tithe",
   offering: "Offering",
-  salaries: "Salaries",
-  utilities: "Utilities",
-  maintenance: "Maintenance",
-  donation: "Donation",
 }
 
 function RecordTransactionModal({ open, onOpenChange }) {
@@ -76,16 +71,16 @@ function RecordTransactionModal({ open, onOpenChange }) {
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="transaction-description">Description</Label>
+            <Label htmlFor="transaction-note">Note</Label>
             <Input
-              id="transaction-description"
+              id="transaction-note"
               placeholder="e.g. Sunday Service Tithe"
               className="h-10 rounded-lg"
             />
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="transaction-amount">Amount (USD)</Label>
+            <Label htmlFor="transaction-amount">Amount (PHP)</Label>
             <Input
               id="transaction-amount"
               type="number"
@@ -99,31 +94,19 @@ function RecordTransactionModal({ open, onOpenChange }) {
             <Input id="transaction-date" type="date" className="h-10 rounded-lg" />
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="transaction-recorded-by">Recorded By</Label>
-            <Input
-              id="transaction-recorded-by"
-              placeholder="e.g. Pastor Admin"
-              className="h-10 rounded-lg"
-            />
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <Label>Category</Label>
-            <Select defaultValue="tithe">
-              <SelectTrigger className="h-10 w-full rounded-lg">
-                <SelectValue>{(value) => categoryLabels[value]}</SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="tithe">Tithe</SelectItem>
-                <SelectItem value="offering">Offering</SelectItem>
-                <SelectItem value="salaries">Salaries</SelectItem>
-                <SelectItem value="utilities">Utilities</SelectItem>
-                <SelectItem value="maintenance">Maintenance</SelectItem>
-                <SelectItem value="donation">Donation</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          {type === "income" && (
+            <div className="flex flex-col gap-1.5">
+              <Label>Category</Label>
+              <Select defaultValue="offering">
+                <SelectTrigger className="h-10 w-full rounded-lg">
+                  <SelectValue>{(value) => categoryLabels[value]}</SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="offering">Offering</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
         </div>
 
         <DialogFooter className="mx-0 mb-0 flex-col-reverse justify-end gap-3 rounded-b-xl border-t border-border bg-transparent px-4 py-4 sm:flex-row sm:px-6 sm:py-5">

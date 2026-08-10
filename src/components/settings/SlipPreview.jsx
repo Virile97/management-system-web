@@ -1,72 +1,113 @@
+import Image from "next/image"
 import { cn } from "@/lib/utils"
-import { Plus, QrCode } from "lucide-react"
+import { QrCode } from "lucide-react"
 
-const copyLabels = [null, null, null, null]
+const copyLabels = Array.from({ length: 10 }, () => null)
 
-const accentColorMap = {
-  navy: "#1e2a4a",
-  gold: "#c9a24b",
-  green: "#2f7d4f",
-  red: "#c0432f",
-  purple: "#7c5cbf",
-  gray: "#6b7280",
-}
+const OFFERING_CATEGORIES = ["Tithes", "Love", "Faith", "Christbirth", "Firstfruit", "Sacrificial", "Thanksgiving"]
+const OTHER_OFFERING_CATEGORIES = [
+  "Bless Offering",
+  "Children's Ministry",
+  "Ensemble",
+  "GCTV",
+  "Mission",
+  "Mercy",
+  "Love Gift – Pastor",
+]
 
 function isVisible(fields, key) {
   return fields.find((field) => field.key === key)?.visible ?? true
 }
 
 const qrSizeClasses = {
-  Small: { compact: "h-10 w-10", full: "h-20 w-20" },
-  Medium: { compact: "h-14 w-14", full: "h-28 w-28" },
-  Large: { compact: "h-[4.5rem] w-[4.5rem]", full: "h-36 w-36" },
+  Small: { print: "h-4 w-4", compact: "h-10 w-10", full: "h-20 w-20" },
+  Medium: { print: "h-5 w-5", compact: "h-14 w-14", full: "h-28 w-28" },
+  Large: { print: "h-6 w-6", compact: "h-[4.5rem] w-[4.5rem]", full: "h-36 w-36" },
 }
 
 const qrIconSizeClasses = {
-  Small: { compact: "h-7 w-7", full: "h-14 w-14" },
-  Medium: { compact: "h-10 w-10", full: "h-20 w-20" },
-  Large: { compact: "h-[3.25rem] w-[3.25rem]", full: "h-[6.5rem] w-[6.5rem]" },
+  Small: { print: "h-3 w-3", compact: "h-7 w-7", full: "h-14 w-14" },
+  Medium: { print: "h-3.5 w-3.5", compact: "h-10 w-10", full: "h-20 w-20" },
+  Large: { print: "h-4.5 w-4.5", compact: "h-[3.25rem] w-[3.25rem]", full: "h-[6.5rem] w-[6.5rem]" },
 }
 
-function QrBlock({ qr, isFull }) {
-  const boxSize = qrSizeClasses[qr.size]?.[isFull ? "full" : "compact"]
-  const iconSize = qrIconSizeClasses[qr.size]?.[isFull ? "full" : "compact"]
+// Density tokens per size variant. "print" is calibrated so 8 copies (a
+// 4x2 grid) fit within a single 8.5x5.5in sheet despite the slip having 13
+// offering line items — every dimension is pushed near the practical
+// minimum for legible print type.
+const density = {
+  full: {
+    cardPad: "gap-3 p-6",
+    headerGap: "gap-3",
+    logo: "size-16",
+    churchName: "text-xs",
+    addressText: "mt-1 text-sm",
+    slipTitle: "text-sm",
+    sectionPad: "pt-4",
+    sectionGap: "gap-x-6",
+    labelText: "text-xs my-5",
+    offeringLabelText: "text-[10px]",
+    offeringRowGap: "gap-2",
+    offeringLine: "mt-2",
+    badgePad: "px-2.5 py-1 text-xs",
+  },
+  compact: {
+    cardPad: "gap-2 p-3",
+    headerGap: "gap-1",
+    logo: "size-10",
+    churchName: "text-[7px]",
+    addressText: "mt-0.5 text-[6px]",
+    slipTitle: "text-[10px]",
+    sectionPad: "mt-1 pt-2",
+    sectionGap: "gap-x-3",
+    labelText: "text-[5px] my-2",
+    offeringLabelText: "text-[5px]",
+    offeringRowGap: "gap-0.5",
+    offeringLine: "mt-0.5",
+    badgePad: "px-2 py-0.5 text-[10px]",
+  },
+  print: {
+    cardPad: "gap-0.5 p-3",
+    headerGap: "gap-0.5",
+    logo: "size-5",
+    churchName: "text-[5px]",
+    addressText: "text-[4.2px] leading-tight",
+    slipTitle: "text-[5px]",
+    sectionPad: "pt-0.5",
+    sectionGap: "gap-x-1.5",
+    labelText: "text-[4.5px] my-px",
+    offeringLabelText: "text-[4.5px]",
+    offeringRowGap: "gap-1",
+    offeringLine: "mt-1px",
+    badgePad: "px-1 py-px text-[5px]",
+  },
+}
+
+function QrBlock({ qr, size }) {
+  const boxSize = qrSizeClasses[qr.size]?.[size]
+  const iconSize = qrIconSizeClasses[qr.size]?.[size]
 
   return (
     <div className="flex flex-col items-center gap-1">
       <div className={cn("flex items-center justify-center rounded bg-foreground/5", boxSize)}>
         <QrCode className={cn("text-foreground/60", iconSize)} />
       </div>
-      <p
-        className={cn(
-          "max-w-20 text-center leading-tight text-muted-foreground",
-          isFull ? "text-[11px]" : "text-[9px]"
-        )}
-      >
-        {qr.caption}
-      </p>
     </div>
   )
 }
 
 function MiniSlip({ label, size = "compact", branding, qr, fields }) {
-  const isFull = size === "full"
-  const accentColor = accentColorMap[branding.accent] ?? accentColorMap.navy
+  const d = density[size] ?? density.compact
   const showTopRightQr = qr.enabled && qr.position === "Top Right"
   const showFooterQr = qr.enabled && qr.position !== "Top Right"
 
   return (
-    <div
-      className={cn(
-        "flex flex-col rounded-xl bg-white ring-1 ring-border",
-        isFull ? "gap-3 p-6" : "gap-2 p-3"
-      )}
-    >
+    <div className={cn("flex flex-col bg-white ring-1 ring-border", d.cardPad)}>
       {label && (
         <span
           className={cn(
             "w-fit rounded-full bg-muted font-semibold tracking-wide text-muted-foreground uppercase",
-            isFull ? "px-2.5 py-1 text-xs" : "px-2 py-0.5 text-[10px]"
+            d.badgePad
           )}
         >
           {label}
@@ -74,144 +115,78 @@ function MiniSlip({ label, size = "compact", branding, qr, fields }) {
       )}
 
       <div className="flex items-start justify-between">
-        <div className={cn("flex items-start", isFull ? "gap-3" : "gap-2")}>
+        <div className={cn("flex w-full items-start", d.headerGap)}>
           {branding.showLogo && (
-            <div
-              className={cn(
-                "flex shrink-0 items-center justify-center rounded-full text-white",
-                isFull ? "h-9 w-9" : "h-6 w-6"
-              )}
-              style={{ backgroundColor: accentColor }}
-            >
-              <Plus className={isFull ? "h-5 w-5" : "h-3.5 w-3.5"} />
+            <div className={cn("relative shrink-0", d.logo)}>
+              <Image src="/images/logo-black.png" alt="" fill className="object-contain" />
             </div>
           )}
           <div>
-            <p
-              className={cn(
-                "font-heading leading-tight font-semibold text-foreground/85",
-                isFull ? "text-xl" : "text-sm"
-              )}
-            >
+            <p className={cn("font-heading leading-tight font-bold text-foreground/85", d.churchName)}>
               {branding.churchName}
             </p>
-            <p className={cn("font-medium text-foreground/70", isFull ? "text-sm" : "text-xs")}>
-              {branding.slipTitle}
+            <p className={cn("leading-tight text-muted-foreground", d.addressText)}>
+              {branding.address}
             </p>
-            <p
-              className={cn(
-                "leading-tight text-muted-foreground",
-                isFull ? "mt-1 text-sm" : "mt-0.5 text-[10px]"
-              )}
-            >
-              {branding.subtitle}
-            </p>
+            <p className={cn("font-medium text-foreground/70", d.slipTitle)}>{branding.slipTitle}</p>
           </div>
         </div>
 
-        {showTopRightQr && <QrBlock qr={qr} isFull={isFull} />}
+        {showTopRightQr && <QrBlock qr={qr} size={size} />}
       </div>
 
-      {(isVisible(fields, "date") || isVisible(fields, "receiptNo")) && (
+      {isVisible(fields, "date") && (
         <div
           className={cn(
-            "grid grid-cols-2 border-t border-border font-medium tracking-wide text-muted-foreground uppercase",
-            isFull ? "gap-x-6 pt-4 text-xs" : "mt-1 gap-x-3 pt-2 text-[9px]"
+            "border-t border-border font-medium tracking-wide text-muted-foreground uppercase",
+            d.sectionPad,
+            d.labelText
           )}
         >
-          <span className={cn(!isVisible(fields, "date") && "invisible")}>Date</span>
-          <span className={cn(!isVisible(fields, "receiptNo") && "invisible")}>Receipt No.</span>
+          Date
         </div>
       )}
 
       {isVisible(fields, "memberName") && (
         <div
           className={cn(
-            "border-t border-border font-medium tracking-wide text-muted-foreground uppercase",
-            isFull ? "pt-4 text-xs" : "pt-1.5 text-[9px]"
+            "border-b border-dotted border-foreground/40 font-medium tracking-wide text-muted-foreground uppercase",
+            d.sectionPad,
+            d.labelText
           )}
         >
           Member Name
         </div>
       )}
 
-      {isVisible(fields, "offeringType") && (
-        <div
-          className={cn(
-            "border-t border-border font-medium tracking-wide text-muted-foreground uppercase",
-            isFull ? "pt-4 text-xs" : "pt-1.5 text-[9px]"
-          )}
-        >
-          Offering Type
-          <p
-            className={cn(
-              "font-normal normal-case text-muted-foreground/70",
-              isFull ? "mt-1 text-xs" : "mt-0.5 text-[9px]"
-            )}
-          >
-            Tithes / Love Gift / Special Offering / Building Fund / Others
-          </p>
-        </div>
-      )}
-
-      {isVisible(fields, "amount") && (
-        <div className={cn("border-t border-border", isFull ? "pt-4" : "pt-1.5")}>
-          <span
-            className={cn(
-              "font-medium tracking-wide text-muted-foreground uppercase",
-              isFull ? "text-xs" : "text-[9px]"
-            )}
-          >
-            Amount (GHS)
-          </span>
-          <div
-            className={cn(
-              "rounded border border-border bg-white",
-              isFull ? "mt-2 h-10" : "mt-1 h-5"
-            )}
-          />
-        </div>
-      )}
-
-      {isVisible(fields, "amountInWords") && (
-        <div
-          className={cn(
-            "border-t border-border font-medium tracking-wide text-muted-foreground uppercase",
-            isFull ? "pt-4 text-xs" : "pt-1.5 text-[9px]"
-          )}
-        >
-          Amount in Words
-        </div>
-      )}
-
-      {(isVisible(fields, "receivedBy") || isVisible(fields, "signature")) && (
-        <div
-          className={cn(
-            "grid grid-cols-2 border-t border-border",
-            isFull ? "gap-x-6 pt-4" : "gap-x-3 pt-1.5"
-          )}
-        >
-          <div className={cn(!isVisible(fields, "receivedBy") && "invisible")}>
-            <span
-              className={cn(
-                "font-medium tracking-wide text-muted-foreground uppercase",
-                isFull ? "text-xs" : "text-[9px]"
-              )}
-            >
-              Received By
-            </span>
-            <div className={cn("bg-border", isFull ? "mt-4 h-px" : "mt-2 h-px")} />
+      {(isVisible(fields, "offeringType") || isVisible(fields, "amount")) && (
+        <div className={d.sectionPad}>
+          <div className={cn("flex flex-col", d.offeringRowGap)}>
+            {OFFERING_CATEGORIES.map((category) => (
+              <div key={category} className="flex items-center justify-between gap-3">
+                <span className={cn("normal-case text-foreground/80", d.offeringLabelText)}>{category}</span>
+                <div className={cn("flex-1 border-b border-dotted border-foreground/40", d.offeringLine)} />
+              </div>
+            ))}
           </div>
-          <div className={cn(!isVisible(fields, "signature") && "invisible")}>
-            <span
-              className={cn(
-                "font-medium tracking-wide text-muted-foreground uppercase",
-                isFull ? "text-xs" : "text-[9px]"
-              )}
-            >
-              Signature
+
+          <p className={cn("font-medium tracking-wide text-muted-foreground uppercase", d.labelText)}>
+            Others
+          </p>
+          <div className={cn("mt-0.5 flex flex-col", d.offeringRowGap)}>
+            {OTHER_OFFERING_CATEGORIES.map((category) => (
+              <div key={category} className="flex items-center justify-between gap-3">
+                <span className={cn("normal-case text-foreground/80", d.offeringLabelText)}>{category}</span>
+                <div className={cn("flex-1 border-b border-dotted border-foreground/40", d.offeringLine)} />
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-1 flex items-center justify-between gap-3 pt-0.5">
+            <span className={cn("font-semibold tracking-wide text-foreground/85 uppercase", d.labelText)}>
+              Total
             </span>
-            <div className={cn("bg-border", isFull ? "mt-4 h-px" : "mt-2 h-px")} />
+            <div className={cn("flex-1 border-b border-dotted border-foreground/40", d.offeringLine)} />
           </div>
         </div>
       )}
@@ -220,53 +195,45 @@ function MiniSlip({ label, size = "compact", branding, qr, fields }) {
         <div
           className={cn(
             "flex border-t border-border",
-            isFull ? "pt-4" : "pt-1.5",
+            d.sectionPad,
             qr.position === "Bottom Left" ? "justify-start" : "justify-end"
           )}
         >
-          <QrBlock qr={qr} isFull={isFull} />
+          <QrBlock qr={qr} size={size} />
         </div>
       )}
-
-      <p
-        className={cn(
-          "border-t border-border text-center text-muted-foreground",
-          isFull ? "pt-4 text-xs" : "pt-1.5 text-[9px]"
-        )}
-      >
-        {branding.footerNote}
-      </p>
     </div>
   )
 }
 
 function SlipPreview({ size = "compact", branding, qr, fields }) {
   const isFull = size === "full"
+  const slipSize = isFull ? "compact" : "print"
 
   return (
-    <div className={cn("rounded-2xl bg-muted/50", isFull ? "p-4 sm:p-8" : "p-4 sm:p-6")}>
+    <div className={cn("bg-muted", isFull ? "p-4 sm:p-8" : "p-4 sm:p-6")}>
       <p
         className={cn(
           "text-center font-medium tracking-wide text-muted-foreground uppercase",
           isFull ? "text-sm" : "text-xs"
         )}
       >
-        Short Bond Paper — 8.5 x 5.5 in — 4 Copies
+        Short Bond Paper — 8.5 x 5.5 in — 10 Copies
       </p>
 
       <div
         className={cn(
-          "grid grid-cols-1 rounded-xl bg-white ring-1 ring-border sm:grid-cols-2",
-          isFull ? "mt-6 gap-4 p-4 sm:gap-6 sm:p-6" : "mt-4 gap-4 p-4"
+          "grid grid-cols-2 rounded-xl bg-white ring-1 ring-border sm:grid-cols-5",
+          isFull ? "mt-6 aspect-8.5/5.5 gap-2 p-4 sm:gap-3 sm:p-6" : "mt-4 gap-1.5 p-3"
         )}
       >
         {copyLabels.map((label, index) => (
-          <MiniSlip key={index} label={label} size={size} branding={branding} qr={qr} fields={fields} />
+          <MiniSlip key={index} label={label} size={slipSize} branding={branding} qr={qr} fields={fields} />
         ))}
       </div>
     </div>
   )
 }
 
-export { SlipPreview }
+export { SlipPreview, MiniSlip }
 export default SlipPreview

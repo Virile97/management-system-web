@@ -15,8 +15,8 @@ export default function LoginPage() {
             className="size-[5em] shrink-0 rounded-xl object-cover"
           />
           <div>
-            <p className="font-heading text-xl font-medium text-white">Lighthouse BBC</p>
-            <p className="text-sm text-white/60">Management System</p>
+            <p className="font-heading text-xl font-medium text-white">Lighthouse BBC Goa</p>
+            <p className="text-sm text-white/60">Data Management System</p>
           </div>
         </div>
 

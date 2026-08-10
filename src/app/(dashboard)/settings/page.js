@@ -6,9 +6,11 @@ import { Button } from "@/components/ui/button"
 import { BrandingSettings } from "@/components/settings/BrandingSettings"
 import { QRSettings } from "@/components/settings/QRSettings"
 import { SlipFields } from "@/components/settings/SlipFields"
-import { SlipPreview } from "@/components/settings/SlipPreview"
+import { SlipPreview, MiniSlip } from "@/components/settings/SlipPreview"
+import { SingleSlipPreview } from "@/components/settings/SingleSlipPreview"
 import { SettingsTabs } from "@/components/settings/SettingsTabs"
 import { UsersRolesSettings } from "@/components/settings/UsersRolesSettings"
+import { PrintPortal } from "@/components/common/PrintPortal"
 import { useSlipConfig } from "@/components/settings/SlipConfigContext"
 import { RotateCcw, Eye, EyeOff, Printer } from "lucide-react"
 
@@ -64,7 +66,7 @@ function SettingsPageContent() {
                   Offering Slip
                 </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Configure the 4-copy slip printed on short bond paper (8.5 x 5.5 in)
+                  Configure the 10-copy slip printed on short bond paper (8.5 x 5.5 in)
                 </p>
               </div>
 
@@ -85,7 +87,10 @@ function SettingsPageContent() {
                   )}
                   {isPreviewing ? "Edit" : "Preview"}
                 </Button>
-                <Button className="h-10 gap-2 rounded-lg bg-[#1e2a4a] px-4 text-white hover:bg-[#1e2a4a]/90">
+                <Button
+                  className="h-10 gap-2 rounded-lg bg-[#1e2a4a] px-4 text-white hover:bg-[#1e2a4a]/90"
+                  onClick={() => window.print()}
+                >
                   <Printer className="h-4 w-4" />
                   Print Slip
                 </Button>
@@ -105,10 +110,20 @@ function SettingsPageContent() {
                 </div>
 
                 <div className="lg:sticky lg:top-8 lg:self-start">
-                  <SlipPreview branding={branding} qr={qr} fields={fields} />
+                  <SingleSlipPreview branding={branding} qr={qr} fields={fields} />
                 </div>
               </div>
             )}
+
+            <PrintPortal>
+              <div className="print-slip-page">
+                <div className="print-slip-sheet grid grid-cols-5 grid-rows-2 gap-1">
+                  {Array.from({ length: 10 }, (_, index) => (
+                    <MiniSlip key={index} size="print" branding={branding} qr={qr} fields={fields} />
+                  ))}
+                </div>
+              </div>
+            </PrintPortal>
           </>
         ) : (
           <div className="mt-6">

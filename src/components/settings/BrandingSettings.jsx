@@ -44,21 +44,11 @@ function BrandingSettings({ branding, onChange }) {
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="slip-subtitle">Scripture / Subtitle</Label>
+          <Label htmlFor="church-address">Address</Label>
           <Input
-            id="slip-subtitle"
-            value={branding.subtitle}
-            onChange={(event) => onChange("subtitle", event.target.value)}
-            className="h-10 rounded-lg"
-          />
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="footer-note">Footer Note</Label>
-          <Input
-            id="footer-note"
-            value={branding.footerNote}
-            onChange={(event) => onChange("footerNote", event.target.value)}
+            id="church-address"
+            value={branding.address}
+            onChange={(event) => onChange("address", event.target.value)}
             className="h-10 rounded-lg"
           />
         </div>

@@ -195,6 +195,14 @@
     width: 100%;
   }
 
+  /* Settings page's 8-copy sheet: unlike the member print flows (which grow
+     across multiple pages as needed), all 8 copies must fit one physical
+     8.5x5.5in sheet, so this grid is capped to the page's usable height. */
+  .print-slip-sheet {
+    height: 5in;
+    overflow: hidden;
+  }
+
   .print-slip-page:last-child {
     page-break-after: auto;
   }
