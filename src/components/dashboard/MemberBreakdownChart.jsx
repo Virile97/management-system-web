@@ -8,7 +8,7 @@ import { Users } from "lucide-react"
 
 const STATUS_COLORS = ["#3f6a4e", "#c9a24b", "#a3392f", "#4a5568", "#6b46c1"]
 
-function MemberBreakdownChart({ total = 0, breakdown = [] }) {
+function MemberBreakdownChart({ total = 0, breakdown = [], title = "Member Breakdown", totalLabel = "total" }) {
   const chartConfig = breakdown.reduce((config, entry, index) => {
     config[entry.status] = { label: entry.status, color: STATUS_COLORS[index % STATUS_COLORS.length] }
     return config
@@ -18,12 +18,12 @@ function MemberBreakdownChart({ total = 0, breakdown = [] }) {
     <Card className="rounded-2xl p-4 sm:p-6">
       <CardHeader className="flex-row items-center justify-between px-0">
         <CardTitle className="font-heading text-lg font-normal text-foreground/80">
-          Member Breakdown
+          {title}
         </CardTitle>
-        {total > 0 && <span className="text-sm text-muted-foreground">{total} total</span>}
+        {total > 0 && <span className="text-sm text-muted-foreground">{total} {totalLabel}</span>}
       </CardHeader>
 
-      <CardContent className="px-0">
+      <CardContent className="flex h-full flex-col justify-end px-0">
         {total === 0 ? (
           <EmptyState
             icon={Users}

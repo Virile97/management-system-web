@@ -19,10 +19,35 @@ import { AddMemberModal } from "@/components/members/AddMemberModal"
 import { EditMemberModal } from "@/components/members/EditMemberModal"
 import { PrintSlipModal } from "@/components/members/PrintSlipModal"
 import { PrintSelectedSlipsModal } from "@/components/members/PrintSelectedSlipsModal"
+import { MemberBreakdownChart } from "@/components/dashboard/MemberBreakdownChart"
+import { DateRangeButton } from "@/components/common/DateRangeButton"
+import { DateRangeFilterModal } from "@/components/soul-winning/DateRangeFilterModal"
 import { useDebounce } from "@/hooks/use-debounce"
+import { formatDateRangeLabel } from "@/utils/helpers"
 import { listMembers, bulkDeleteMembers } from "@/services/member.service"
 import { useMembersStore } from "@/stores/members.store"
 import { Plus, Printer, Trash2 } from "lucide-react"
+
+const STATUS_ORDER = ["Active", "Inactive", "Deceased"]
+
+// Client-side breakdown of only the currently loaded/visible members (the
+// current page's rows) — there's no members-stats endpoint yet, so this
+// intentionally does not represent the full member population.
+function buildVisibleBreakdown(members) {
+  const counts = {}
+  for (const member of members) {
+    counts[member.status] = (counts[member.status] ?? 0) + 1
+  }
+
+  const total = members.length
+  const statuses = [...STATUS_ORDER.filter((status) => counts[status]), ...Object.keys(counts).filter((status) => !STATUS_ORDER.includes(status))]
+
+  return statuses.map((status) => ({
+    status,
+    count: counts[status],
+    percentage: total > 0 ? Math.round((counts[status] / total) * 100) : 0,
+  }))
+}
 
 export default function MembersPage() {
   return (
@@ -88,6 +113,20 @@ function MembersPageContent() {
   const [isDeleteSelectedOpen, setIsDeleteSelectedOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState("")
+
+  // UI only — member.service.js's listMembers has no date param yet, so this
+  // range isn't wired into any fetch call until the backend supports it.
+  const [isDateRangeOpen, setIsDateRangeOpen] = useState(false)
+  const [dateRange, setDateRange] = useState(null)
+  const dateRangeModalRange = dateRange ?? {
+    year: new Date().getFullYear(),
+    month: new Date().getMonth(),
+    start: null,
+    end: null,
+    startTime: "12:00 AM",
+    endTime: "11:59 PM",
+    utc: true,
+  }
 
   function updateParams(updates) {
     const params = new URLSearchParams(searchParams)
@@ -194,6 +233,7 @@ function MembersPageContent() {
   }, [page, activeFilter, debouncedSearch, refreshKey])
 
   const selectedMembers = members.filter((member) => selectedIds.has(member.id))
+  const visibleBreakdown = { total: members.length, breakdown: buildVisibleBreakdown(members) }
 
   const hasActiveFilters = activeFilter !== DEFAULT_STATUS || Boolean(search)
   // Nothing to filter — no members exist at all (not just for the current
@@ -288,8 +328,27 @@ function MembersPageContent() {
           </div>
         </div>
 
+        <div className="mt-6">
+          <MemberBreakdownChart
+            total={visibleBreakdown.total}
+            breakdown={visibleBreakdown.breakdown}
+            title="Member Breakdown — This Page"
+            totalLabel="on this page"
+          />
+        </div>
+
         <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <MemberFilters active={activeFilter} onChange={updateFilter} disabled={filtersDisabled} />
+          <div className="flex flex-wrap items-center gap-3">
+            <MemberFilters active={activeFilter} onChange={updateFilter} disabled={filtersDisabled} />
+            <DateRangeButton
+              hasRange={Boolean(dateRange)}
+              label={dateRange && formatDateRangeLabel(dateRange)}
+              disabled={filtersDisabled}
+              onOpen={() => setIsDateRangeOpen(true)}
+              onClear={() => setDateRange(null)}
+              className="h-9"
+            />
+          </div>
           <MemberSearch value={search} onChange={updateSearch} disabled={filtersDisabled} />
         </div>
 
@@ -335,6 +394,14 @@ function MembersPageContent() {
         open={isPrintSelectedOpen}
         onOpenChange={setIsPrintSelectedOpen}
         members={selectedMembers}
+      />
+
+      <DateRangeFilterModal
+        open={isDateRangeOpen}
+        onOpenChange={setIsDateRangeOpen}
+        range={dateRangeModalRange}
+        hasSelection={Boolean(dateRange)}
+        onApply={setDateRange}
       />
 
       <Dialog

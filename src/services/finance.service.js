@@ -2,16 +2,36 @@ import { getCsrfHeader } from "@/lib/auth"
 import { fetchJson, fetchWithMeta } from "@/services/api"
 import { APP_API_ENDPOINTS } from "@/utils/constants"
 
-function getFinanceStats(signal) {
-  return fetchJson(APP_API_ENDPOINTS.TRANSACTIONS_STATS, { signal })
+function getFinanceStats({ period = "month", from = "", to = "" } = {}, signal) {
+  const params = new URLSearchParams({ period })
+  if (from) params.set("from", from)
+  if (to) params.set("to", to)
+
+  return fetchJson(`${APP_API_ENDPOINTS.TRANSACTIONS_STATS}?${params.toString()}`, { signal })
 }
 
-function getFinanceByCategory(signal) {
-  return fetchJson(APP_API_ENDPOINTS.TRANSACTIONS_BY_CATEGORY, { signal })
+/**
+ * Type/category/offering-type option lists for the Record Transaction form.
+ * Rarely changes, so callers should cache this (see finance.store's
+ * `config`) rather than refetching on every modal open.
+ */
+function getTransactionsConfig(signal) {
+  return fetchJson(APP_API_ENDPOINTS.TRANSACTIONS_CONFIG, { signal })
 }
 
-function getFinanceTrend({ range = "6m" } = {}, signal) {
-  const params = new URLSearchParams({ range })
+function getFinanceByOfferingType({ period = "month", from = "", to = "" } = {}, signal) {
+  const params = new URLSearchParams({ period })
+  if (from) params.set("from", from)
+  if (to) params.set("to", to)
+
+  return fetchJson(`${APP_API_ENDPOINTS.TRANSACTIONS_BY_OFFERING_TYPE}?${params.toString()}`, { signal })
+}
+
+function getFinanceTrend({ period = "month", from = "", to = "" } = {}, signal) {
+  const params = new URLSearchParams({ period })
+  if (from) params.set("from", from)
+  if (to) params.set("to", to)
+
   return fetchJson(`${APP_API_ENDPOINTS.TRANSACTIONS_TREND}?${params.toString()}`, { signal })
 }
 
@@ -67,8 +87,9 @@ function bulkDeleteTransactions(ids) {
 
 export {
   getFinanceStats,
-  getFinanceByCategory,
+  getFinanceByOfferingType,
   getFinanceTrend,
+  getTransactionsConfig,
   listTransactions,
   getTransactionById,
   bulkDeleteTransactions,

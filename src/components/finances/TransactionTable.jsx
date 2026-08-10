@@ -8,17 +8,13 @@ import { FilterPills } from "@/components/common/FilterPills"
 import { DateRangeButton } from "@/components/common/DateRangeButton"
 import { DateRangeFilterModal } from "@/components/soul-winning/DateRangeFilterModal"
 import { cn } from "@/lib/utils"
+import { toDateRangeStrings, toDatePoint } from "@/utils/helpers"
 import { Button } from "@/components/ui/button"
 import { Search, ArrowUpRight, ArrowDownRight, Receipt, Trash2 } from "lucide-react"
 
 const FILTERS = ["All", "Income", "Expense"]
 
-function pad(value) {
-  return String(value).padStart(2, "0")
-}
-
-// dateFrom/dateTo are "YYYY-MM-DD" strings (or ""); the modal works in
-// day/month/year numbers for a single viewed month, so this seeds its
+// dateFrom/dateTo are "YYYY-MM-DD" strings (or ""); this seeds the modal's
 // initial view/selection from whichever bound is set (defaulting to today).
 function toModalRange(dateFrom, dateTo) {
   const seed = dateFrom ? new Date(dateFrom) : dateTo ? new Date(dateTo) : new Date()
@@ -26,20 +22,9 @@ function toModalRange(dateFrom, dateTo) {
   return {
     year: seed.getFullYear(),
     month: seed.getMonth(),
-    start: dateFrom ? new Date(dateFrom).getDate() : null,
-    end: dateTo ? new Date(dateTo).getDate() : null,
+    start: toDatePoint(dateFrom),
+    end: toDatePoint(dateTo),
   }
-}
-
-// Converts the modal's { year, month, start, end } day-of-month selection
-// back into "YYYY-MM-DD" from/to strings for the /transactions API.
-function toDateStrings(range) {
-  if (!range.start) return { from: "", to: "" }
-
-  const from = `${range.year}-${pad(range.month + 1)}-${pad(range.start)}`
-  const to = `${range.year}-${pad(range.month + 1)}-${pad(range.end ?? range.start)}`
-
-  return { from, to }
 }
 
 const categoryStyles = {
@@ -96,7 +81,7 @@ function TransactionTable({
   const filtersDisabled = total === 0 && !hasActiveFilters
 
   function handleApplyDateRange(range) {
-    const { from: nextFrom, to: nextTo } = toDateStrings(range)
+    const { from: nextFrom, to: nextTo } = toDateRangeStrings(range)
     onDateFromChange(nextFrom)
     onDateToChange(nextTo)
   }

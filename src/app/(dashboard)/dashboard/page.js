@@ -8,6 +8,7 @@ import { StatCard } from "@/components/dashboard/StatsCards"
 import { MemberBreakdownChart } from "@/components/dashboard/MemberBreakdownChart"
 import { SoulWinningChart } from "@/components/dashboard/SoulWinningChart"
 import { FinanceChart } from "@/components/dashboard/FinanceChart"
+import { AttendanceChart } from "@/components/dashboard/AttendanceChart"
 import { RecentActivity } from "@/components/dashboard/RecentActivity"
 import {
   StatCardSkeleton,
@@ -96,7 +97,8 @@ export default function DashboardPage() {
             ))}
           </div>
 
-          <div className="mt-4 grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-3">
+          <div className="mt-4 grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2">
+            <ChartCardSkeleton />
             <ChartCardSkeleton />
             <ChartCardSkeleton />
             <ChartCardSkeleton />
@@ -137,7 +139,7 @@ export default function DashboardPage() {
           ))}
         </div>
 
-        <div className="mt-4 grid grid-cols-1 gap-4 sm:mt-6 sm:gap-6 lg:grid-cols-3">
+        <div className="mt-4 grid grid-cols-1 gap-4 sm:mt-6 sm:gap-6 lg:grid-cols-2">
           <MemberBreakdownChart
             total={memberBreakdown?.total ?? 0}
             breakdown={memberBreakdown?.breakdown ?? []}
@@ -146,6 +148,8 @@ export default function DashboardPage() {
           <SoulWinningChart />
 
           <FinanceChart data={financeSummary} />
+
+          <AttendanceChart />
         </div>
 
         <div className="mt-4 sm:mt-6">

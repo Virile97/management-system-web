@@ -11,6 +11,7 @@ import { DateRangeButton } from "@/components/common/DateRangeButton"
 import { DateRangeFilterModal } from "@/components/soul-winning/DateRangeFilterModal"
 import { getAttendanceStats, getAttendanceMembers } from "@/services/attendance.service"
 import { useAsyncData } from "@/hooks/use-async-data"
+import { formatDateRangeLabel } from "@/utils/helpers"
 import { Download, Search } from "lucide-react"
 
 const GROUP_LEVELS = ["Career", "Ladies", "Men", "Young People"]
@@ -29,8 +30,8 @@ export default function AttendancePage() {
   const modalRange = range ?? {
     year: new Date().getFullYear(),
     month: new Date().getMonth(),
-    start: new Date().getDate(),
-    end: new Date().getDate(),
+    start: null,
+    end: null,
     startTime: "12:00 AM",
     endTime: "11:59 PM",
     utc: true,
@@ -85,13 +86,7 @@ export default function AttendancePage() {
           <div className="flex items-center gap-3">
             <DateRangeButton
               hasRange={Boolean(range)}
-              label={
-                range &&
-                `${String(range.month + 1).padStart(2, "0")}/${String(range.start).padStart(2, "0")}/${range.year}` +
-                  (range.end !== range.start
-                    ? ` – ${String(range.month + 1).padStart(2, "0")}/${String(range.end).padStart(2, "0")}/${range.year}`
-                    : "")
-              }
+              label={range && formatDateRangeLabel(range)}
               onOpen={() => setIsDateRangeOpen(true)}
               onClear={() => setRange(null)}
             />

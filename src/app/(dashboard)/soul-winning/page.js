@@ -196,8 +196,8 @@ function SoulWinningPageContent() {
   const [customRange, setCustomRange] = useState({
     year: 2026,
     month: 6,
-    start: 1,
-    end: 9,
+    start: { year: 2026, month: 6, day: 1 },
+    end: { year: 2026, month: 6, day: 9 },
     startTime: "12:00 AM",
     endTime: "11:59 PM",
     utc: true,

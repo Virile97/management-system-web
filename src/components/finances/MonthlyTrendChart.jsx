@@ -33,7 +33,7 @@ function MonthlyTrendChart({ data = [], isLoading }) {
         </CardTitle>
       </CardHeader>
 
-      <CardContent className="flex h-full flex-col justify-center px-0">
+      <CardContent className="flex h-full flex-col justify-end px-0">
         {!hasData ? (
           <EmptyState
             icon={TrendingUp}

@@ -1,17 +1,7 @@
 import Image from "next/image"
 import { cn } from "@/lib/utils"
 import { QrCode } from "lucide-react"
-
-const OFFERING_CATEGORIES = ["Tithes", "Love", "Faith", "Christbirth", "Firstfruit", "Sacrificial", "Thanksgiving"]
-const OTHER_OFFERING_CATEGORIES = [
-  "Bless Offering",
-  "Children's Ministry",
-  "Ensemble",
-  "GCTV",
-  "Mission",
-  "Mercy",
-  "Love Gift – Pastor",
-]
+import { OFFERING_CATEGORIES, OTHER_OFFERING_CATEGORIES } from "@/utils/constants"
 
 const qrSizeClasses = {
   Small: { compact: "h-6 w-6", print: "h-4 w-4", full: "h-10 w-10" },

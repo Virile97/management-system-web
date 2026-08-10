@@ -28,8 +28,9 @@ export const API_ENDPOINTS = {
   TRANSACTIONS_TREND: `${API_V1}/transactions/trend`,
   TRANSACTIONS_STATS: `${API_V1}/transactions/stats`,
   TRANSACTION_BY_ID: (id) => `${API_V1}/transactions/${id}`,
-  TRANSACTIONS_BY_CATEGORY: `${API_V1}/transactions/by-category`,
+  TRANSACTIONS_BY_OFFERING_TYPE: `${API_V1}/transactions/by-offering-type`,
   TRANSACTIONS_BULK_DELETE: `${API_V1}/transactions/bulk-delete`,
+  TRANSACTIONS_CONFIG: `${API_V1}/transactions/config`,
 }
 
 export const APP_API_ENDPOINTS = {
@@ -61,8 +62,9 @@ export const APP_API_ENDPOINTS = {
   TRANSACTIONS_STATS: "/api/finances/stats",
   TRANSACTIONS_TREND: "/api/finances/trend",
   TRANSACTION_BY_ID: (id) => `/api/finances/${id}`,
-  TRANSACTIONS_BY_CATEGORY: "/api/finances/by-category",
+  TRANSACTIONS_BY_OFFERING_TYPE: "/api/finances/by-offering-type",
   TRANSACTIONS_BULK_DELETE: "/api/finances/bulk-delete",
+  TRANSACTIONS_CONFIG: "/api/finances/config",
 }
 
 /**
@@ -82,3 +84,27 @@ export const AUTH_TOKEN_COOKIE_NAME = "auth_token"
 
 export const AUTH_SESSION_MAX_AGE = 60 * 60 * 24 // 24 hours, slides forward on each authenticated request
 export const AUTH_SESSION_ABSOLUTE_MAX_AGE = 60 * 60 * 24 * 7 // 7 days, hard cap regardless of activity
+
+/**
+ * Offering line items, in printed-slip order. Shared by the offering slip
+ * preview and the Record Transaction form so both stay in sync.
+ */
+export const OFFERING_CATEGORIES = [
+  "Tithes",
+  "Love",
+  "Faith",
+  "Christbirth",
+  "Firstfruit",
+  "Sacrificial",
+  "Thanksgiving",
+]
+
+export const OTHER_OFFERING_CATEGORIES = [
+  "Bless Offering",
+  "Children's Ministry",
+  "Ensemble",
+  "GCTV",
+  "Mission",
+  "Mercy",
+  "Love Gift – Pastor",
+]

@@ -28,7 +28,7 @@ function FinanceChart({ data = [] }) {
         </CardTitle>
       </CardHeader>
 
-      <CardContent className="px-0">
+      <CardContent className="flex h-full flex-col justify-end px-0">
         {!hasData ? (
           <EmptyState
             icon={DollarSign}

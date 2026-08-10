@@ -2,7 +2,7 @@ import { create } from "zustand"
 
 const initialState = {
   stats: null,
-  categoryData: [],
+  offeringTypeData: [],
   trendData: [],
   isSummaryLoading: true,
   summaryError: "",
@@ -14,13 +14,20 @@ const initialState = {
   dateTo: "",
   isTableLoading: true,
   tableError: "",
+
+  // Type/category/offering-type options for the Record Transaction form.
+  // Fetched once and cached here — `config` stays null until the first
+  // successful load, so callers know whether to fetch or reuse it.
+  config: null,
+  isConfigLoading: false,
+  configError: "",
 }
 
 const useFinanceStore = create((set) => ({
   ...initialState,
 
   setStats: (stats) => set({ stats }),
-  setCategoryData: (categoryData) => set({ categoryData }),
+  setOfferingTypeData: (offeringTypeData) => set({ offeringTypeData }),
   setTrendData: (trendData) => set({ trendData }),
   setSummaryLoading: (isSummaryLoading) => set({ isSummaryLoading }),
   setSummaryError: (summaryError) => set({ summaryError }),
@@ -32,6 +39,10 @@ const useFinanceStore = create((set) => ({
   clearDateRange: () => set({ dateFrom: "", dateTo: "" }),
   setTableLoading: (isTableLoading) => set({ isTableLoading }),
   setTableError: (tableError) => set({ tableError }),
+
+  setConfig: (config) => set({ config }),
+  setConfigLoading: (isConfigLoading) => set({ isConfigLoading }),
+  setConfigError: (configError) => set({ configError }),
 
   reset: () => set(initialState),
 }))

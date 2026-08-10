@@ -1,28 +1,37 @@
 "use client"
 
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { useState } from "react"
+import { Card, CardHeader, CardTitle, CardAction, CardContent } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { EmptyState } from "@/components/common/EmptyState"
 import { ChartCardSkeleton } from "@/components/dashboard/DashboardSkeletons"
+import { MultiSelectDropdown } from "@/components/common/MultiSelectDropdown"
 import { PieChart, Pie, Cell } from "recharts"
 import { PieChart as PieChartIcon } from "lucide-react"
 
-// Fixed palette cycled across however many categories the backend returns.
+// Fixed palette cycled across however many offering types the backend returns.
 const COLORS = ["#1e2a4a", "#2f5233", "#b3492f", "#d98e3f", "#7a4a2b", "#c9a24b", "#4a6fa5", "#8e4162"]
 
-function CategoryChart({ data = [], isLoading }) {
+function OfferingTypeChart({ data = [], isLoading }) {
+  const [selectedTypes, setSelectedTypes] = useState([])
+
   if (isLoading) {
     return <ChartCardSkeleton />
   }
 
-  const categories = data.map((entry, index) => ({
-    name: entry.category,
+  const allTypeNames = data.map((entry) => entry.offeringType)
+  const visibleData = selectedTypes.length > 0
+    ? data.filter((entry) => selectedTypes.includes(entry.offeringType))
+    : data
+
+  const offeringTypes = visibleData.map((entry) => ({
+    name: entry.offeringType,
     value: entry.total,
-    color: COLORS[index % COLORS.length],
+    color: COLORS[allTypeNames.indexOf(entry.offeringType) % COLORS.length],
   }))
 
-  const chartConfig = categories.reduce((config, category) => {
-    config[category.name] = { label: category.name, color: category.color }
+  const chartConfig = offeringTypes.reduce((config, offeringType) => {
+    config[offeringType.name] = { label: offeringType.name, color: offeringType.color }
     return config
   }, {})
 
@@ -30,16 +39,27 @@ function CategoryChart({ data = [], isLoading }) {
     <Card className="rounded-2xl p-4 sm:p-6">
       <CardHeader className="px-0">
         <CardTitle className="font-heading text-lg font-normal text-foreground/80">
-          By Category
+          By Offering Type
         </CardTitle>
+
+        {allTypeNames.length > 0 && (
+          <CardAction>
+            <MultiSelectDropdown
+              label="Offering Type"
+              options={allTypeNames}
+              selected={selectedTypes}
+              onChange={setSelectedTypes}
+            />
+          </CardAction>
+        )}
       </CardHeader>
 
       <CardContent className="flex h-full flex-col justify-center px-0">
-        {categories.length === 0 ? (
+        {offeringTypes.length === 0 ? (
           <EmptyState
             icon={PieChartIcon}
-            title="No category data yet"
-            description="Spending and income by category will show up here once transactions are recorded."
+            title="No offering type data yet"
+            description="Offering breakdown by type will show up here once transactions are recorded."
           />
         ) : (
           <>
@@ -67,7 +87,7 @@ function CategoryChart({ data = [], isLoading }) {
                   }
                 />
                 <Pie
-                  data={categories}
+                  data={offeringTypes}
                   dataKey="value"
                   nameKey="name"
                   innerRadius={34}
@@ -76,21 +96,21 @@ function CategoryChart({ data = [], isLoading }) {
                   stroke="var(--card)"
                   isAnimationActive={false}
                 >
-                  {categories.map((category) => (
-                    <Cell key={category.name} fill={category.color} />
+                  {offeringTypes.map((offeringType) => (
+                    <Cell key={offeringType.name} fill={offeringType.color} />
                   ))}
                 </Pie>
               </PieChart>
             </ChartContainer>
 
             <div className="mt-4 grid grid-cols-2 gap-x-6 gap-y-1.5">
-              {categories.map((category) => (
-                <div key={category.name} className="flex items-center gap-2 text-xs text-foreground/80">
+              {offeringTypes.map((offeringType) => (
+                <div key={offeringType.name} className="flex items-center gap-2 text-xs text-foreground/80">
                   <span
                     className="h-1.5 w-1.5 shrink-0 rounded-full"
-                    style={{ backgroundColor: category.color }}
+                    style={{ backgroundColor: offeringType.color }}
                   />
-                  {category.name}
+                  {offeringType.name}
                 </div>
               ))}
             </div>
@@ -101,5 +121,5 @@ function CategoryChart({ data = [], isLoading }) {
   )
 }
 
-export { CategoryChart }
-export default CategoryChart
+export { OfferingTypeChart }
+export default OfferingTypeChart

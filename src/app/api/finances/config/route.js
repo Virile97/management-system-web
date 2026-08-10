@@ -11,11 +11,11 @@ export async function GET() {
   }
 
   try {
-    const { data } = await api.get(API_ENDPOINTS.TRANSACTIONS_BY_CATEGORY, withAuthHeader(token))
+    const { data } = await api.get(API_ENDPOINTS.TRANSACTIONS_CONFIG, withAuthHeader(token))
     return NextResponse.json(data)
   } catch (err) {
     const status = err?.response?.status || 500
-    const message = err?.response?.data?.message || "Unable to fetch category breakdown"
+    const message = err?.response?.data?.message || "Unable to fetch transaction form options"
 
     return NextResponse.json({ success: false, message }, { status })
   }

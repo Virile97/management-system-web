@@ -10,17 +10,17 @@ export async function GET(request) {
     return NextResponse.json({ success: false, message: "Not authenticated" }, { status: 401 })
   }
 
-  const { period, from, to } = Object.fromEntries(request.nextUrl.searchParams)
+  const { period, from, to, offeringTypeId } = Object.fromEntries(request.nextUrl.searchParams)
 
   try {
-    const { data } = await api.get(API_ENDPOINTS.TRANSACTIONS_TREND, {
+    const { data } = await api.get(API_ENDPOINTS.TRANSACTIONS_BY_OFFERING_TYPE, {
       ...withAuthHeader(token),
-      params: { period, from, to },
+      params: { period, from, to, offeringTypeId },
     })
     return NextResponse.json(data)
   } catch (err) {
     const status = err?.response?.status || 500
-    const message = err?.response?.data?.message || "Unable to fetch monthly trend"
+    const message = err?.response?.data?.message || "Unable to fetch offering type breakdown"
 
     return NextResponse.json({ success: false, message }, { status })
   }

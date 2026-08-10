@@ -4,14 +4,19 @@ import { api, withAuthHeader } from "@/lib/axios"
 import { getSessionToken } from "@/lib/session"
 import { API_ENDPOINTS } from "@/utils/constants"
 
-export async function GET() {
+export async function GET(request) {
   const token = getSessionToken()
   if (!token) {
     return NextResponse.json({ success: false, message: "Not authenticated" }, { status: 401 })
   }
 
+  const { period, from, to } = Object.fromEntries(request.nextUrl.searchParams)
+
   try {
-    const { data } = await api.get(API_ENDPOINTS.TRANSACTIONS_STATS, withAuthHeader(token))
+    const { data } = await api.get(API_ENDPOINTS.TRANSACTIONS_STATS, {
+      ...withAuthHeader(token),
+      params: { period, from, to },
+    })
     return NextResponse.json(data)
   } catch (err) {
     const status = err?.response?.status || 500

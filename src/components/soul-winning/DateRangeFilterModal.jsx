@@ -24,11 +24,36 @@ function isToday(year, month, day) {
   return now.getFullYear() === year && now.getMonth() === month && now.getDate() === day
 }
 
+// Comparable ordinal for a { year, month, day } point, so start/end can be
+// compared and range-membership tested even when they fall in different
+// months (a plain day-of-month number can't do that on its own).
+function toOrdinal(point) {
+  return new Date(point.year, point.month, point.day).getTime()
+}
+
+function samePoint(a, b) {
+  return a.year === b.year && a.month === b.month && a.day === b.day
+}
+
+// range.start/range.end come in as either full { year, month, day } points
+// or (for back-compat with older callers) a bare day number paired with
+// range.year/range.month.
+function normalizePoint(range, key) {
+  const value = range?.[key]
+  if (value == null) return null
+  if (typeof value === "object") return value
+
+  return { year: range.year, month: range.month, day: value }
+}
+
 function DateRangeFilterModal({ open, onOpenChange, range, hasSelection = true, onApply }) {
-  const [viewYear, setViewYear] = useState(range.year)
-  const [viewMonth, setViewMonth] = useState(range.month)
+  const initialStart = normalizePoint(range, "start")
+  const initialEnd = normalizePoint(range, "end")
+
+  const [viewYear, setViewYear] = useState(initialStart?.year ?? range.year)
+  const [viewMonth, setViewMonth] = useState(initialStart?.month ?? range.month)
   const [selection, setSelection] = useState(
-    hasSelection ? { start: range.start, end: range.end } : { start: null, end: null }
+    hasSelection ? { start: initialStart, end: initialEnd } : { start: null, end: null }
   )
   const [startTime, setStartTime] = useState(range.startTime ?? "12:00 AM")
   const [endTime, setEndTime] = useState(range.endTime ?? "11:59 PM")
@@ -42,9 +67,12 @@ function DateRangeFilterModal({ open, onOpenChange, range, hasSelection = true, 
   useEffect(() => {
     if (!open) return
 
-    setViewYear(range.year)
-    setViewMonth(range.month)
-    setSelection(hasSelection ? { start: range.start, end: range.end } : { start: null, end: null })
+    const start = normalizePoint(range, "start")
+    const end = normalizePoint(range, "end")
+
+    setViewYear(start?.year ?? range.year)
+    setViewMonth(start?.month ?? range.month)
+    setSelection(hasSelection ? { start, end } : { start: null, end: null })
     setStartTime(range.startTime ?? "12:00 AM")
     setEndTime(range.endTime ?? "11:59 PM")
     setUseUtc(range.utc ?? true)
@@ -73,34 +101,38 @@ function DateRangeFilterModal({ open, onOpenChange, range, hasSelection = true, 
   }
 
   function handleDayClick(day) {
+    const point = { year: viewYear, month: viewMonth, day }
+
     if (!selection.start || (selection.start && selection.end)) {
-      setSelection({ start: day, end: null })
-    } else if (day < selection.start) {
-      setSelection({ start: day, end: selection.start })
+      setSelection({ start: point, end: null })
+    } else if (toOrdinal(point) < toOrdinal(selection.start)) {
+      setSelection({ start: point, end: selection.start })
     } else {
-      setSelection({ start: selection.start, end: day })
+      setSelection({ start: selection.start, end: point })
     }
   }
 
   function isInRange(day) {
     if (!selection.start) return false
 
+    const point = { year: viewYear, month: viewMonth, day }
     const end = selection.end ?? selection.start
-    return day >= selection.start && day <= end
+    const ordinal = toOrdinal(point)
+
+    return ordinal >= toOrdinal(selection.start) && ordinal <= toOrdinal(end)
   }
 
   function isRangeStart(day) {
-    return day === selection.start
+    return selection.start && samePoint(selection.start, { year: viewYear, month: viewMonth, day })
   }
 
   function isRangeEnd(day) {
-    return day === (selection.end ?? selection.start)
+    const end = selection.end ?? selection.start
+    return end && samePoint(end, { year: viewYear, month: viewMonth, day })
   }
 
   function handleApply() {
     onApply({
-      year: viewYear,
-      month: viewMonth,
       start: selection.start,
       end: selection.end ?? selection.start,
       startTime,
@@ -152,6 +184,16 @@ function DateRangeFilterModal({ open, onOpenChange, range, hasSelection = true, 
               <ChevronRight className="h-4 w-4" />
             </button>
           </div>
+
+          {selection.start && (
+            <p className="mt-2 text-center text-xs text-muted-foreground">
+              {monthNames[selection.start.month]} {selection.start.day}, {selection.start.year}
+              {" – "}
+              {selection.end
+                ? `${monthNames[selection.end.month]} ${selection.end.day}, ${selection.end.year}`
+                : "…"}
+            </p>
+          )}
 
           <div className="mt-4 grid grid-cols-7 gap-y-1">
             {days.map((day) => {
@@ -221,7 +263,8 @@ function DateRangeFilterModal({ open, onOpenChange, range, hasSelection = true, 
           <button
             type="button"
             onClick={handleApply}
-            className="rounded-lg bg-[#1e2a4a] px-5 py-2 text-sm font-medium text-white hover:bg-[#1e2a4a]/90"
+            disabled={!selection.start}
+            className="rounded-lg bg-[#1e2a4a] px-5 py-2 text-sm font-medium text-white hover:bg-[#1e2a4a]/90 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Apply
           </button>

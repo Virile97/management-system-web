@@ -1,19 +1,9 @@
 import Image from "next/image"
 import { cn } from "@/lib/utils"
 import { QrCode } from "lucide-react"
+import { OFFERING_CATEGORIES, OTHER_OFFERING_CATEGORIES } from "@/utils/constants"
 
 const copyLabels = Array.from({ length: 10 }, () => null)
-
-const OFFERING_CATEGORIES = ["Tithes", "Love", "Faith", "Christbirth", "Firstfruit", "Sacrificial", "Thanksgiving"]
-const OTHER_OFFERING_CATEGORIES = [
-  "Bless Offering",
-  "Children's Ministry",
-  "Ensemble",
-  "GCTV",
-  "Mission",
-  "Mercy",
-  "Love Gift – Pastor",
-]
 
 function isVisible(fields, key) {
   return fields.find((field) => field.key === key)?.visible ?? true
