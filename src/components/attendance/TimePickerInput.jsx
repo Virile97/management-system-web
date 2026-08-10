@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import { Clock } from "lucide-react"
@@ -11,7 +11,13 @@ const periods = ["AM", "PM"]
 
 function parseValue(value) {
   const match = /^(\d{2}):(\d{2}) (AM|PM)$/.exec(value ?? "")
-  if (!match) return { hour: null, minute: null, period: null }
+
+  if (!match) return { 
+    hour: null, 
+    minute: null, 
+    period: null 
+  }
+
   return { hour: match[1], minute: match[2], period: match[3] }
 }
 
@@ -21,12 +27,14 @@ function formatDisplay({ hour, minute, period }) {
 
 function formatValue({ hour, minute, period }) {
   if (!hour || !minute || !period) return null
+
   return `${hour}:${minute} ${period}`
 }
 
 function currentHour12() {
   const hour24 = new Date().getHours()
   const hour12 = hour24 % 12 || 12
+
   return String(hour12).padStart(2, "0")
 }
 
@@ -34,11 +42,11 @@ function currentMinute() {
   return String(new Date().getMinutes()).padStart(2, "0")
 }
 
-// Rotates a list so it starts at `start` and wraps around, so the current
-// hour/minute is the first (topmost) option instead of buried mid-scroll.
 function rotateFrom(options, start) {
   const index = options.indexOf(start)
+
   if (index <= 0) return options
+
   return [...options.slice(index), ...options.slice(0, index)]
 }
 
@@ -55,8 +63,7 @@ function TimePickerColumn({ options, active, currentValue, onSelect }) {
             active === option
               ? "bg-blue-500 font-medium text-white"
               : "text-foreground/80 hover:bg-muted",
-            // Marks "now" so it's findable even before anything is picked —
-            // a soft tint, distinct from the solid-fill selected state above.
+
             active !== option && option === currentValue && "bg-blue-50 font-medium text-blue-600"
           )}
         >
@@ -67,10 +74,6 @@ function TimePickerColumn({ options, active, currentValue, onSelect }) {
   )
 }
 
-/**
- * Backspace clears segments right-to-left: minute first, then hour+period
- * on the next press — so it takes two presses to fully clear a set time.
- */
 function clearNextSegment(parts) {
   if (parts.minute) return { ...parts, minute: null }
   if (parts.hour || parts.period) return { ...parts, hour: null, period: null }
@@ -79,20 +82,24 @@ function clearNextSegment(parts) {
 
 function TimePickerInput({ value, disabled, onChange, placeholder = "--:-- --" }) {
   const [open, setOpen] = useState(false)
-  // Owns the segment-level state itself: `value` only carries a complete
-  // "HH:MM AM/PM" string, so a partially-cleared time (e.g. hour set but
-  // minute erased via Backspace) has nowhere to live except here.
   const [draft, setDraft] = useState(() => parseValue(value))
+
+  const lastEmitted = useRef(value)
+
+  useEffect(() => {
+    if (value === lastEmitted.current) return
+
+    lastEmitted.current = value
+    setDraft(parseValue(value))
+  }, [value])
 
   function commit(nextParts) {
     setDraft(nextParts)
-    onChange?.(formatValue(nextParts))
+    const nextValue = formatValue(nextParts)
+    lastEmitted.current = nextValue
+    onChange?.(nextValue)
   }
 
-  // If only one of hour/minute was picked, default the other rather than
-  // leaving the time incomplete: minute defaults to "00", hour defaults to
-  // the current local hour (more useful than a fixed value for attendance
-  // check-ins, which are almost always logged around "now").
   function fillMissingSegment(parts) {
     if (!(parts.hour || parts.minute) || (parts.hour && parts.minute)) return parts
 
@@ -125,9 +132,6 @@ function TimePickerInput({ value, disabled, onChange, placeholder = "--:-- --" }
   const hasAnySegment = draft.hour || draft.minute || draft.period
   const display = hasAnySegment ? formatDisplay(draft) : null
 
-  // Rotate the lists so the current hour/minute leads, and remember which
-  // options those were so they can be ringed — but only recompute when the
-  // popover opens, not on every render, so nothing shifts mid-selection.
   const { hourOptions, minuteOptions, nowHour, nowMinute } = useMemo(() => {
     if (!open) return { hourOptions: hours, minuteOptions: minutes, nowHour: null, nowMinute: null }
 

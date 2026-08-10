@@ -7,10 +7,11 @@ import { StatCardSkeleton, ListCardSkeleton } from "@/components/dashboard/Dashb
 import { AttendanceStatsCards } from "@/components/attendance/AttendanceStatsCards"
 import { AttendanceGroupTabs } from "@/components/attendance/AttendanceGroupTabs"
 import { AttendanceTable } from "@/components/attendance/AttendanceTable"
+import { DateRangeButton } from "@/components/common/DateRangeButton"
 import { DateRangeFilterModal } from "@/components/soul-winning/DateRangeFilterModal"
 import { getAttendanceStats, getAttendanceMembers } from "@/services/attendance.service"
 import { useAsyncData } from "@/hooks/use-async-data"
-import { Calendar, Download, Search } from "lucide-react"
+import { Download, Search } from "lucide-react"
 
 const GROUP_LEVELS = ["Career", "Ladies", "Men", "Young People"]
 const PAGE_SIZE = 5
@@ -23,15 +24,17 @@ export default function AttendancePage() {
   const [search, setSearch] = useState("")
   const [page, setPage] = useState(1)
   const [isDateRangeOpen, setIsDateRangeOpen] = useState(false)
-  const [range, setRange] = useState({
-    year: 2026,
-    month: 7,
-    start: 9,
-    end: 9,
+  const [range, setRange] = useState(null)
+
+  const modalRange = range ?? {
+    year: new Date().getFullYear(),
+    month: new Date().getMonth(),
+    start: new Date().getDate(),
+    end: new Date().getDate(),
     startTime: "12:00 AM",
     endTime: "11:59 PM",
     utc: true,
-  })
+  }
 
   const buildTasks = useCallback(() => [
     [(signal) => getAttendanceStats(range, signal), setStats],
@@ -80,17 +83,18 @@ export default function AttendancePage() {
           </div>
 
           <div className="flex items-center gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              className="h-8 gap-1.5 rounded-lg px-3 text-sm"
-              onClick={() => setIsDateRangeOpen(true)}
-            >
-              <Calendar className="h-3.5 w-3.5" />
-              {String(range.month + 1).padStart(2, "0")}/{String(range.start).padStart(2, "0")}/{range.year}
-              {range.end !== range.start &&
-                ` – ${String(range.month + 1).padStart(2, "0")}/${String(range.end).padStart(2, "0")}/${range.year}`}
-            </Button>
+            <DateRangeButton
+              hasRange={Boolean(range)}
+              label={
+                range &&
+                `${String(range.month + 1).padStart(2, "0")}/${String(range.start).padStart(2, "0")}/${range.year}` +
+                  (range.end !== range.start
+                    ? ` – ${String(range.month + 1).padStart(2, "0")}/${String(range.end).padStart(2, "0")}/${range.year}`
+                    : "")
+              }
+              onOpen={() => setIsDateRangeOpen(true)}
+              onClear={() => setRange(null)}
+            />
 
             <Button className="h-10 gap-2 rounded-lg bg-[#1e2a4a] px-4 text-white hover:bg-[#1e2a4a]/90">
               <Download className="h-4 w-4" />
@@ -160,7 +164,8 @@ export default function AttendancePage() {
       <DateRangeFilterModal
         open={isDateRangeOpen}
         onOpenChange={setIsDateRangeOpen}
-        range={range}
+        range={modalRange}
+        hasSelection={Boolean(range)}
         onApply={setRange}
       />
     </div>

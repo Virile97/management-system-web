@@ -5,10 +5,11 @@ import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
 import { DataTableShell } from "@/components/common/DataTableShell"
 import { FilterPills } from "@/components/common/FilterPills"
+import { DateRangeButton } from "@/components/common/DateRangeButton"
 import { DateRangeFilterModal } from "@/components/soul-winning/DateRangeFilterModal"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { Search, ArrowUpRight, ArrowDownRight, Receipt, X, Calendar, Trash2 } from "lucide-react"
+import { Search, ArrowUpRight, ArrowDownRight, Receipt, Trash2 } from "lucide-react"
 
 const FILTERS = ["All", "Income", "Expense"]
 
@@ -110,32 +111,14 @@ function TransactionTable({
           disabled={filtersDisabled}
         />
 
-        <div className="flex items-center gap-1">
-          <Button
-            type="button"
-            variant="outline"
-            disabled={filtersDisabled}
-            className={cn(
-              "h-8 gap-1.5 rounded-lg px-3 text-sm",
-              hasDateRange && "border-[#1e2a4a] text-[#1e2a4a]"
-            )}
-            onClick={() => setIsDateRangeOpen(true)}
-          >
-            <Calendar className="h-3.5 w-3.5" />
-            {hasDateRange ? `${dateFrom || "…"} – ${dateTo || "…"}` : "Date Range"}
-          </Button>
-          {hasDateRange && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground"
-              onClick={onClearDateRange}
-              aria-label="Clear date range"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          )}
-        </div>
+        <DateRangeButton
+          hasRange={hasDateRange}
+          label={hasDateRange ? `${dateFrom || "…"} – ${dateTo || "…"}` : null}
+          disabled={filtersDisabled}
+          onOpen={() => setIsDateRangeOpen(true)}
+          onClear={onClearDateRange}
+          className="h-8"
+        />
 
         <div className="relative w-full sm:w-72">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />

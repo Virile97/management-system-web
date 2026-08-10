@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import {
   Dialog,
   DialogContent,
@@ -19,13 +19,37 @@ function getDaysInMonth(year, month) {
   return new Date(year, month + 1, 0).getDate()
 }
 
-function DateRangeFilterModal({ open, onOpenChange, range, onApply }) {
+function isToday(year, month, day) {
+  const now = new Date()
+  return now.getFullYear() === year && now.getMonth() === month && now.getDate() === day
+}
+
+function DateRangeFilterModal({ open, onOpenChange, range, hasSelection = true, onApply }) {
   const [viewYear, setViewYear] = useState(range.year)
   const [viewMonth, setViewMonth] = useState(range.month)
-  const [selection, setSelection] = useState({ start: range.start, end: range.end })
+  const [selection, setSelection] = useState(
+    hasSelection ? { start: range.start, end: range.end } : { start: null, end: null }
+  )
   const [startTime, setStartTime] = useState(range.startTime ?? "12:00 AM")
   const [endTime, setEndTime] = useState(range.endTime ?? "11:59 PM")
   const [useUtc, setUseUtc] = useState(range.utc ?? true)
+
+  // The modal stays mounted between opens (only `open` toggles), so its
+  // internal state otherwise only ever reflects the very first `range` it
+  // was mounted with. Re-derive on every open so a reset on the parent
+  // (range cleared to null, hasSelection false) is actually reflected
+  // instead of showing whatever was left selected from last time.
+  useEffect(() => {
+    if (!open) return
+
+    setViewYear(range.year)
+    setViewMonth(range.month)
+    setSelection(hasSelection ? { start: range.start, end: range.end } : { start: null, end: null })
+    setStartTime(range.startTime ?? "12:00 AM")
+    setEndTime(range.endTime ?? "11:59 PM")
+    setUseUtc(range.utc ?? true)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open])
 
   const daysInMonth = getDaysInMonth(viewYear, viewMonth)
   const days = Array.from({ length: daysInMonth }, (_, i) => i + 1)
@@ -60,6 +84,7 @@ function DateRangeFilterModal({ open, onOpenChange, range, onApply }) {
 
   function isInRange(day) {
     if (!selection.start) return false
+
     const end = selection.end ?? selection.start
     return day >= selection.start && day <= end
   }
@@ -133,6 +158,7 @@ function DateRangeFilterModal({ open, onOpenChange, range, onApply }) {
               const inRange = isInRange(day)
               const isStart = isRangeStart(day)
               const isEnd = isRangeEnd(day)
+              const today = isToday(viewYear, viewMonth, day)
 
               return (
                 <button
@@ -141,10 +167,15 @@ function DateRangeFilterModal({ open, onOpenChange, range, onApply }) {
                   onClick={() => handleDayClick(day)}
                   className={cn(
                     "flex h-9 w-full min-w-0 items-center justify-center text-sm text-foreground/85 transition-colors",
-                    inRange && "bg-[#1e2a4a] text-white",
+                    inRange && "bg-[#1e2a4a] font-medium text-white",
                     isStart && "rounded-l-full",
                     isEnd && "rounded-r-full",
-                    !inRange && "rounded-full hover:bg-muted"
+                    !inRange && "rounded-full hover:bg-muted",
+                    // Today gets a soft tint in the same navy family as the
+                    // solid selected/range fill, so it reads as related but
+                    // distinct — findable at a glance without being mistaken
+                    // for an actual selection.
+                    !inRange && today && "bg-[#1e2a4a]/10 font-medium text-[#1e2a4a]"
                   )}
                 >
                   {day}
