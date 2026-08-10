@@ -60,12 +60,7 @@ function MemberProfileCard({ member, onEdit }) {
 
         <p className="font-heading text-base font-medium text-white">{member.name}</p>
 
-        <div className="flex flex-wrap items-center justify-center gap-2">
-          {primaryGroup && (
-            <span className="rounded-full bg-white/10 px-2.5 py-1 text-xs font-medium text-white/80">
-              {primaryGroup}
-            </span>
-          )}
+        <div className="flex flex-col items-center gap-2">
           <span
             className={cn(
               "rounded-full px-2.5 py-1 text-xs font-medium",
@@ -74,6 +69,11 @@ function MemberProfileCard({ member, onEdit }) {
           >
             {member.status}
           </span>
+          {primaryGroup && (
+            <span className="rounded-full bg-white/10 px-2.5 py-1 text-xs font-medium text-white/80">
+              {primaryGroup}
+            </span>
+          )}
         </div>
       </div>
 

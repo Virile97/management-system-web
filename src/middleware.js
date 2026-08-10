@@ -66,8 +66,14 @@ export function middleware(request) {
     }
 
     // A member's financial breakdown is admin-only too, even though the member
-    // page itself is not: block both the view and the code check behind it.
-    if (request.nextUrl.pathname.startsWith("/api/members/finance-access")) {
+    // page itself is not: block the view, the offerings behind it, and the
+    // code check that gates them.
+    const isFinanceApi =
+      request.nextUrl.pathname.startsWith("/api/members/finance-access") ||
+      (request.nextUrl.pathname.startsWith("/api/members/") &&
+        request.nextUrl.pathname.endsWith("/offerings"))
+
+    if (isFinanceApi) {
       return NextResponse.json({ success: false, message: "Not allowed" }, { status: 403 })
     }
 

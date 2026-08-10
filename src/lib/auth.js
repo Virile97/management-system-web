@@ -47,6 +47,18 @@ async function encryptWithPublicKey(publicKeyPem, plainText) {
   return arrayBufferToBase64(ciphertext)
 }
 
+/**
+ * SHA-256 of "<nonce>:<value>" as a hex string, for proving knowledge of a
+ * secret (the finance access code) without ever sending it. The server issues
+ * the nonce and recomputes the same digest from its own copy of the secret.
+ */
+async function hashWithNonce(nonce, value) {
+  const encoded = new TextEncoder().encode(`${nonce}:${value}`)
+  const digest = await window.crypto.subtle.digest("SHA-256", encoded)
+
+  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("")
+}
+
 function readCookie(name) {
   const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`))
 
@@ -79,4 +91,4 @@ function getCurrentUser() {
   }
 }
 
-export { encryptWithPublicKey, getCsrfHeader, getCurrentUser }
+export { encryptWithPublicKey, hashWithNonce, getCsrfHeader, getCurrentUser }

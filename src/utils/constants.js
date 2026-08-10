@@ -22,6 +22,7 @@ export const API_ENDPOINTS = {
   MEMBERS_CONFIG: `${API_V1}/members/config`,
   MEMBERS_BREAKDOWN: `${API_V1}/members/breakdown`,
   MEMBER_BY_ID: (id) => `${API_V1}/members/${id}`,
+  MEMBER_OFFERINGS: (id) => `${API_V1}/members/${id}/offerings`,
   MEMBERS_BULK_DELETE: `${API_V1}/members/bulk-delete`,
 
   // Finances endpoints
@@ -57,6 +58,7 @@ export const APP_API_ENDPOINTS = {
   MEMBERS_CONFIG: "/api/members/config",
   MEMBERS_BREAKDOWN: "/api/members/breakdown",
   MEMBER_BY_ID: (id) => `/api/members/${id}`,
+  MEMBER_OFFERINGS: (id) => `/api/members/${id}/offerings`,
   MEMBERS_BULK_DELETE: "/api/members/bulk-delete",
   // Verified against this app's own FINANCE_ACCESS_CODE — no backend counterpart.
   MEMBERS_FINANCE_ACCESS: "/api/members/finance-access",

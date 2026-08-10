@@ -1,118 +1,100 @@
-import { getCsrfHeader } from "@/lib/auth"
-import { fetchJson } from "@/services/api"
+import { getCsrfHeader, hashWithNonce } from "@/lib/auth"
+import { fetchJson, fetchWithMeta } from "@/services/api"
 import { APP_API_ENDPOINTS } from "@/utils/constants"
 
 /**
  * Verifies the admin code that gates a member's financial breakdown. Resolves
  * on success and throws with the server's message ("Incorrect access code") on
- * failure — the code itself is only ever compared server-side.
+ * failure.
+ *
+ * The code never leaves the browser: a single-use nonce is fetched first and
+ * only SHA-256("<nonce>:<code>") is posted, so the request payload holds an
+ * opaque digest rather than the code itself. Each attempt takes a fresh nonce
+ * since the server spends it on sight.
  */
-function verifyFinanceAccess(code) {
+async function verifyFinanceAccess(code) {
+  const { nonce } = await fetchJson(APP_API_ENDPOINTS.MEMBERS_FINANCE_ACCESS)
+  const digest = await hashWithNonce(nonce, code)
+
   return fetchJson(APP_API_ENDPOINTS.MEMBERS_FINANCE_ACCESS, {
     method: "POST",
     headers: { "Content-Type": "application/json", ...getCsrfHeader() },
-    body: JSON.stringify({ code }),
+    body: JSON.stringify({ nonce, digest }),
   })
 }
 
+// Tab labels, in display order, mapped onto the backend's period enum.
+const PERIOD_VALUES = {
+  Weekly: "week",
+  Monthly: "month",
+  Yearly: "year",
+  Custom: "custom",
+}
+
+const PERIODS = Object.keys(PERIOD_VALUES)
+
+// Transactions recorded without an offering-type breakdown come back with a
+// null offeringType; they still carry an amount, so they get a label rather
+// than being hidden from the list.
+const UNSPECIFIED_TYPE = "Unspecified"
+
 /**
- * No per-member offering endpoint exists yet (transactions carry no member
- * linkage), so this resolves from generated data instead of calling fetchJson.
- * The signature matches the rest of the finance service (period-scoped,
- * AbortSignal-aware) so swapping in the real endpoint is a one-line change
- * here rather than a rewrite of the panel.
+ * Flattens an offering line item into the flat fields the table renders, in
+ * the same spirit as finance.service's normalizeTransaction.
  */
-const OFFERING_TYPES = ["Tithe", "First Fruit", "Sacrificial", "Thanksgiving", "Love"]
+function normalizeOffering(item) {
+  return {
+    id: item.id,
+    transactionId: item.transactionId,
+    date: item.date,
+    type: item.offeringType?.name ?? UNSPECIFIED_TYPE,
+    amount: Number(item.amount),
+    note: item.note ?? "",
+  }
+}
 
-const PERIODS = ["Weekly", "Month", "Year", "Custom"]
-
-function mockResolve(value, signal) {
-  return new Promise((resolve, reject) => {
-    if (signal?.aborted) return reject(new DOMException("Aborted", "AbortError"))
-    resolve(value)
+/**
+ * A member's offering line items for a period, optionally narrowed to one or
+ * more offering types. Paging is by transaction (`page`/`limit`, default 20,
+ * max 100), so a page can return slightly more line items than `limit` when a
+ * transaction has a multi-type breakdown. `meta.total` / `meta.totalPages` are
+ * transaction counts; `totalRecords` is the full filtered line-item count.
+ *
+ * `from`/`to` ("YYYY-MM-DD") are only sent for the Custom period, which the API
+ * requires both bounds for. `offeringTypeIds` are config ids, each appended as
+ * a repeated `offeringTypeId` query param.
+ */
+async function getMemberOfferings(
+  memberId,
+  { period = "Yearly", from = "", to = "", offeringTypeIds = [], page = 1, limit = 20 } = {},
+  signal
+) {
+  const params = new URLSearchParams({
+    period: PERIOD_VALUES[period] ?? "month",
+    page: String(page),
+    limit: String(limit),
   })
-}
 
-function hashId(value) {
-  let hash = 0
-  for (const char of String(value)) hash = (hash * 31 + char.charCodeAt(0)) >>> 0
-  return hash
-}
-
-// Same member + year always produces the same records, so the numbers don't
-// churn between renders the way Math.random() would.
-function buildYearRecords(memberId, year) {
-  const seed = hashId(memberId)
-  const now = new Date()
-  const records = []
-
-  for (let month = 0; month < 12; month++) {
-    const count = 1 + ((seed >> month) & 1)
-
-    for (let index = 0; index < count; index++) {
-      const day = 1 + ((seed + month * 7 + index * 13) % 28)
-      const date = new Date(year, month, day)
-      if (date > now) continue
-
-      const type = OFFERING_TYPES[(seed + month + index) % OFFERING_TYPES.length]
-
-      records.push({
-        id: `${memberId}-${year}-${month}-${index}`,
-        date: date.toISOString(),
-        type,
-        amount: 500 + ((seed + month * 137 + index * 61) % 18) * 100,
-        note: type === "First Fruit" ? "Annual" : "",
-      })
-    }
+  if (PERIOD_VALUES[period] === "custom") {
+    params.set("from", from)
+    params.set("to", to)
   }
 
-  return records
+  for (const id of offeringTypeIds) {
+    if (id) params.append("offeringTypeId", id)
+  }
+
+  const { data, meta } = await fetchWithMeta(
+    `${APP_API_ENDPOINTS.MEMBER_OFFERINGS(memberId)}?${params.toString()}`,
+    { signal }
+  )
+
+  return {
+    total: Number(data.totalOfferings) || 0,
+    totalRecords: Number(data.totalRecords) || 0,
+    records: (data.items ?? []).map(normalizeOffering),
+    meta: meta || { page, limit, total: 0, totalPages: 1 },
+  }
 }
 
-/**
- * Resolves the [start, end] window a period covers. Everything but a custom
- * range is anchored to today.
- */
-function resolvePeriodRange({ period, from, to }) {
-  if (period === "Custom" && from) {
-    return { start: new Date(from), end: new Date(`${to || from}T23:59:59`) }
-  }
-
-  const now = new Date()
-
-  if (period === "Weekly") {
-    const start = new Date(now)
-    start.setDate(start.getDate() - 6)
-    return { start, end: now }
-  }
-
-  if (period === "Month") {
-    return { start: new Date(now.getFullYear(), now.getMonth(), 1), end: now }
-  }
-
-  return { start: new Date(now.getFullYear(), 0, 1), end: now }
-}
-
-function getMemberOfferings(memberId, { period = "Year", from = "", to = "" } = {}, signal) {
-  const { start, end } = resolvePeriodRange({ period, from, to })
-
-  // A custom range can span more than one year, so build every year it
-  // touches before filtering down to the window itself.
-  const records = []
-  for (let year = start.getFullYear(); year <= end.getFullYear(); year++) {
-    records.push(...buildYearRecords(memberId, year))
-  }
-
-  const inRange = records
-    .filter((record) => {
-      const date = new Date(record.date)
-      return date >= start && date <= end
-    })
-    .sort((a, b) => new Date(b.date) - new Date(a.date))
-
-  const total = inRange.reduce((sum, record) => sum + record.amount, 0)
-
-  return mockResolve({ total, records: inRange }, signal)
-}
-
-export { verifyFinanceAccess, getMemberOfferings, OFFERING_TYPES, PERIODS }
+export { verifyFinanceAccess, getMemberOfferings, PERIODS, UNSPECIFIED_TYPE }

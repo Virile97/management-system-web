@@ -15,7 +15,10 @@ import { register as registerAbortController } from "@/lib/abort-registry"
 import { useMembersStore } from "@/stores/members.store"
 import { Lock } from "lucide-react"
 
-const DEFAULT_PERIOD = "Year"
+const DEFAULT_PERIOD = "Yearly"
+
+// Older bookmarks used Month/Year; map them onto the current tab labels.
+const PERIOD_ALIASES = { Month: "Monthly", Year: "Yearly" }
 
 // Same allow-list the sidebar uses for /finances — the plain USER role can see
 // a member but never their financial breakdown.
@@ -37,13 +40,23 @@ function MemberDetailPageContent() {
 
   const isFinanceView = searchParams.get("view") === "finance"
   const isEditParam = searchParams.get("isEdit") === "true"
-  const period = searchParams.get("period") || DEFAULT_PERIOD
+  const periodParam =
+    PERIOD_ALIASES[searchParams.get("period")] || searchParams.get("period") || DEFAULT_PERIOD
 
   // The URL (periodFrom/periodTo) is the source of truth for the custom range,
   // so the finance panel's filters survive a reload — they're only read back
   // while the Custom period is actually active.
-  const periodFrom = period === "Custom" ? searchParams.get("periodFrom") || "" : ""
-  const periodTo = period === "Custom" ? searchParams.get("periodTo") || "" : ""
+  const periodFrom = periodParam === "Custom" ? searchParams.get("periodFrom") || "" : ""
+  const periodTo = periodParam === "Custom" ? searchParams.get("periodTo") || "" : ""
+
+  // The offerings API rejects a custom period without both bounds, so a
+  // hand-typed ?period=Custom falls back to the default rather than erroring.
+  const period = periodParam === "Custom" && !(periodFrom && periodTo) ? DEFAULT_PERIOD : periodParam
+
+  // Comma-separated config ids; empty means "all types". A single legacy id
+  // still parses cleanly as a one-element list.
+  const offeringTypeIds = (searchParams.get("offeringType") || "").split(",").filter(Boolean)
+  const offeringsPage = Math.max(1, parseInt(searchParams.get("page"), 10) || 1)
 
   // The list page caches every member it has fetched, so the profile can
   // render immediately on click while the full record loads behind it.
@@ -124,7 +137,7 @@ function MemberDetailPageContent() {
     const params = new URLSearchParams(searchParams)
 
     for (const [key, value] of Object.entries(updates)) {
-      if (!value || value === DEFAULT_PERIOD) {
+      if (!value || value === DEFAULT_PERIOD || (key === "page" && value <= 1)) {
         params.delete(key)
       } else {
         params.set(key, String(value))
@@ -143,11 +156,19 @@ function MemberDetailPageContent() {
   function updatePeriod(nextPeriod) {
     if (nextPeriod === "Custom") return
 
-    updateParams({ period: nextPeriod, periodFrom: "", periodTo: "" })
+    updateParams({ period: nextPeriod, periodFrom: "", periodTo: "", page: 1 })
   }
 
   function applyPeriodRange({ from, to }) {
-    updateParams({ period: "Custom", periodFrom: from, periodTo: to })
+    updateParams({ period: "Custom", periodFrom: from, periodTo: to, page: 1 })
+  }
+
+  function updateOfferingTypes(nextTypeIds) {
+    updateParams({ offeringType: nextTypeIds.length ? nextTypeIds.join(",") : "", page: 1 })
+  }
+
+  function goToOfferingsPage(nextPage) {
+    updateParams({ page: nextPage })
   }
 
   // Leaving the finance view is the single place the unlock is cleared, so
@@ -234,8 +255,12 @@ function MemberDetailPageContent() {
                 period={period}
                 dateFrom={periodFrom}
                 dateTo={periodTo}
+                offeringTypeIds={offeringTypeIds}
+                page={offeringsPage}
                 onPeriodChange={updatePeriod}
                 onApplyDateRange={applyPeriodRange}
+                onOfferingTypesChange={updateOfferingTypes}
+                onPageChange={goToOfferingsPage}
                 onLock={handleLock}
               />
             ) : (
