@@ -1,7 +1,37 @@
 import { ERROR_MESSAGES } from "@/utils/errors"
 import { getCurrentUser } from "@/lib/auth"
 
-async function fetchWithMeta(url, options) {
+// Several fetchers can 401 at once (e.g. the dashboard's parallel stat
+// calls) when the access token expires — share one in-flight refresh across
+// all of them instead of racing multiple /api/auth/refresh calls.
+let refreshPromise = null
+
+function refreshSession() {
+  if (!refreshPromise) {
+    refreshPromise = fetch("/api/auth/refresh", { method: "POST" })
+      .then((res) => res.ok)
+      .catch(() => false)
+      .finally(() => {
+        refreshPromise = null
+      })
+  }
+
+  return refreshPromise
+}
+
+async function logout() {
+  // Awaited (not fire-and-forget) so the redirect can't race the cookie
+  // being cleared, and thrown as a distinctly-named error so withRetry
+  // doesn't burn attempts retrying a session that's already dead.
+  await fetch("/api/auth/logout", { method: "POST" }).catch(() => {})
+  window.location.href = "/login"
+
+  const err = new Error(ERROR_MESSAGES.GENERIC)
+  err.name = "SessionExpiredError"
+  return err
+}
+
+async function fetchWithMeta(url, options, { _isRetry = false } = {}) {
   if (typeof navigator !== "undefined" && !navigator.onLine) {
     throw new Error(ERROR_MESSAGES.OFFLINE)
   }
@@ -18,21 +48,18 @@ async function fetchWithMeta(url, options) {
     const isTokenInvalid = /invalid|expired/i.test(body?.message ?? "")
 
     if (isTokenInvalid && typeof window !== "undefined") {
-      // The backend has explicitly rejected this token — there is no
-      // refresh-token flow to fall back to (see /api/auth/refresh, a 501
-      // stub), so the only correct move is to log out: clear the session
-      // (httpOnly cookie included, hence going through the logout route
-      // rather than deleting client-side) and send the user to sign in
-      // again instead of leaving them stuck on a page that can't recover.
-      // Awaited (not fire-and-forget) so the redirect can't race the cookie
-      // being cleared, and thrown as a distinctly-named error so withRetry
-      // doesn't burn attempts retrying a session that's already dead.
-      await fetch("/api/auth/logout", { method: "POST" }).catch(() => {})
-      window.location.href = "/login"
+      // Access token expired — try one silent refresh-and-retry before
+      // giving up. Only the refresh call's own failure (refresh token also
+      // expired/revoked) is a real "session truly ended" signal now.
+      if (!_isRetry) {
+        const refreshed = await refreshSession()
 
-      const err = new Error(ERROR_MESSAGES.GENERIC)
-      err.name = "SessionExpiredError"
-      throw err
+        if (refreshed) {
+          return fetchWithMeta(url, options, { _isRetry: true })
+        }
+      }
+
+      throw await logout()
     }
 
     // Otherwise, only redirect if the client-side session is actually gone

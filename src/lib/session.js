@@ -57,6 +57,35 @@ function clearSessionCookies(response) {
 }
 
 /**
+ * Updates just the access token half of the session (after a successful
+ * /auth/refresh), preserving the original loginAt so the absolute session
+ * cap keeps counting from first login rather than resetting on refresh.
+ */
+function setAccessTokenCookie(response, { token, loginAt }) {
+  response.cookies.set(
+    AUTH_TOKEN_COOKIE_NAME,
+    JSON.stringify({ token, loginAt }),
+    { ...baseCookieOptions(), httpOnly: true, maxAge: AUTH_SESSION_MAX_AGE }
+  )
+}
+
+/**
+ * Relays the backend's own Set-Cookie header (its httpOnly refresh-token
+ * cookie) from an axios response onto our Next.js response, so it reaches
+ * the browser and is sent back to the backend on the next /auth/refresh
+ * call. We never parse or name this cookie — it's opaque to this app.
+ */
+function forwardBackendSetCookie(response, axiosResponse) {
+  const raw = axiosResponse.headers?.["set-cookie"]
+  if (!raw) return
+
+  const cookies = Array.isArray(raw) ? raw : [raw]
+  for (const cookie of cookies) {
+    response.headers.append("Set-Cookie", cookie)
+  }
+}
+
+/**
  * Validates the raw auth_token cookie value against the absolute session cap.
  * Returns the parsed { token, loginAt } if still within the cap, or null otherwise.
  */
@@ -87,10 +116,23 @@ function getSessionToken() {
   return readValidTokenCookie(raw)?.token ?? null
 }
 
+/**
+ * Reads the current request's original loginAt, so a refresh can carry it
+ * forward instead of resetting the absolute session cap.
+ */
+function getSessionLoginAt() {
+  const raw = cookies().get(AUTH_TOKEN_COOKIE_NAME)?.value
+
+  return readValidTokenCookie(raw)?.loginAt ?? null
+}
+
 export {
   baseCookieOptions,
   setSessionCookies,
   clearSessionCookies,
+  setAccessTokenCookie,
+  forwardBackendSetCookie,
   readValidTokenCookie,
   getSessionToken,
+  getSessionLoginAt,
 }

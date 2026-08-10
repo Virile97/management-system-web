@@ -4,6 +4,7 @@ export const API_ENDPOINTS = {
   //Auth endpoints
   AUTH_LOGIN: `${API_V1}/auth/login`,
   AUTH_LOGOUT: `${API_V1}/auth/logout`,
+  AUTH_REFRESH: `${API_V1}/auth/refresh`,
   AUTH_PUBLIC_KEY: `${API_V1}/auth/public-key`,
 
   // Dashboard endpoints
@@ -36,6 +37,7 @@ export const APP_API_ENDPOINTS = {
   AUTH_ME: "/api/auth/me",
   AUTH_LOGIN: "/api/auth/login",
   AUTH_LOGOUT: "/api/auth/logout",
+  AUTH_REFRESH: "/api/auth/refresh",
   AUTH_PUBLIC_KEY: "/api/auth/public-key",
 
   // App Dashboard endpoints
@@ -67,6 +69,11 @@ export const APP_API_ENDPOINTS = {
  * auth_user: non-httpOnly, holds { id, email, name, role } — safe for client JS to read (no secret)
  * auth_token: httpOnly, holds the raw JWT used as the Authorization bearer token against the backend
  * csrf_token: non-httpOnly, double-submitted as the X-CSRF-Token header on mutating /api/* requests
+ *
+ * The backend also sets its own httpOnly refresh-token cookie directly via Set-Cookie on
+ * /auth/login and /auth/refresh responses. This app never reads or names that cookie — it's
+ * opaque to us — but login/refresh route handlers must forward the backend's Set-Cookie header
+ * onto the browser response so it round-trips back to the backend on the next refresh call.
  */
 export const CSRF_COOKIE_NAME = "csrf_token"
 export const CSRF_HEADER_NAME = "x-csrf-token"
