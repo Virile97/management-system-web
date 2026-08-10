@@ -22,6 +22,7 @@ import { PeriodTabs } from "@/components/soul-winning/PeriodTabs"
 import { DateRangeFilterModal } from "@/components/soul-winning/DateRangeFilterModal"
 import { useDebounce } from "@/hooks/use-debounce"
 import { toDatePoint, toDateRangeStrings } from "@/utils/helpers"
+import { register as registerAbortController } from "@/lib/abort-registry"
 import {
   getFinanceStats,
   getFinanceByOfferingType,
@@ -193,6 +194,7 @@ function FinancesPageContent() {
   // filters — they only refetch when the period (or its custom range) changes.
   useEffect(() => {
     const controller = new AbortController()
+    const unregister = registerAbortController(controller)
 
     const { setStats, setOfferingTypeData, setTrendData, setSummaryLoading, setSummaryError } =
       useFinanceStore.getState()
@@ -221,7 +223,10 @@ function FinancesPageContent() {
     }
 
     loadSummary()
-    return () => controller.abort()
+    return () => {
+      controller.abort()
+      unregister()
+    }
   }, [periodValue, periodFrom, periodTo])
 
   // Type/category/offering-type options rarely change, so fetch them once
@@ -229,11 +234,12 @@ function FinancesPageContent() {
   // API when `config` hasn't been loaded yet.
   useEffect(() => {
     const controller = new AbortController()
+    const unregister = registerAbortController(controller)
 
     const { config: existingConfig, setConfig, setConfigLoading, setConfigError } =
       useFinanceStore.getState()
 
-    if (existingConfig) return
+    if (existingConfig) return unregister
 
     async function loadConfig() {
       setConfigLoading(true)
@@ -252,11 +258,15 @@ function FinancesPageContent() {
     }
 
     loadConfig()
-    return () => controller.abort()
+    return () => {
+      controller.abort()
+      unregister()
+    }
   }, [])
 
   useEffect(() => {
     const controller = new AbortController()
+    const unregister = registerAbortController(controller)
 
     const { setTransactions, setTableLoading, setTableError } = useFinanceStore.getState()
 
@@ -297,7 +307,10 @@ function FinancesPageContent() {
     }
 
     loadTransactions()
-    return () => controller.abort()
+    return () => {
+      controller.abort()
+      unregister()
+    }
   }, [page, activeFilter, debouncedSearch, dateFrom, dateTo, refreshKey])
 
   const { setSearch, setDateFrom, setDateTo, clearDateRange } = useFinanceStore.getState()

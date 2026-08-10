@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 
 import { withRetry } from "@/services/api"
+import { register as registerAbortController } from "@/lib/abort-registry"
 
 function useAsyncData(buildTasks, { maxAttempts, deps = [] } = {}) {
   const [error, setError] = useState("")
@@ -13,6 +14,7 @@ function useAsyncData(buildTasks, { maxAttempts, deps = [] } = {}) {
 
   useEffect(() => {
     const controller = new AbortController()
+    const unregister = registerAbortController(controller)
     const tasks = buildTasks()
 
     async function load() {
@@ -40,7 +42,10 @@ function useAsyncData(buildTasks, { maxAttempts, deps = [] } = {}) {
 
     load()
 
-    return () => controller.abort()
+    return () => {
+      controller.abort()
+      unregister()
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [retryToken, ...deps])
 

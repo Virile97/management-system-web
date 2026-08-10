@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation"
 import { SidebarItem } from "@/components/layout/SidebarItem"
 import { LayoutGrid, Users, PhilippinePeso, Heart, Settings, X, LogOut, ClipboardCheck } from "lucide-react"
 import { getCurrentUser } from "@/lib/auth"
+import { abortAll } from "@/lib/abort-registry"
 import { useDashboardStore } from "@/stores/dashboard.store"
 import { useMemberFormStore } from "@/stores/memberForm.store"
 import { useMembersStore } from "@/stores/members.store"
@@ -63,6 +64,12 @@ function Sidebar({ open = false, onClose }) {
   async function handleLogout() {
     setLogoutError("")
     setIsLoggingOut(true)
+
+    // Cancel every in-flight authenticated request first. Middleware renews
+    // (re-Set-Cookies) the session cookie on every authenticated GET — a
+    // request still in flight when logout clears cookies can otherwise land
+    // afterward and resurrect a valid session via its stale renewed cookie.
+    abortAll()
 
     try {
       const res = await fetch(APP_API_ENDPOINTS.AUTH_LOGOUT, { method: "POST" })

@@ -11,6 +11,7 @@ import { EditMemberModal } from "@/components/members/EditMemberModal"
 import { getMemberById, normalizeMember } from "@/services/member.service"
 import { getMemberRecentAttendance } from "@/services/attendance.service"
 import { getCurrentUser } from "@/lib/auth"
+import { register as registerAbortController } from "@/lib/abort-registry"
 import { useMembersStore } from "@/stores/members.store"
 import { Lock } from "lucide-react"
 
@@ -72,6 +73,7 @@ function MemberDetailPageContent() {
 
   useEffect(() => {
     const controller = new AbortController()
+    const unregister = registerAbortController(controller)
 
     async function loadMember() {
       setError("")
@@ -86,11 +88,15 @@ function MemberDetailPageContent() {
     }
 
     loadMember()
-    return () => controller.abort()
+    return () => {
+      controller.abort()
+      unregister()
+    }
   }, [memberId, refreshKey])
 
   useEffect(() => {
     const controller = new AbortController()
+    const unregister = registerAbortController(controller)
 
     async function loadAttendance() {
       setIsAttendanceLoading(true)
@@ -108,7 +114,10 @@ function MemberDetailPageContent() {
     }
 
     loadAttendance()
-    return () => controller.abort()
+    return () => {
+      controller.abort()
+      unregister()
+    }
   }, [memberId])
 
   function updateParams(updates) {

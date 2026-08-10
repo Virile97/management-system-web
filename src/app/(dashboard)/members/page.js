@@ -24,6 +24,7 @@ import { DateRangeButton } from "@/components/common/DateRangeButton"
 import { DateRangeFilterModal } from "@/components/soul-winning/DateRangeFilterModal"
 import { useDebounce } from "@/hooks/use-debounce"
 import { formatDateRangeLabel, toDateRangeStrings } from "@/utils/helpers"
+import { register as registerAbortController } from "@/lib/abort-registry"
 import { listMembers, getMemberBreakdown, bulkDeleteMembers } from "@/services/member.service"
 import { useMembersStore } from "@/stores/members.store"
 import { Plus, Printer, Trash2 } from "lucide-react"
@@ -165,6 +166,7 @@ function MembersPageContent() {
     }
 
     const controller = new AbortController()
+    const unregister = registerAbortController(controller)
 
     async function loadMembers() {
       // Search-only fast path: answer from the accumulated cache when possible,
@@ -220,27 +222,26 @@ function MembersPageContent() {
     }
 
     loadMembers()
-    return () => controller.abort()
+    return () => {
+      controller.abort()
+      unregister()
+    }
   }, [page, activeFilter, debouncedSearch, dateFrom, dateTo, refreshKey])
 
   const [breakdown, setBreakdown] = useState({ total: 0, breakdown: [] })
   const [isBreakdownLoading, setIsBreakdownLoading] = useState(true)
 
+  // The breakdown describes the whole member population for the selected date
+  // range, so the status tabs and the search box deliberately don't narrow it —
+  // filtering the table down to one status shouldn't collapse the chart to it.
   useEffect(() => {
     const controller = new AbortController()
+    const unregister = registerAbortController(controller)
 
     async function loadBreakdown() {
       setIsBreakdownLoading(true)
       try {
-        const data = await getMemberBreakdown(
-          {
-            search: debouncedSearch,
-            status: activeFilter === DEFAULT_STATUS ? "" : activeFilter,
-            from: dateFrom,
-            to: dateTo,
-          },
-          controller.signal
-        )
+        const data = await getMemberBreakdown({ from: dateFrom, to: dateTo }, controller.signal)
         if (controller.signal.aborted) return
         setBreakdown(data)
       } catch {
@@ -251,8 +252,11 @@ function MembersPageContent() {
     }
 
     loadBreakdown()
-    return () => controller.abort()
-  }, [activeFilter, debouncedSearch, dateFrom, dateTo, refreshKey])
+    return () => {
+      controller.abort()
+      unregister()
+    }
+  }, [dateFrom, dateTo, refreshKey])
 
   const selectedMembers = members.filter((member) => selectedIds.has(member.id))
 
@@ -341,6 +345,15 @@ function MembersPageContent() {
               </>
             )}
 
+            <DateRangeButton
+              hasRange={Boolean(dateRange)}
+              label={dateRange && formatDateRangeLabel(dateRange)}
+              disabled={filtersDisabled}
+              onOpen={() => setIsDateRangeOpen(true)}
+              onClear={() => setDateRange(null)}
+              className="h-10 px-4"
+            />
+
             <Button
               className="h-10 gap-2 rounded-lg bg-[#1e2a4a] px-4 text-white hover:bg-[#1e2a4a]/90"
               onClick={() => setIsAddMemberOpen(true)}
@@ -362,14 +375,6 @@ function MembersPageContent() {
         <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-wrap items-center gap-3">
             <MemberFilters active={activeFilter} onChange={updateFilter} disabled={filtersDisabled} />
-            <DateRangeButton
-              hasRange={Boolean(dateRange)}
-              label={dateRange && formatDateRangeLabel(dateRange)}
-              disabled={filtersDisabled}
-              onOpen={() => setIsDateRangeOpen(true)}
-              onClear={() => setDateRange(null)}
-              className="h-9"
-            />
           </div>
           <MemberSearch value={search} onChange={updateSearch} disabled={filtersDisabled} />
         </div>
