@@ -21,8 +21,23 @@ export async function GET(request, { params }) {
   }
 }
 
-export async function PUT(request, { params }) {
-  return NextResponse.json({ message: "Not implemented" }, { status: 501 })
+export async function PATCH(request, { params }) {
+  const token = getSessionToken()
+  if (!token) {
+    return NextResponse.json({ success: false, message: "Not authenticated" }, { status: 401 })
+  }
+
+  const body = await request.json()
+
+  try {
+    const { data } = await api.patch(API_ENDPOINTS.TRANSACTION_BY_ID(params.id), body, withAuthHeader(token))
+    return NextResponse.json(data)
+  } catch (err) {
+    const status = err?.response?.status || 500
+    const message = err?.response?.data?.message || "Unable to update transaction"
+
+    return NextResponse.json({ success: false, message }, { status })
+  }
 }
 
 export async function DELETE(request, { params }) {

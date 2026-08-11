@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 import { cn } from "@/lib/utils"
-import { QrCode, Printer } from "lucide-react"
+import { QrCode } from "lucide-react"
 
 const statusStyles = {
   Active: "bg-emerald-50 text-emerald-600",
@@ -97,13 +97,8 @@ function MemberCard({ member, checked, onCheckedChange, onPrint, onEdit, onOpen 
         </button>
         <button
           type="button"
-          onClick={() => onPrint(member)}
-          className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-muted/40 text-muted-foreground hover:bg-muted"
-        >
-          <Printer className="h-4 w-4" />
-        </button>
-        <button
-          type="button"
+          onClick={() => onPrint?.(member)}
+          aria-label={`Print QR code for ${member.name}`}
           className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-muted/40 text-muted-foreground hover:bg-muted"
         >
           <QrCode className="h-4 w-4" />

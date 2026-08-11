@@ -64,6 +64,7 @@ function TransactionTable({
   onToggleSelect,
   onToggleSelectAll,
   onDeleteSelected,
+  onEdit,
   page,
   totalPages,
   total,
@@ -173,6 +174,9 @@ function TransactionTable({
           <th className="py-3 pr-4 text-right text-xs font-medium tracking-wide text-muted-foreground uppercase">
             Amount
           </th>
+          <th className="py-3 pr-4 text-right text-xs font-medium tracking-wide text-muted-foreground uppercase">
+            Actions
+          </th>
         </tr>
       )}
       renderDesktopRows={(rows, selection) =>
@@ -225,6 +229,15 @@ function TransactionTable({
             >
               {transaction.amount > 0 ? "+" : "-"}
               {currencyFormatter.format(Math.abs(transaction.amount))}
+            </td>
+            <td className="py-4 pr-4 text-right">
+              <button
+                type="button"
+                onClick={() => onEdit?.(transaction)}
+                className="text-sm font-medium text-foreground/80 hover:text-foreground"
+              >
+                Edit
+              </button>
             </td>
           </tr>
         ))
@@ -284,6 +297,16 @@ function TransactionTable({
             <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
               <span>{formatDate(transaction.createdAt)}</span>
               <span>{transaction.recordedBy}</span>
+            </div>
+
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={() => onEdit?.(transaction)}
+                className="text-sm font-medium text-foreground/80 hover:text-foreground"
+              >
+                Edit
+              </button>
             </div>
           </div>
         ))

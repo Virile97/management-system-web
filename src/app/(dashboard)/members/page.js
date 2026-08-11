@@ -17,8 +17,8 @@ import { MemberSearch } from "@/components/members/MemberSearch"
 import { MemberTable } from "@/components/members/MemberTable"
 import { AddMemberModal } from "@/components/members/AddMemberModal"
 import { EditMemberModal } from "@/components/members/EditMemberModal"
-import { PrintSlipModal } from "@/components/members/PrintSlipModal"
-import { PrintSelectedSlipsModal } from "@/components/members/PrintSelectedSlipsModal"
+import { PrintQrModal } from "@/components/members/PrintQrModal"
+import { PrintSelectedQrModal } from "@/components/members/PrintSelectedQrModal"
 import { MemberBreakdownChart } from "@/components/dashboard/MemberBreakdownChart"
 import { DateRangeButton } from "@/components/common/DateRangeButton"
 import { DateRangeFilterModal } from "@/components/soul-winning/DateRangeFilterModal"
@@ -27,7 +27,7 @@ import { formatDateRangeLabel, toDateRangeStrings } from "@/utils/helpers"
 import { register as registerAbortController } from "@/lib/abort-registry"
 import { listMembers, getMemberBreakdown, bulkDeleteMembers } from "@/services/member.service"
 import { useMembersStore } from "@/stores/members.store"
-import { Plus, Printer, Trash2 } from "lucide-react"
+import { Plus, QrCode, Trash2 } from "lucide-react"
 
 export default function MembersPage() {
   return (
@@ -331,8 +331,8 @@ function MembersPageContent() {
                   className="h-10 gap-2 rounded-lg px-4"
                   onClick={() => setIsPrintSelectedOpen(true)}
                 >
-                  <Printer className="h-4 w-4" />
-                  Print Selected ({selectedIds.size})
+                  <QrCode className="h-4 w-4" />
+                  Print QR ({selectedIds.size})
                 </Button>
                 <Button
                   variant="outline"
@@ -413,12 +413,12 @@ function MembersPageContent() {
         memberId={editMemberIdParam}
         onUpdated={() => setRefreshKey((key) => key + 1)}
       />
-      <PrintSlipModal
+      <PrintQrModal
         open={printMember !== null}
         onOpenChange={(open) => !open && setPrintMember(null)}
         member={printMember}
       />
-      <PrintSelectedSlipsModal
+      <PrintSelectedQrModal
         open={isPrintSelectedOpen}
         onOpenChange={setIsPrintSelectedOpen}
         members={selectedMembers}

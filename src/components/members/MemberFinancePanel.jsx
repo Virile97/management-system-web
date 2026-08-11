@@ -2,18 +2,21 @@
 
 import { useEffect, useState } from "react"
 import { Card } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import { EmptyState } from "@/components/common/EmptyState"
 import { MultiSelectDropdown } from "@/components/common/MultiSelectDropdown"
 import { Pagination } from "@/components/common/Pagination"
 import { ListCardSkeleton } from "@/components/dashboard/DashboardSkeletons"
+import { Skeleton } from "@/components/ui/skeleton"
 import { PeriodTabs } from "@/components/soul-winning/PeriodTabs"
 import { DateRangeFilterModal } from "@/components/soul-winning/DateRangeFilterModal"
+import { ExportMonthlyOfferingsModal } from "@/components/members/ExportMonthlyOfferingsModal"
 import { getMemberOfferings, PERIODS } from "@/services/memberFinance.service"
 import { getTransactionsConfig } from "@/services/finance.service"
 import { useFinanceStore } from "@/stores/finance.store"
 import { toDateRangeStrings, toDatePoint } from "@/utils/helpers"
 import { cn } from "@/lib/utils"
-import { Receipt, ShieldCheck, Lock, X } from "lucide-react"
+import { Receipt, ShieldCheck, Lock, X, FileDown } from "lucide-react"
 
 // Matches the offerings API default (max 100). Paging is by transaction, so a
 // page can return slightly more line items when a txn has a multi-type split.
@@ -67,6 +70,7 @@ function TypeBadge({ type }) {
 
 function MemberFinancePanel({
   memberId,
+  memberName,
   period,
   dateFrom,
   dateTo,
@@ -79,6 +83,7 @@ function MemberFinancePanel({
   onLock,
 }) {
   const [isDateRangeOpen, setIsDateRangeOpen] = useState(false)
+  const [isExportOpen, setIsExportOpen] = useState(false)
 
   const [records, setRecords] = useState([])
   const [total, setTotal] = useState(0)
@@ -227,12 +232,31 @@ function MemberFinancePanel({
       )}
 
       <Card className="rounded-2xl p-4 sm:p-5">
-        <p className="text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
-          Total Offerings
-        </p>
-        <p className="mt-1 font-heading text-2xl font-normal text-foreground/85 sm:text-3xl">
-          {currencyFormatter.format(total)}
-        </p>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+              Total Offerings
+            </p>
+            {isLoading ? (
+              <Skeleton className="mt-2 h-8 w-36 sm:h-9" />
+            ) : (
+              <p className="mt-1 font-heading text-2xl font-normal text-foreground/85 sm:text-3xl">
+                {currencyFormatter.format(total)}
+              </p>
+            )}
+          </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            className="h-9 shrink-0 gap-2 rounded-lg"
+            onClick={() => setIsExportOpen(true)}
+            disabled={isLoading}
+          >
+            <FileDown className="h-4 w-4" />
+            Export Monthly Report
+          </Button>
+        </div>
       </Card>
 
       <Card className="overflow-hidden rounded-2xl p-0">
@@ -334,6 +358,18 @@ function MemberFinancePanel({
         range={toModalRange(dateFrom, dateTo)}
         hasSelection={Boolean(dateFrom || dateTo)}
         onApply={handleApplyDateRange}
+      />
+
+      <ExportMonthlyOfferingsModal
+        open={isExportOpen}
+        onOpenChange={setIsExportOpen}
+        memberId={memberId}
+        memberName={memberName}
+        period={period}
+        dateFrom={dateFrom}
+        dateTo={dateTo}
+        offeringTypeIds={offeringTypeIds}
+        offeringTypeLabels={selectedTypeNames}
       />
     </div>
   )

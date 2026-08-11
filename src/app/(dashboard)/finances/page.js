@@ -69,6 +69,9 @@ function FinancesPageContent() {
   // `recordType` is separate from the table's `type` filter so the two don't collide.
   const isRecordingParam = searchParams.get("recording") === "true"
   const recordTypeParam = searchParams.get("recordType") || DEFAULT_RECORD_TYPE
+  // Same ?isEdit=true&…Id convention as members.
+  const isEditParam = searchParams.get("isEdit") === "true"
+  const editTransactionIdParam = searchParams.get("transactionId") || ""
   const isScanParam = searchParams.get("scan") === "true"
 
   const [selectedIds, setSelectedIds] = useState(new Set())
@@ -168,11 +171,29 @@ function FinancesPageContent() {
   }
 
   function openRecordTransaction() {
-    updateParams({ recording: "true", recordType: DEFAULT_RECORD_TYPE })
+    updateParams({
+      recording: "true",
+      recordType: DEFAULT_RECORD_TYPE,
+      isEdit: "",
+      transactionId: "",
+    })
   }
 
   function closeRecordTransaction() {
-    updateParams({ recording: "", recordType: "" })
+    updateParams({ recording: "", recordType: "", isEdit: "", transactionId: "" })
+  }
+
+  function openEditTransaction(transaction) {
+    updateParams({
+      isEdit: "true",
+      transactionId: transaction.id,
+      recording: "",
+      recordType: "",
+    })
+  }
+
+  function closeEditTransaction() {
+    updateParams({ isEdit: "", transactionId: "" })
   }
 
   function updateRecordType(nextType) {
@@ -464,6 +485,7 @@ function FinancesPageContent() {
             onToggleSelect={toggleSelect}
             onToggleSelectAll={toggleSelectAll}
             onDeleteSelected={() => setIsDeleteSelectedOpen(true)}
+            onEdit={openEditTransaction}
             page={page}
             totalPages={meta.totalPages}
             total={meta.total}
@@ -475,10 +497,16 @@ function FinancesPageContent() {
 
       <ScanQRModal open={isScanParam} onOpenChange={(open) => !open && closeScanQr()} />
       <RecordTransactionModal
-        open={isRecordingParam}
-        onOpenChange={(open) => !open && closeRecordTransaction()}
+        open={isRecordingParam || (isEditParam && Boolean(editTransactionIdParam))}
+        onOpenChange={(open) => {
+          if (open) return
+          if (isEditParam) closeEditTransaction()
+          else closeRecordTransaction()
+        }}
         type={recordTypeParam}
         onTypeChange={updateRecordType}
+        transactionId={isEditParam ? editTransactionIdParam || null : null}
+        onSaved={() => setRefreshKey((key) => key + 1)}
         config={config}
         isConfigLoading={isConfigLoading}
         configError={configError}

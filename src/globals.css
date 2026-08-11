@@ -166,15 +166,33 @@
 }
 
 @media print {
+  /* Default: offering-slip half-sheet. Named `report` page below targets
+     short bond (letter) for the member monthly offerings export. */
   @page {
     size: 8.5in 5.5in;
     margin: 0.25in;
+  }
+
+  /* Margin 0 so Chromium/Firefox have no room for the default header/footer
+     (URL, date, page number). Padding on .print-report-page keeps the same
+     short-bond inset the report had before. */
+  @page report {
+    size: 8.5in 11in;
+    margin: 0;
   }
 
   * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
     color-adjust: exact !important;
+  }
+
+  /* Kill the app's warm off-white --background so report pages don't show a
+     yellowish band around the white sheet content. */
+  html,
+  body,
+  #print-portal-root {
+    background: #fff !important;
   }
 
   body > *:not(#print-portal-root) {
@@ -205,6 +223,25 @@
 
   .print-slip-page:last-child {
     page-break-after: auto;
+  }
+
+  .print-report-page {
+    page: report;
+    box-sizing: border-box;
+    width: 8.5in;
+    min-height: 11in;
+    padding: 0.5in;
+    background: #fff !important;
+  }
+
+  /* Single member QR: pin to the top-left so the rest of the sheet stays free. */
+  .print-report-page.print-qr-single {
+    display: block;
+    padding: 0.25in;
+  }
+
+  .print-report-sheet {
+    background: #fff !important;
   }
 }
 

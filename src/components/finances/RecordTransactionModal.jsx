@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import {
   Dialog,
   DialogContent,
@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
+import { getTransactionById, updateTransaction } from "@/services/finance.service"
 import { sanitizeDecimalInput, toDateInputValue } from "@/utils/helpers"
 
 // `type` is the UI's own "income"/"expense" discriminator (drives the URL
@@ -34,171 +35,377 @@ function findConfigId(options, name) {
   return options?.find((option) => option.name.toLowerCase() === name.toLowerCase())?.id ?? null
 }
 
+function emptyForm(type = "income") {
+  return {
+    type,
+    description: "",
+    amount: "",
+    date: toDateInputValue(),
+    categoryId: "",
+    offeringAmounts: {},
+  }
+}
+
+function transactionToForm(transaction, config) {
+  const typeName = transaction.type?.name?.toLowerCase() === "expense" ? "expense" : "income"
+  const items = transaction.items ?? transaction.breakdown ?? []
+  const offeringAmounts = {}
+
+  for (const item of items) {
+    const offeringTypeId = item.offeringTypeId || item.offeringType?.id
+    if (!offeringTypeId) continue
+    offeringAmounts[offeringTypeId] = String(item.amount ?? "")
+  }
+
+  return {
+    type: typeName,
+    description: transaction.description ?? "",
+    amount: transaction.amount != null ? String(Math.abs(Number(transaction.amount))) : "",
+    date: toDateInputValue(transaction.createdAt || transaction.date),
+    categoryId: transaction.category?.id || transaction.categoryId || "",
+    offeringAmounts,
+    typeId: transaction.type?.id || transaction.typeId || findConfigId(config?.types, typeName),
+  }
+}
+
 function RecordTransactionModal({
   open,
   onOpenChange,
   type = "income",
   onTypeChange,
+  transactionId = null,
+  onSaved,
   config,
   isConfigLoading,
   configError,
 }) {
-  const [categoryId, setCategoryId] = useState("")
-  const [offeringAmounts, setOfferingAmounts] = useState({})
+  const isEditing = Boolean(transactionId)
+  // Edit mode keeps form null until the transaction (and config) finish loading,
+  // matching EditMemberModal so empty fields never flash.
+  const [form, setForm] = useState(() => (transactionId ? null : emptyForm(type)))
+  const [isLoadingTransaction, setIsLoadingTransaction] = useState(false)
+  const [loadError, setLoadError] = useState("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState("")
+
+  const activeType = isEditing ? form?.type || "income" : type
 
   const rawTypes = config?.types?.length ? config.types : FALLBACK_TYPES
   // Income always renders on the left, Expense on the right, regardless of
-  // whatever order the backend returns them in.
-  const types = [...rawTypes].sort(
-    (a, b) => (a.name.toLowerCase() === "expense" ? 1 : 0) - (b.name.toLowerCase() === "expense" ? 1 : 0)
-  )
+  // whatever order the backend returns them in. While editing, only the
+  // transaction's own type is shown — switching income ↔ expense isn't allowed.
+  const types = [...rawTypes]
+    .filter((option) => {
+      if (!isEditing) return true
+      const optionKey = option.name.toLowerCase() === "expense" ? "expense" : "income"
+      return optionKey === activeType
+    })
+    .sort(
+      (a, b) => (a.name.toLowerCase() === "expense" ? 1 : 0) - (b.name.toLowerCase() === "expense" ? 1 : 0)
+    )
   const categories = config?.categories ?? []
   const offeringTypes = config?.offeringTypes ?? []
 
   const offeringCategoryId = findConfigId(categories, "offering")
-  const selectedCategoryId = categoryId || categories[0]?.id || ""
+  const selectedCategoryId = form?.categoryId || categories[0]?.id || ""
   const selectedCategoryName = categories.find((category) => category.id === selectedCategoryId)?.name
 
+  function resetState() {
+    setForm(null)
+    setLoadError("")
+    setSubmitError("")
+    setIsLoadingTransaction(false)
+  }
+
+  function handleOpenChange(next) {
+    if (!next) resetState()
+    onOpenChange(next)
+  }
+
+  useEffect(() => {
+    if (!open) return
+
+    setSubmitError("")
+    setLoadError("")
+
+    // Create mode: seed a blank form each time the modal opens. Type toggles
+    // while open come from the parent `type` prop and must not wipe inputs.
+    if (!transactionId) {
+      setForm(emptyForm(type))
+      return
+    }
+
+    setForm(null)
+
+    const controller = new AbortController()
+
+    async function load() {
+      setIsLoadingTransaction(true)
+      setLoadError("")
+
+      try {
+        const transaction = await getTransactionById(transactionId, controller.signal)
+        if (controller.signal.aborted) return
+        setForm(transactionToForm(transaction, config))
+      } catch (err) {
+        if (controller.signal.aborted) return
+        setLoadError(err?.message || "Unable to load transaction")
+      } finally {
+        if (!controller.signal.aborted) setIsLoadingTransaction(false)
+      }
+    }
+
+    load()
+    return () => controller.abort()
+    // `config` / `type` are read for the initial seed only; re-running on those
+    // would wipe in-progress edits when the parent store updates.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, transactionId])
+
+  function handleTypeChange(nextType) {
+    if (isEditing) {
+      setForm((prev) => (prev ? { ...prev, type: nextType } : prev))
+      return
+    }
+    onTypeChange?.(nextType)
+  }
+
   function handleOfferingChange(offeringTypeId, value) {
-    setOfferingAmounts((prev) => ({ ...prev, [offeringTypeId]: sanitizeDecimalInput(value) }))
+    setForm((prev) => {
+      if (!prev) return prev
+      return {
+        ...prev,
+        offeringAmounts: {
+          ...prev.offeringAmounts,
+          [offeringTypeId]: sanitizeDecimalInput(value),
+        },
+      }
+    })
   }
 
   const isOfferingBreakdown =
-    type === "income" && offeringCategoryId && selectedCategoryId === offeringCategoryId
+    activeType === "income" && offeringCategoryId && selectedCategoryId === offeringCategoryId
   const hasOfferingAmount = offeringTypes.some(
-    (offeringType) => Number(offeringAmounts[offeringType.id]) > 0
+    (offeringType) => Number(form?.offeringAmounts?.[offeringType.id]) > 0
   )
+  const hasFlatAmount = Number(form?.amount) > 0
+  const isBusy = isConfigLoading || (isEditing && isLoadingTransaction)
+  const isFormReady =
+    Boolean(form) && !isBusy && !(isEditing ? loadError : configError)
+  const canSubmit =
+    isEditing &&
+    isFormReady &&
+    Boolean(form.date) &&
+    (isOfferingBreakdown ? hasOfferingAmount : hasFlatAmount)
+
+  async function handleSubmit() {
+    if (!isEditing || !canSubmit || !form) return
+
+    const typeId =
+      form.typeId ||
+      findConfigId(config?.types, activeType === "expense" ? "Expense" : "Income")
+
+    if (!typeId) {
+      setSubmitError("Unable to resolve transaction type")
+      return
+    }
+
+    const payload = {
+      typeId,
+      description: form.description.trim() || null,
+      date: form.date,
+      categoryId: activeType === "income" ? selectedCategoryId || null : null,
+    }
+
+    if (isOfferingBreakdown) {
+      payload.breakdown = offeringTypes
+        .filter((offeringType) => Number(form.offeringAmounts[offeringType.id]) > 0)
+        .map((offeringType) => ({
+          offeringTypeId: offeringType.id,
+          amount: Number(form.offeringAmounts[offeringType.id]),
+        }))
+    } else {
+      payload.amount = Number(form.amount)
+    }
+
+    setIsSubmitting(true)
+    setSubmitError("")
+
+    try {
+      await updateTransaction(transactionId, payload)
+      resetState()
+      onSaved?.()
+      onOpenChange(false)
+    } catch (err) {
+      setSubmitError(err?.message || "Unable to update transaction")
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
         className="flex max-h-[calc(100vh-4rem)] max-w-lg flex-col gap-0 p-0 sm:max-w-lg"
         showCloseButton={false}
       >
         <DialogHeader className="flex-row items-center justify-between gap-0 border-b border-border px-4 py-4 sm:px-6 sm:py-5">
           <DialogTitle className="font-heading text-lg font-normal sm:text-xl">
-            Record Transaction
+            {isEditing ? "Edit Transaction" : "Record Transaction"}
           </DialogTitle>
         </DialogHeader>
 
         <div className="flex flex-col gap-5 overflow-y-auto px-4 py-5 sm:px-6">
-          {isConfigLoading && <p className="text-sm text-muted-foreground">Loading form options…</p>}
-
-          {configError && <p className="text-sm text-red-500">{configError}</p>}
-
-          <div className="flex flex-col gap-1.5">
-            <Label>
-              Type <span className="text-red-500">*</span>
-            </Label>
-            <div className="grid grid-cols-2 overflow-hidden rounded-lg border border-input">
-              {types.map((option) => {
-                const optionKey = option.name.toLowerCase() === "expense" ? "expense" : "income"
-
-                return (
-                  <button
-                    key={option.name}
-                    type="button"
-                    onClick={() => onTypeChange(optionKey)}
-                    className={cn(
-                      "h-10 text-sm font-medium transition-colors",
-                      type === optionKey
-                        ? TYPE_META[optionKey].activeClass
-                        : "bg-transparent text-foreground/80 hover:bg-muted"
-                    )}
-                  >
-                    {option.name}
-                  </button>
-                )
-              })}
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="transaction-note">
-              Note <span className="text-muted-foreground">(Optional)</span>
-            </Label>
-            <Input
-              id="transaction-note"
-              placeholder="e.g. Sunday Service Tithe"
-              className="h-10 rounded-lg"
-            />
-          </div>
-
-          {type === "expense" && (
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="transaction-amount">
-                Amount (PHP) <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                id="transaction-amount"
-                type="number"
-                placeholder="0.00"
-                required
-                className="h-10 rounded-lg"
-              />
-            </div>
+          {isBusy && (
+            <p className="text-sm text-muted-foreground">
+              {isEditing ? "Loading transaction…" : "Loading form options…"}
+            </p>
           )}
 
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="transaction-date">
-              Date <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              id="transaction-date"
-              type="date"
-              defaultValue={toDateInputValue()}
-              required
-              className="h-10 rounded-lg"
-            />
-          </div>
-
-          {type === "income" && (
-            <div className="flex flex-col gap-1.5">
-              <Label>
-                Category <span className="text-red-500">*</span>
-              </Label>
-              <Select value={selectedCategoryId} onValueChange={setCategoryId}>
-                <SelectTrigger className="h-10 w-full rounded-lg">
-                  <SelectValue>{() => selectedCategoryName}</SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
-                      {category.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          {(configError || loadError) && (
+            <p className="text-sm text-red-500">{configError || loadError}</p>
           )}
 
-          {isOfferingBreakdown && (
-            <div className="flex flex-col gap-1.5">
-              <Label>
-                Offering Breakdown <span className="text-red-500">*</span>
-              </Label>
-              <p className="text-xs text-muted-foreground">
-                Enter an amount for at least one category.
-              </p>
-              <div className="flex max-h-70 flex-col gap-2 overflow-y-auto rounded-lg border border-input px-3 py-2.5">
-                {offeringTypes.map((offeringType) => (
-                  <div key={offeringType.id} className="flex items-center justify-between gap-3">
-                    <Label htmlFor={`offering-${offeringType.id}`} className="text-sm font-normal">
-                      {offeringType.name}:
-                    </Label>
-                    <Input
-                      id={`offering-${offeringType.id}`}
-                      inputMode="decimal"
-                      placeholder="0.00"
-                      value={offeringAmounts[offeringType.id] ?? ""}
-                      onChange={(e) => handleOfferingChange(offeringType.id, e.target.value)}
-                      className="h-9 w-32 rounded-lg"
-                    />
-                  </div>
-                ))}
+          {isFormReady && (
+            <>
+              <div className="flex flex-col gap-1.5">
+                <Label>
+                  Type <span className="text-red-500">*</span>
+                </Label>
+                <div
+                  className={cn(
+                    "grid overflow-hidden rounded-lg border border-input",
+                    types.length > 1 ? "grid-cols-2" : "grid-cols-1"
+                  )}
+                >
+                  {types.map((option) => {
+                    const optionKey = option.name.toLowerCase() === "expense" ? "expense" : "income"
+
+                    return (
+                      <button
+                        key={option.name}
+                        type="button"
+                        onClick={() => handleTypeChange(optionKey)}
+                        disabled={isSubmitting || isEditing}
+                        className={cn(
+                          "h-10 text-sm font-medium transition-colors",
+                          activeType === optionKey
+                            ? TYPE_META[optionKey].activeClass
+                            : "bg-transparent text-foreground/80 hover:bg-muted"
+                        )}
+                      >
+                        {option.name}
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
-            </div>
+
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="transaction-note">
+                  Note <span className="text-muted-foreground">(Optional)</span>
+                </Label>
+                <Input
+                  id="transaction-note"
+                  placeholder="e.g. Sunday Service Tithe"
+                  value={form.description}
+                  onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
+                  disabled={isSubmitting}
+                  className="h-10 rounded-lg"
+                />
+              </div>
+
+              {!isOfferingBreakdown && (
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="transaction-amount">
+                    Amount (PHP) <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="transaction-amount"
+                    inputMode="decimal"
+                    placeholder="0.00"
+                    value={form.amount}
+                    onChange={(e) =>
+                      setForm((prev) => ({ ...prev, amount: sanitizeDecimalInput(e.target.value) }))
+                    }
+                    disabled={isSubmitting}
+                    required
+                    className="h-10 rounded-lg"
+                  />
+                </div>
+              )}
+
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="transaction-date">
+                  Date <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="transaction-date"
+                  type="date"
+                  value={form.date}
+                  onChange={(e) => setForm((prev) => ({ ...prev, date: e.target.value }))}
+                  disabled={isSubmitting}
+                  required
+                  className="h-10 rounded-lg"
+                />
+              </div>
+
+              {activeType === "income" && (
+                <div className="flex flex-col gap-1.5">
+                  <Label>
+                    Category <span className="text-red-500">*</span>
+                  </Label>
+                  <Select
+                    value={selectedCategoryId}
+                    onValueChange={(value) => setForm((prev) => ({ ...prev, categoryId: value }))}
+                    disabled={isSubmitting}
+                  >
+                    <SelectTrigger className="h-10 w-full rounded-lg">
+                      <SelectValue>{() => selectedCategoryName}</SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((category) => (
+                        <SelectItem key={category.id} value={category.id}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {isOfferingBreakdown && (
+                <div className="flex flex-col gap-1.5">
+                  <Label>
+                    Offering Breakdown <span className="text-red-500">*</span>
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    Enter an amount for at least one category.
+                  </p>
+                  <div className="flex max-h-70 flex-col gap-2 overflow-y-auto rounded-lg border border-input px-3 py-2.5">
+                    {offeringTypes.map((offeringType) => (
+                      <div key={offeringType.id} className="flex items-center justify-between gap-3">
+                        <Label htmlFor={`offering-${offeringType.id}`} className="text-sm font-normal">
+                          {offeringType.name}:
+                        </Label>
+                        <Input
+                          id={`offering-${offeringType.id}`}
+                          inputMode="decimal"
+                          placeholder="0.00"
+                          value={form.offeringAmounts[offeringType.id] ?? ""}
+                          onChange={(e) => handleOfferingChange(offeringType.id, e.target.value)}
+                          disabled={isSubmitting}
+                          className="h-9 w-32 rounded-lg"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
           )}
+
+          {submitError && <p className="text-sm text-red-500">{submitError}</p>}
         </div>
 
         <DialogFooter className="mx-0 mb-0 flex-col-reverse justify-end gap-3 rounded-b-xl border-t border-border bg-transparent px-4 py-4 sm:flex-row sm:px-6 sm:py-5">
@@ -206,16 +413,22 @@ function RecordTransactionModal({
             type="button"
             variant="outline"
             className="h-10 rounded-lg px-5"
-            onClick={() => onOpenChange(false)}
+            onClick={() => handleOpenChange(false)}
+            disabled={isSubmitting}
           >
             Cancel
           </Button>
           <Button
             type="button"
-            disabled={isOfferingBreakdown && !hasOfferingAmount}
+            disabled={
+              isEditing
+                ? !canSubmit || isSubmitting
+                : !isFormReady || (isOfferingBreakdown && !hasOfferingAmount)
+            }
+            onClick={isEditing ? handleSubmit : undefined}
             className="h-10 rounded-lg bg-[#1e2a4a] px-5 text-white hover:bg-[#1e2a4a]/90"
           >
-            Save Transaction
+            {isSubmitting ? "Saving…" : isEditing ? "Save Changes" : "Save Transaction"}
           </Button>
         </DialogFooter>
       </DialogContent>

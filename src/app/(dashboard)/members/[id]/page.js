@@ -301,6 +301,7 @@ function MemberDetailPageContent() {
             {isFinanceView && isUnlocked && canViewFinance ? (
               <MemberFinancePanel
                 memberId={memberId}
+                memberName={member.name}
                 period={period}
                 dateFrom={periodFrom}
                 dateTo={periodTo}

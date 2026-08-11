@@ -77,6 +77,19 @@ function getTransactionById(id, signal) {
   return fetchJson(APP_API_ENDPOINTS.TRANSACTION_BY_ID(id), { signal })
 }
 
+/**
+ * Partial update for a transaction. At least one field must be present.
+ * `breakdown` replaces line items and wins over `amount` when both are sent.
+ * Pass `categoryId` / `memberId` / `description` as null to clear them.
+ */
+function updateTransaction(id, payload) {
+  return fetchJson(APP_API_ENDPOINTS.TRANSACTION_BY_ID(id), {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...getCsrfHeader() },
+    body: JSON.stringify(payload),
+  })
+}
+
 function bulkDeleteTransactions(ids) {
   return fetchJson(APP_API_ENDPOINTS.TRANSACTIONS_BULK_DELETE, {
     method: "POST",
@@ -92,5 +105,6 @@ export {
   getTransactionsConfig,
   listTransactions,
   getTransactionById,
+  updateTransaction,
   bulkDeleteTransactions,
 }
