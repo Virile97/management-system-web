@@ -1,71 +1,255 @@
-/**
- * No /attendance backend route exists yet, so these resolve from mock data
- * instead of calling fetchJson. Signatures match the dashboard/finance
- * services (date-scoped, group-scoped, AbortSignal-aware) so swapping in
- * real endpoints later is a one-line change per function, not a page rewrite.
- */
+import { getCsrfHeader } from "@/lib/auth"
+import { fetchJson, fetchWithMeta } from "@/services/api"
+import { APP_API_ENDPOINTS } from "@/utils/constants"
+import { toDateInputValue } from "@/utils/helpers"
 
-const MOCK_MEMBERS = [
-  { id: 1, name: "Pastor Admin", level: "Men", morningIn: "08:02 AM", morningOut: "12:15 PM", afternoonIn: "01:30 PM", afternoonOut: "05:00 PM", status: "Full day" },
-  { id: 2, name: "Emmanuel Boateng", level: "Men", morningIn: "08:20 AM", morningOut: "12:10 PM", afternoonIn: null, afternoonOut: null, status: "Morning only" },
-  { id: 3, name: "Grace Mensah", level: "Ladies", morningIn: "07:55 AM", morningOut: "12:00 PM", afternoonIn: "01:15 PM", afternoonOut: "05:05 PM", status: "Full day" },
-  { id: 4, name: "Samuel Tetteh", level: "Young People", morningIn: "08:45 AM", morningOut: null, afternoonIn: null, afternoonOut: null, status: "Morning only" },
-  { id: 5, name: "Abena Osei", level: "Ladies", morningIn: "08:00 AM", morningOut: "12:05 PM", afternoonIn: "01:20 PM", afternoonOut: "04:55 PM", status: "Full day" },
-  { id: 6, name: "Kwame Asante", level: "Career", morningIn: "09:10 AM", morningOut: "12:30 PM", afternoonIn: "01:45 PM", afternoonOut: null, status: "Full day" },
-  { id: 7, name: "Esi Forson", level: "Young People", morningIn: null, morningOut: null, afternoonIn: "01:00 PM", afternoonOut: "05:10 PM", status: "Afternoon only" },
-  { id: 8, name: "Bright Boadu", level: "Career", morningIn: "08:05 AM", morningOut: "12:20 PM", afternoonIn: "01:10 PM", afternoonOut: "05:00 PM", status: "Full day" },
-  { id: 9, name: "Maame Agyei", level: "Ladies", morningIn: "07:50 AM", morningOut: "11:55 AM", afternoonIn: "01:00 PM", afternoonOut: "04:45 PM", status: "Full day" },
-  { id: 10, name: "Joseph Owusu", level: "Men", morningIn: null, morningOut: null, afternoonIn: null, afternoonOut: null, status: "Absent" },
-]
-
-const MOCK_MEMBER_ATTENDANCE = [
-  { id: 1, event: "Sunday Worship", daysAgo: 6, status: "Present" },
-  { id: 2, event: "Sunday Worship", daysAgo: 13, status: "Present" },
-  { id: 3, event: "Sunday Worship", daysAgo: 20, status: "Absent" },
-  { id: 4, event: "Prayer Night", daysAgo: 27, status: "Present" },
-  { id: 5, event: "Sunday Worship", daysAgo: 34, status: "Absent" },
-]
-
-const MOCK_STATS = {
-  total: 12,
-  present: 11,
-  attendanceRate: 92,
-  fullDay: 8,
-  partial: 3,
-  partialMorning: 2,
-  partialAfternoon: 1,
-  absent: 1,
+const STATUS_LABELS = {
+  full_day: "Full day",
+  morning_only: "Morning only",
+  afternoon_only: "Afternoon only",
+  partial: "Partial",
+  absent: "Absent",
+  present: "Present",
 }
 
-function mockResolve(value, signal) {
-  return new Promise((resolve, reject) => {
-    if (signal?.aborted) return reject(new DOMException("Aborted", "AbortError"))
-    resolve(value)
+/**
+ * Formats an ISO datetime into the "hh:mm AM/PM" string TimePickerInput expects.
+ * Uses local calendar parts so the picker matches what the user recorded.
+ */
+function formatAttendanceTime(iso) {
+  if (!iso) return null
+
+  const value = new Date(iso)
+  if (Number.isNaN(value.getTime())) return null
+
+  const hour24 = value.getHours()
+  const hour12 = hour24 % 12 || 12
+  const period = hour24 < 12 ? "AM" : "PM"
+  const minute = String(value.getMinutes()).padStart(2, "0")
+
+  return `${String(hour12).padStart(2, "0")}:${minute} ${period}`
+}
+
+/**
+ * Builds a local "YYYY-MM-DDTHH:mm:ss" datetime from a date + TimePicker value.
+ * Matches the attendance API's expected shape (no Z / offset).
+ */
+function toAttendanceDateTime(date, timeDisplay) {
+  if (!date || !timeDisplay) return null
+
+  const match = /^(\d{1,2}):(\d{2})\s*(AM|PM)$/i.exec(String(timeDisplay).trim())
+  if (!match) return null
+
+  let hour = Number(match[1])
+  const minute = Number(match[2])
+  const period = match[3].toUpperCase()
+
+  if (period === "AM" && hour === 12) hour = 0
+  if (period === "PM" && hour !== 12) hour += 12
+
+  const pad = (n) => String(n).padStart(2, "0")
+  return `${date}T${pad(hour)}:${pad(minute)}:00`
+}
+
+function formatStatusLabel(status) {
+  if (!status) return null
+  return STATUS_LABELS[status] ?? String(status).replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+}
+
+function normalizeSummary(summary = {}) {
+  return {
+    total: summary.totalMembers ?? 0,
+    present: summary.present ?? 0,
+    attendanceRate: summary.attendanceRate ?? 0,
+    fullDay: summary.fullDay ?? 0,
+    partial: summary.partial ?? 0,
+    partialMorning: summary.morningOnly ?? 0,
+    partialAfternoon: summary.afternoonOnly ?? 0,
+    absent: summary.absent ?? 0,
+  }
+}
+
+function normalizeLevel(level) {
+  return {
+    id: level?.id ?? null,
+    name: level?.name === "All Members" ? "All" : (level?.name ?? "All"),
+    label: level?.name ?? "All Members",
+    count: level?.count ?? 0,
+  }
+}
+
+function formatMemberName(member) {
+  if (!member) return "—"
+  if (member.name) return member.name
+  return [member.firstName, member.middleName, member.lastName].filter(Boolean).join(" ") || "—"
+}
+
+/**
+ * List items carry `attendances: []` for the requested day. Empty means the
+ * member has no check-in yet — leave table fields blank (no prefill).
+ */
+function pickAttendanceRecord(item, date) {
+  const records = Array.isArray(item?.attendances)
+    ? item.attendances
+    : item?.attendance
+      ? Array.isArray(item.attendance)
+        ? item.attendance
+        : [item.attendance]
+      : []
+
+  if (records.length === 0) return null
+
+  if (date) {
+    const match = records.find((record) => resolveRecordDate(record, record) === date)
+    if (match) return match
+  }
+
+  return [...records].sort((a, b) => String(b?.date || "").localeCompare(String(a?.date || "")))[0]
+}
+
+function normalizeItem(item, date) {
+  const member = item?.member ?? {}
+  const attendance = pickAttendanceRecord(item, date)
+
+  // No attendance row for this day → blank fields (fresh day, no prefill).
+  if (!attendance) {
+    return {
+      id: member.id,
+      name: formatMemberName(member),
+      level: member.level?.name || "—",
+      morningIn: null,
+      morningOut: null,
+      afternoonIn: null,
+      afternoonOut: null,
+      status: null,
+      date: date || null,
+      attendanceId: null,
+    }
+  }
+
+  const status =
+    formatStatusLabel(attendance?.status) || derivePresentLabel(attendance)
+
+  return {
+    id: member.id,
+    name: formatMemberName(member),
+    level: member.level?.name || "—",
+    morningIn: formatAttendanceTime(attendance?.morningIn),
+    morningOut: formatAttendanceTime(attendance?.morningOut),
+    afternoonIn: formatAttendanceTime(attendance?.afternoonIn),
+    afternoonOut: formatAttendanceTime(attendance?.afternoonOut),
+    status: status === "Absent" ? null : status,
+    date: resolveRecordDate(attendance, attendance) || date || null,
+    attendanceId: attendance?.id ?? null,
+  }
+}
+
+function resolveRecordDate(row, attendance) {
+  const raw =
+    row?.date ||
+    attendance?.date ||
+    attendance?.morningIn ||
+    attendance?.afternoonIn ||
+    attendance?.morningOut ||
+    attendance?.afternoonOut
+
+  if (!raw) return null
+  if (/^\d{4}-\d{2}-\d{2}$/.test(String(raw))) return String(raw)
+
+  const parsed = new Date(raw)
+  if (Number.isNaN(parsed.getTime())) return null
+  return toDateInputValue(parsed)
+}
+
+function derivePresentLabel(attendance) {
+  if (!attendance) return "Absent"
+  if (attendance.status) return formatStatusLabel(attendance.status)
+
+  const morning = Boolean(attendance.morningIn)
+  const afternoon = Boolean(attendance.afternoonIn)
+  if (morning && afternoon) return "Full day"
+  if (morning) return "Morning only"
+  if (afternoon) return "Afternoon only"
+  return "Absent"
+}
+
+/**
+ * Maps `GET /members/:id` → `attendances[]` (newest first) into the same
+ * session-row shape the attendance table / member overview uses.
+ */
+function mapMemberAttendances(attendances = []) {
+  return (Array.isArray(attendances) ? attendances : [])
+    .map((attendance, index) => {
+      const statusLabel = derivePresentLabel(attendance)
+      const hasAnyTime = Boolean(
+        attendance?.morningIn ||
+          attendance?.morningOut ||
+          attendance?.afternoonIn ||
+          attendance?.afternoonOut
+      )
+
+      if (!hasAnyTime && (!attendance?.status || statusLabel === "Absent")) {
+        return null
+      }
+
+      return {
+        id: attendance?.id ?? `attendance-${index}`,
+        date: resolveRecordDate(attendance, attendance),
+        morningIn: formatAttendanceTime(attendance?.morningIn),
+        morningOut: formatAttendanceTime(attendance?.morningOut),
+        afternoonIn: formatAttendanceTime(attendance?.afternoonIn),
+        afternoonOut: formatAttendanceTime(attendance?.afternoonOut),
+        status: statusLabel === "Absent" ? null : statusLabel,
+      }
+    })
+    .filter(Boolean)
+}
+
+async function listAttendance(
+  { date = toDateInputValue(), level = "", search = "", page = 1, limit = 20 } = {},
+  signal
+) {
+  const params = new URLSearchParams()
+
+  if (date) params.set("date", date)
+  if (level) params.set("level", level)
+  if (search) params.set("search", search)
+  params.set("page", String(page))
+  params.set("limit", String(limit))
+
+  const { data, meta } = await fetchWithMeta(
+    `${APP_API_ENDPOINTS.ATTENDANCE}?${params.toString()}`,
+    { signal }
+  )
+
+  return {
+    date: data?.date ?? data?.period?.from ?? date,
+    summary: normalizeSummary(data?.summary),
+    levels: (data?.levels ?? []).map(normalizeLevel),
+    items: (data?.items ?? []).map((item) => normalizeItem(item, date)),
+    meta: meta || { page, limit, total: 0, totalPages: 1 },
+  }
+}
+
+/**
+ * Partial upsert for one member's attendance on a date. Only include fields
+ * that changed — send null to clear a slot. Omitting morningOut when setting
+ * morningIn lets the backend default morningOut to noon.
+ */
+function upsertAttendance(memberId, payload, signal) {
+  return fetchJson(APP_API_ENDPOINTS.ATTENDANCE_BY_MEMBER(memberId), {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getCsrfHeader() },
+    body: JSON.stringify(payload),
+    signal,
   })
 }
 
-function getAttendanceStats(dateRange, signal) {
-  return mockResolve(MOCK_STATS, signal)
+export {
+  listAttendance,
+  upsertAttendance,
+  mapMemberAttendances,
+  formatAttendanceTime,
+  toAttendanceDateTime,
+  formatStatusLabel,
 }
-
-function getAttendanceMembers(dateRange, signal) {
-  return mockResolve(MOCK_MEMBERS, signal)
-}
-
-/**
- * The last few services a single member was checked in/out for, newest first.
- * Dates are derived from today so the mock stays plausible over time.
- */
-function getMemberRecentAttendance(memberId, signal) {
-  const now = Date.now()
-  const records = MOCK_MEMBER_ATTENDANCE.map((record) => ({
-    id: record.id,
-    event: record.event,
-    status: record.status,
-    date: new Date(now - record.daysAgo * 24 * 60 * 60 * 1000).toISOString(),
-  }))
-
-  return mockResolve(records, signal)
-}
-
-export { getAttendanceStats, getAttendanceMembers, getMemberRecentAttendance }

@@ -10,6 +10,7 @@ import { useDashboardStore } from "@/stores/dashboard.store"
 import { useMemberFormStore } from "@/stores/memberForm.store"
 import { useMembersStore } from "@/stores/members.store"
 import { useFinanceStore } from "@/stores/finance.store"
+import { useAttendanceStore } from "@/stores/attendance.store"
 import { APP_API_ENDPOINTS } from "@/utils/constants"
 import { ERROR_MESSAGES } from "@/utils/errors"
 
@@ -81,6 +82,7 @@ function Sidebar({ open = false, onClose }) {
       useMemberFormStore.getState().reset()
       useMembersStore.getState().reset()
       useFinanceStore.getState().reset()
+      useAttendanceStore.getState().reset()
 
       onClose?.()
       router.push("/login")

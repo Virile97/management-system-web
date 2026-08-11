@@ -2,6 +2,8 @@ import { Card } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 
 function AttendanceStatsCards({ stats }) {
+  if (!stats) return null
+
   const cards = [
     {
       label: "Total Members",

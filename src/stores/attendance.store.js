@@ -1,0 +1,77 @@
+import { create } from "zustand"
+import { persist, createJSONStorage } from "zustand/middleware"
+
+const initialState = {
+  items: [],
+  summary: null,
+  levels: [],
+  meta: { page: 1, limit: 20, total: 0, totalPages: 1 },
+  // { date, level, search, page } the persisted list was fetched for
+  query: null,
+  // id -> attendance row for the active date; powers the search fast-path
+  cache: {},
+  cacheDate: null,
+}
+
+/**
+ * Persisted to sessionStorage so the attendance list (and the search
+ * fast-path cache) survives a remount without an extra fetch, but clears
+ * with the browser session — reset() is also called on logout.
+ */
+const useAttendanceStore = create(
+  persist(
+    (set, get) => ({
+      ...initialState,
+
+      setAttendance: (items, meta, query, { summary, levels } = {}) =>
+        set((state) => ({
+          items,
+          meta,
+          query,
+          summary: summary ?? state.summary,
+          levels: levels ?? state.levels,
+        })),
+
+      setSummary: (summary) => set({ summary }),
+      setLevels: (levels) => set({ levels }),
+
+      /**
+       * Accumulates rows for a single calendar day. Switching date wipes the
+       * prior cache so search never mixes times from another day.
+       */
+      cacheItems: (items, date) =>
+        set((state) => {
+          const cache = state.cacheDate === date ? { ...state.cache } : {}
+          for (const item of items) {
+            if (item?.id != null) cache[item.id] = item
+          }
+          return { cache, cacheDate: date }
+        }),
+
+      getCachedItems: (date) => {
+        const state = get()
+        if (!date || state.cacheDate !== date) return []
+        return Object.values(state.cache)
+      },
+
+      patchItem: (memberId, patch) =>
+        set((state) => {
+          const nextItems = state.items.map((item) =>
+            item.id === memberId ? { ...item, ...patch } : item
+          )
+          const cache = { ...state.cache }
+          if (cache[memberId]) cache[memberId] = { ...cache[memberId], ...patch }
+          return { items: nextItems, cache }
+        }),
+
+      reset: () => set(initialState),
+    }),
+    {
+      name: "attendance-list",
+      storage: createJSONStorage(() => sessionStorage),
+    }
+  )
+)
+
+export { useAttendanceStore }
+export default useAttendanceStore

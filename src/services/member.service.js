@@ -10,6 +10,26 @@ function getMemberById(id, signal) {
   return fetchJson(APP_API_ENDPOINTS.MEMBER_BY_ID(id), { signal })
 }
 
+/**
+ * Member profile with paginated attendances (newest first).
+ * `meta` describes the attendance page, not the member itself.
+ */
+async function getMemberDetail(id, { page = 1, limit = 20 } = {}, signal) {
+  const params = new URLSearchParams()
+  params.set("page", String(page))
+  params.set("limit", String(Math.min(100, Math.max(1, limit))))
+
+  const { data, meta } = await fetchWithMeta(
+    `${APP_API_ENDPOINTS.MEMBER_BY_ID(id)}?${params.toString()}`,
+    { signal }
+  )
+
+  return {
+    data,
+    meta: meta || { page, limit, total: data?.attendances?.length ?? 0, totalPages: 1 },
+  }
+}
+
 function formatMemberName(member) {
   return [member.firstName, member.middleName, member.lastName].filter(Boolean).join(" ") || "—"
 }
@@ -147,4 +167,5 @@ export {
   bulkDeleteMembers,
   getMemberFormConfig,
   getMemberById,
+  getMemberDetail,
 }

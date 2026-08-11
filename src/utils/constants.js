@@ -33,6 +33,10 @@ export const API_ENDPOINTS = {
   TRANSACTIONS_BY_OFFERING_TYPE: `${API_V1}/transactions/by-offering-type`,
   TRANSACTIONS_BULK_DELETE: `${API_V1}/transactions/bulk-delete`,
   TRANSACTIONS_CONFIG: `${API_V1}/transactions/config`,
+
+  // Attendance endpoints
+  ATTENDANCE: `${API_V1}/attendance`,
+  ATTENDANCE_BY_MEMBER: (memberId) => `${API_V1}/attendance/${memberId}`,
 }
 
 export const APP_API_ENDPOINTS = {
@@ -71,6 +75,10 @@ export const APP_API_ENDPOINTS = {
   TRANSACTIONS_BY_OFFERING_TYPE: "/api/finances/by-offering-type",
   TRANSACTIONS_BULK_DELETE: "/api/finances/bulk-delete",
   TRANSACTIONS_CONFIG: "/api/finances/config",
+
+  // App Attendance endpoints
+  ATTENDANCE: "/api/attendance",
+  ATTENDANCE_BY_MEMBER: (memberId) => `/api/attendance/${memberId}`,
 }
 
 /**

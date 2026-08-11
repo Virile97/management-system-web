@@ -8,14 +8,15 @@ import { MemberOverviewPanel } from "@/components/members/MemberOverviewPanel"
 import { MemberFinancePanel } from "@/components/members/MemberFinancePanel"
 import { FinanceAccessModal } from "@/components/members/FinanceAccessModal"
 import { EditMemberModal } from "@/components/members/EditMemberModal"
-import { getMemberById, normalizeMember } from "@/services/member.service"
-import { getMemberRecentAttendance } from "@/services/attendance.service"
+import { getMemberDetail, normalizeMember } from "@/services/member.service"
+import { mapMemberAttendances } from "@/services/attendance.service"
 import { getCurrentUser } from "@/lib/auth"
 import { register as registerAbortController } from "@/lib/abort-registry"
 import { useMembersStore } from "@/stores/members.store"
 import { Lock } from "lucide-react"
 
 const DEFAULT_PERIOD = "This Year"
+const ATTENDANCE_PAGE_SIZE = 20
 
 // Auto-lock the unlocked finance breakdown after this much idle time so a
 // stepped-away session doesn't leave offerings on screen.
@@ -69,7 +70,10 @@ function MemberDetailPageContent() {
   // Comma-separated config ids; empty means "all types". A single legacy id
   // still parses cleanly as a one-element list.
   const offeringTypeIds = (searchParams.get("offeringType") || "").split(",").filter(Boolean)
-  const offeringsPage = Math.max(1, parseInt(searchParams.get("page"), 10) || 1)
+  // Shared ?page= — offerings when finance view is open, attendances otherwise.
+  const page = Math.max(1, parseInt(searchParams.get("page"), 10) || 1)
+  const offeringsPage = page
+  const attendancePage = isFinanceView ? 1 : page
 
   // The list page caches every member it has fetched, so the profile can
   // render immediately on click while the full record loads behind it.
@@ -87,6 +91,12 @@ function MemberDetailPageContent() {
   const [error, setError] = useState("")
 
   const [attendance, setAttendance] = useState([])
+  const [attendanceMeta, setAttendanceMeta] = useState({
+    page: 1,
+    limit: ATTENDANCE_PAGE_SIZE,
+    total: 0,
+    totalPages: 1,
+  })
   const [isAttendanceLoading, setIsAttendanceLoading] = useState(true)
   const [attendanceError, setAttendanceError] = useState("")
 
@@ -103,13 +113,37 @@ function MemberDetailPageContent() {
 
     async function loadMember() {
       setError("")
+      setAttendanceError("")
+      setIsAttendanceLoading(true)
       try {
-        const data = await getMemberById(memberId, controller.signal)
+        const { data, meta } = await getMemberDetail(
+          memberId,
+          { page: attendancePage, limit: ATTENDANCE_PAGE_SIZE },
+          controller.signal
+        )
         if (controller.signal.aborted) return
+
+        const resolvedMeta = meta || {
+          page: attendancePage,
+          limit: ATTENDANCE_PAGE_SIZE,
+          total: data?.attendances?.length ?? 0,
+          totalPages: 1,
+        }
+
+        if (!isFinanceView && attendancePage > 1 && attendancePage > resolvedMeta.totalPages) {
+          updateParams({ page: Math.max(1, resolvedMeta.totalPages) })
+          return
+        }
+
         setMember(normalizeMember(data))
+        setAttendance(mapMemberAttendances(data?.attendances))
+        setAttendanceMeta(resolvedMeta)
       } catch (err) {
         if (controller.signal.aborted) return
         setError(err?.message || "Unable to load member")
+        setAttendanceError(err?.message || "Unable to load attendance")
+      } finally {
+        if (!controller.signal.aborted) setIsAttendanceLoading(false)
       }
     }
 
@@ -118,33 +152,8 @@ function MemberDetailPageContent() {
       controller.abort()
       unregister()
     }
-  }, [memberId, refreshKey])
-
-  useEffect(() => {
-    const controller = new AbortController()
-    const unregister = registerAbortController(controller)
-
-    async function loadAttendance() {
-      setIsAttendanceLoading(true)
-      setAttendanceError("")
-      try {
-        const data = await getMemberRecentAttendance(memberId, controller.signal)
-        if (controller.signal.aborted) return
-        setAttendance(data)
-      } catch (err) {
-        if (controller.signal.aborted) return
-        setAttendanceError(err?.message || "Unable to load attendance")
-      } finally {
-        if (!controller.signal.aborted) setIsAttendanceLoading(false)
-      }
-    }
-
-    loadAttendance()
-    return () => {
-      controller.abort()
-      unregister()
-    }
-  }, [memberId])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [memberId, refreshKey, attendancePage])
 
   function updateParams(updates) {
     const params = new URLSearchParams(searchParams)
@@ -161,7 +170,7 @@ function MemberDetailPageContent() {
   }
 
   function setFinanceView(enabled) {
-    updateParams({ view: enabled ? "finance" : "" })
+    updateParams({ view: enabled ? "finance" : "", page: 1 })
   }
 
   // "Custom" only becomes the active period once a range is actually applied;
@@ -181,6 +190,10 @@ function MemberDetailPageContent() {
   }
 
   function goToOfferingsPage(nextPage) {
+    updateParams({ page: nextPage })
+  }
+
+  function goToAttendancePage(nextPage) {
     updateParams({ page: nextPage })
   }
 
@@ -230,6 +243,8 @@ function MemberDetailPageContent() {
     function lockFinance() {
       const params = new URLSearchParams(window.location.search)
       params.delete("view")
+      // Offerings may have advanced ?page=; reset so overview attendance starts at 1.
+      params.delete("page")
 
       const query = params.toString()
       router.push(`${pathname}${query ? `?${query}` : ""}`, { scroll: false })
@@ -319,6 +334,11 @@ function MemberDetailPageContent() {
                 attendance={attendance}
                 isAttendanceLoading={isAttendanceLoading}
                 attendanceError={attendanceError}
+                page={attendanceMeta.page || attendancePage}
+                totalPages={attendanceMeta.totalPages || 1}
+                total={attendanceMeta.total || 0}
+                pageSize={attendanceMeta.limit || ATTENDANCE_PAGE_SIZE}
+                onPageChange={goToAttendancePage}
               />
             )}
           </div>
