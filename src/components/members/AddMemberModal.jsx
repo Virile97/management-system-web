@@ -7,6 +7,7 @@ import { MEMBER_FORM_VALIDATORS } from "@/utils/validators"
 import { calculateAge } from "@/utils/helpers"
 import { createMember, getMemberFormConfig } from "@/services/member.service"
 import { useMemberFormStore } from "@/stores/memberForm.store"
+import { toast } from "sonner"
 import {
   MemberDialogHeader,
   buildSelectFields,
@@ -35,9 +36,14 @@ function AddMemberModal({ open, onOpenChange, onCreated }) {
   useEffect(() => {
     if (!open) return
 
-    // Already cached from a previous open — skip the API call entirely.
-    if (config) {
-      setForm(buildInitialForm(buildSelectFields(config)))
+    setErrors({})
+    setSubmitError("")
+
+    // Only seed/reset when the modal opens — not on later store updates —
+    // otherwise a mid-edit or failed submit can wipe the user's input.
+    const existingConfig = useMemberFormStore.getState().config
+    if (existingConfig) {
+      setForm(buildInitialForm(buildSelectFields(existingConfig)))
       return
     }
 
@@ -62,7 +68,7 @@ function AddMemberModal({ open, onOpenChange, onCreated }) {
 
     loadConfig()
     return () => controller.abort()
-  }, [open, config])
+  }, [open, setConfig])
 
   const selectFields = config ? buildSelectFields(config) : []
   const groupOptions = config ? buildGroupOptions(config) : {}
@@ -90,7 +96,8 @@ function AddMemberModal({ open, onOpenChange, onCreated }) {
   }
 
   function resetForm() {
-    setForm(config ? buildInitialForm(selectFields) : null)
+    const latestConfig = useMemberFormStore.getState().config
+    setForm(latestConfig ? buildInitialForm(buildSelectFields(latestConfig)) : null)
     setErrors({})
     setSubmitError("")
   }
@@ -110,9 +117,12 @@ function AddMemberModal({ open, onOpenChange, onCreated }) {
       await createMember(form)
       resetForm()
       onCreated?.()
-      onOpenChange(false)
+      toast.success("Member added successfully")
     } catch (err) {
-      setSubmitError(err?.message || "Unable to add member. Please try again.")
+      // Keep the filled form so the user can fix and retry.
+      const message = err?.message || "Unable to add member. Please try again."
+      setSubmitError(message)
+      toast.error(message)
     } finally {
       setIsSubmitting(false)
     }

@@ -19,8 +19,16 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
-import { getTransactionById, updateTransaction } from "@/services/finance.service"
+import {
+  createTransaction,
+  getTransactionById,
+  updateTransaction,
+} from "@/services/finance.service"
+import { getMemberById, normalizeMember } from "@/services/member.service"
+import { useMembersStore } from "@/stores/members.store"
+import { MemberPickerField } from "@/components/finances/MemberPickerField"
 import { sanitizeDecimalInput, toDateInputValue } from "@/utils/helpers"
+import { toast } from "sonner"
 
 // `type` is the UI's own "income"/"expense" discriminator (drives the URL
 // param and which fields render) — kept independent of the backend's
@@ -43,6 +51,54 @@ function emptyForm(type = "income") {
     date: toDateInputValue(),
     categoryId: "",
     offeringAmounts: {},
+    memberId: null,
+    memberName: "",
+  }
+}
+
+function formatMemberLabel(member) {
+  if (!member) return ""
+  if (member.name && member.name !== "—") return member.name
+  return [member.firstName, member.middleName, member.lastName].filter(Boolean).join(" ") || ""
+}
+
+function extractLinkedMember(transaction) {
+  const linked =
+    transaction.member ||
+    transaction.recordedForMember ||
+    transaction.memberUser ||
+    null
+  const memberId = linked?.id || transaction.memberId || null
+  if (!memberId) return { memberId: null, memberName: "" }
+
+  return {
+    memberId,
+    memberName: formatMemberLabel(linked),
+  }
+}
+
+/**
+ * Resolve a display name for `memberId`: nested transaction payload first,
+ * then the members Zustand cache, then a member-by-id fetch.
+ */
+async function resolveMemberName(memberId, existingName, signal) {
+  if (existingName) return existingName
+
+  const cached = useMembersStore.getState().cache?.[memberId]
+  if (cached) {
+    const label = formatMemberLabel(cached)
+    if (label) return label
+  }
+
+  try {
+    const member = await getMemberById(memberId, signal)
+    if (signal?.aborted) return existingName
+    const normalized = normalizeMember(member)
+    useMembersStore.getState().cacheMembers([normalized])
+    return formatMemberLabel(normalized) || "Selected member"
+  } catch {
+    if (signal?.aborted) return existingName
+    return "Selected member"
   }
 }
 
@@ -57,6 +113,8 @@ function transactionToForm(transaction, config) {
     offeringAmounts[offeringTypeId] = String(item.amount ?? "")
   }
 
+  const { memberId, memberName } = extractLinkedMember(transaction)
+
   return {
     type: typeName,
     description: transaction.description ?? "",
@@ -65,6 +123,8 @@ function transactionToForm(transaction, config) {
     categoryId: transaction.category?.id || transaction.categoryId || "",
     offeringAmounts,
     typeId: transaction.type?.id || transaction.typeId || findConfigId(config?.types, typeName),
+    memberId,
+    memberName,
   }
 }
 
@@ -146,7 +206,18 @@ function RecordTransactionModal({
       try {
         const transaction = await getTransactionById(transactionId, controller.signal)
         if (controller.signal.aborted) return
-        setForm(transactionToForm(transaction, config))
+
+        const nextForm = transactionToForm(transaction, config)
+        if (nextForm.memberId && !nextForm.memberName) {
+          nextForm.memberName = await resolveMemberName(
+            nextForm.memberId,
+            nextForm.memberName,
+            controller.signal
+          )
+          if (controller.signal.aborted) return
+        }
+
+        setForm(nextForm)
       } catch (err) {
         if (controller.signal.aborted) return
         setLoadError(err?.message || "Unable to load transaction")
@@ -193,13 +264,14 @@ function RecordTransactionModal({
   const isFormReady =
     Boolean(form) && !isBusy && !(isEditing ? loadError : configError)
   const canSubmit =
-    isEditing &&
     isFormReady &&
-    Boolean(form.date) &&
-    (isOfferingBreakdown ? hasOfferingAmount : hasFlatAmount)
+    Boolean(form?.date) &&
+    (isOfferingBreakdown
+      ? hasOfferingAmount && Boolean(form?.memberId)
+      : hasFlatAmount)
 
   async function handleSubmit() {
-    if (!isEditing || !canSubmit || !form) return
+    if (!canSubmit || !form || isSubmitting) return
 
     const typeId =
       form.typeId ||
@@ -215,6 +287,8 @@ function RecordTransactionModal({
       description: form.description.trim() || null,
       date: form.date,
       categoryId: activeType === "income" ? selectedCategoryId || null : null,
+      // Offering transactions must be attributed to a member via memberId.
+      memberId: isOfferingBreakdown ? form.memberId : null,
     }
 
     if (isOfferingBreakdown) {
@@ -232,12 +306,25 @@ function RecordTransactionModal({
     setSubmitError("")
 
     try {
-      await updateTransaction(transactionId, payload)
-      resetState()
-      onSaved?.()
-      onOpenChange(false)
+      if (isEditing) {
+        await updateTransaction(transactionId, payload)
+        resetState()
+        onSaved?.()
+        onOpenChange(false)
+        toast.success("Transaction updated successfully")
+      } else {
+        await createTransaction(payload)
+        setForm(emptyForm(type))
+        setSubmitError("")
+        onSaved?.()
+        toast.success("Transaction added successfully")
+      }
     } catch (err) {
-      setSubmitError(err?.message || "Unable to update transaction")
+      // Keep the filled form so the user can fix and retry.
+      const message =
+        err?.message || (isEditing ? "Unable to update transaction" : "Unable to create transaction")
+      setSubmitError(message)
+      toast.error(message)
     } finally {
       setIsSubmitting(false)
     }
@@ -301,6 +388,63 @@ function RecordTransactionModal({
                 </div>
               </div>
 
+              {activeType === "income" && (
+                <div className="flex flex-col gap-1.5">
+                  <Label>
+                    Category <span className="text-red-500">*</span>
+                  </Label>
+                  <Select
+                    value={selectedCategoryId}
+                    onValueChange={(value) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        categoryId: value,
+                        // Member linkage only applies to Offering — clear it
+                        // when switching away so a stale selection isn't submitted.
+                        memberId: value === offeringCategoryId ? prev.memberId : null,
+                        memberName: value === offeringCategoryId ? prev.memberName : "",
+                      }))
+                    }
+                    disabled={isSubmitting}
+                  >
+                    <SelectTrigger className="h-10 w-full rounded-lg">
+                      <SelectValue>{() => selectedCategoryName}</SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((category) => (
+                        <SelectItem key={category.id} value={category.id}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {isOfferingBreakdown && (
+                <div className="flex flex-col gap-1.5">
+                  <Label>
+                    Member <span className="text-red-500">*</span>
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    Search and select the member this offering belongs to.
+                  </p>
+                  <MemberPickerField
+                    member={
+                      form.memberId ? { id: form.memberId, name: form.memberName } : null
+                    }
+                    onChange={(nextMember) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        memberId: nextMember?.id ?? null,
+                        memberName: nextMember?.name ?? "",
+                      }))
+                    }
+                    disabled={isSubmitting}
+                  />
+                </div>
+              )}
+
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="transaction-note">
                   Note <span className="text-muted-foreground">(Optional)</span>
@@ -335,45 +479,6 @@ function RecordTransactionModal({
                 </div>
               )}
 
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="transaction-date">
-                  Date <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="transaction-date"
-                  type="date"
-                  value={form.date}
-                  onChange={(e) => setForm((prev) => ({ ...prev, date: e.target.value }))}
-                  disabled={isSubmitting}
-                  required
-                  className="h-10 rounded-lg"
-                />
-              </div>
-
-              {activeType === "income" && (
-                <div className="flex flex-col gap-1.5">
-                  <Label>
-                    Category <span className="text-red-500">*</span>
-                  </Label>
-                  <Select
-                    value={selectedCategoryId}
-                    onValueChange={(value) => setForm((prev) => ({ ...prev, categoryId: value }))}
-                    disabled={isSubmitting}
-                  >
-                    <SelectTrigger className="h-10 w-full rounded-lg">
-                      <SelectValue>{() => selectedCategoryName}</SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((category) => (
-                        <SelectItem key={category.id} value={category.id}>
-                          {category.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-
               {isOfferingBreakdown && (
                 <div className="flex flex-col gap-1.5">
                   <Label>
@@ -402,6 +507,21 @@ function RecordTransactionModal({
                   </div>
                 </div>
               )}
+
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="transaction-date">
+                  Date <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="transaction-date"
+                  type="date"
+                  value={form.date}
+                  onChange={(e) => setForm((prev) => ({ ...prev, date: e.target.value }))}
+                  disabled={isSubmitting}
+                  required
+                  className="h-10 rounded-lg"
+                />
+              </div>
             </>
           )}
 
@@ -420,12 +540,8 @@ function RecordTransactionModal({
           </Button>
           <Button
             type="button"
-            disabled={
-              isEditing
-                ? !canSubmit || isSubmitting
-                : !isFormReady || (isOfferingBreakdown && !hasOfferingAmount)
-            }
-            onClick={isEditing ? handleSubmit : undefined}
+            disabled={!canSubmit || isSubmitting}
+            onClick={handleSubmit}
             className="h-10 rounded-lg bg-[#1e2a4a] px-5 text-white hover:bg-[#1e2a4a]/90"
           >
             {isSubmitting ? "Saving…" : isEditing ? "Save Changes" : "Save Transaction"}

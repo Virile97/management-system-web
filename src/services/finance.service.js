@@ -78,6 +78,18 @@ function getTransactionById(id, signal) {
 }
 
 /**
+ * Creates a transaction. Either `amount` or `breakdown` is required;
+ * `breakdown` wins when both are sent. Income should include `categoryId`.
+ */
+function createTransaction(payload) {
+  return fetchJson(APP_API_ENDPOINTS.TRANSACTIONS, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getCsrfHeader() },
+    body: JSON.stringify(payload),
+  })
+}
+
+/**
  * Partial update for a transaction. At least one field must be present.
  * `breakdown` replaces line items and wins over `amount` when both are sent.
  * Pass `categoryId` / `memberId` / `description` as null to clear them.
@@ -105,6 +117,7 @@ export {
   getTransactionsConfig,
   listTransactions,
   getTransactionById,
+  createTransaction,
   updateTransaction,
   bulkDeleteTransactions,
 }

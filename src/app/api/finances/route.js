@@ -28,5 +28,20 @@ export async function GET(request) {
 }
 
 export async function POST(request) {
-  return NextResponse.json({ message: "Not implemented" }, { status: 501 })
+  const token = getSessionToken()
+  if (!token) {
+    return NextResponse.json({ success: false, message: "Not authenticated" }, { status: 401 })
+  }
+
+  const body = await request.json()
+
+  try {
+    const { data } = await api.post(API_ENDPOINTS.TRANSACTIONS, body, withAuthHeader(token))
+    return NextResponse.json(data, { status: 201 })
+  } catch (err) {
+    const status = err?.response?.status || 500
+    const message = err?.response?.data?.message || "Unable to create transaction"
+
+    return NextResponse.json({ success: false, message }, { status })
+  }
 }

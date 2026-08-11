@@ -44,6 +44,10 @@ function MonthlyTrendChart({ data = [], isLoading }) {
           <ChartContainer config={chartConfig} className="aspect-auto h-56 w-full">
             <AreaChart data={data} margin={{ left: 0, right: 0, top: 8, bottom: 0 }}>
               <defs>
+                <linearGradient id="incomeFill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#16a34a" stopOpacity={0.2} />
+                  <stop offset="100%" stopColor="#16a34a" stopOpacity={0} />
+                </linearGradient>
                 <linearGradient id="expenseFill" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="#b3492f" stopOpacity={0.2} />
                   <stop offset="100%" stopColor="#b3492f" stopOpacity={0} />
@@ -61,9 +65,8 @@ function MonthlyTrendChart({ data = [], isLoading }) {
                 dataKey="income"
                 type="monotone"
                 stroke="#16a34a"
-                strokeOpacity={0}
-                fill="#16a34a"
-                fillOpacity={0}
+                strokeWidth={2}
+                fill="url(#incomeFill)"
                 isAnimationActive={false}
               />
               <Area
