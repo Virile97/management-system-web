@@ -18,10 +18,11 @@ import { OfferingTypeChart } from "@/components/finances/OfferingTypeChart"
 import { TransactionTable } from "@/components/finances/TransactionTable"
 import { ScanQRModal } from "@/components/finances/ScanQRModal"
 import { RecordTransactionModal } from "@/components/finances/RecordTransactionModal"
+import { ExportTransactionsReportModal } from "@/components/finances/ExportTransactionsReportModal"
 import { PeriodTabs } from "@/components/soul-winning/PeriodTabs"
 import { DateRangeFilterModal } from "@/components/soul-winning/DateRangeFilterModal"
 import { useDebounce } from "@/hooks/use-debounce"
-import { toDatePoint, toDateRangeStrings } from "@/utils/helpers"
+import { toDatePoint, toDateRangeStrings, toPeriodDateRange } from "@/utils/helpers"
 import { register as registerAbortController } from "@/lib/abort-registry"
 import {
   getFinanceStats,
@@ -32,7 +33,7 @@ import {
   bulkDeleteTransactions,
 } from "@/services/finance.service"
 import { useFinanceStore } from "@/stores/finance.store"
-import { ScanLine, Plus } from "lucide-react"
+import { ScanLine, Plus, FileDown } from "lucide-react"
 
 const PAGE_SIZE = 10
 const DEFAULT_FILTER = "All"
@@ -79,6 +80,7 @@ function FinancesPageContent() {
   const [isDeleting, setIsDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState("")
   const [refreshKey, setRefreshKey] = useState(0)
+  const [isExportOpen, setIsExportOpen] = useState(false)
 
   const periodValue = PERIOD_VALUES[period] ?? "month"
 
@@ -141,6 +143,16 @@ function FinancesPageContent() {
     }))
   )
 
+  // Period tabs own the table date bounds whenever a non-default period is
+  // active. "This Month" is the default, so it leaves the table's own
+  // date-range control enabled and hides the Clear filter affordance.
+  const periodDrivesTableDates = period !== DEFAULT_PERIOD
+  const periodTableRange = toPeriodDateRange(period, periodFrom, periodTo)
+  const tableDateFrom = periodDrivesTableDates ? periodTableRange.from : dateFrom
+  const tableDateTo = periodDrivesTableDates ? periodTableRange.to : dateTo
+  const tableDateRangeLabel =
+    tableDateFrom || tableDateTo ? `${tableDateFrom || "…"} – ${tableDateTo || "…"}` : ""
+
   const debouncedSearch = useDebounce(search, 300)
 
   function updateParams(updates) {
@@ -200,15 +212,26 @@ function FinancesPageContent() {
     updateParams({ recordType: nextType })
   }
 
-  // Filters the stats/trend/offering-type summary by time period. The
-  // transaction table below has its own independent date-range filter and
-  // is intentionally not affected by this.
+  // Filters the stats/trend/offering-type summary AND (for non-default
+  // periods) the transaction table by time period. Switching away from
+  // the default clears the table's own date-range so only one date source
+  // is active at a time.
   function updatePeriod(nextPeriod) {
     if (nextPeriod === "Custom") {
       setIsDateRangeOpen(true)
       return
     }
+
+    if (nextPeriod !== DEFAULT_PERIOD) {
+      useFinanceStore.getState().clearDateRange()
+    }
+
     updateParams({ period: nextPeriod, periodFrom: "", periodTo: "", page: 1 })
+  }
+
+  function clearPeriodFilter() {
+    useFinanceStore.getState().clearDateRange()
+    updateParams({ period: DEFAULT_PERIOD, periodFrom: "", periodTo: "", page: 1 })
   }
 
   // Stats/offering-type/trend are independent of the transaction table's own
@@ -301,8 +324,8 @@ function FinancesPageContent() {
             limit: PAGE_SIZE,
             type: activeFilter === "All" ? "" : activeFilter,
             search: debouncedSearch,
-            from: dateFrom,
-            to: dateTo,
+            from: tableDateFrom,
+            to: tableDateTo,
           },
           controller.signal
         )
@@ -332,7 +355,7 @@ function FinancesPageContent() {
       controller.abort()
       unregister()
     }
-  }, [page, activeFilter, debouncedSearch, dateFrom, dateTo, refreshKey])
+  }, [page, activeFilter, debouncedSearch, tableDateFrom, tableDateTo, refreshKey])
 
   const { setSearch, setDateFrom, setDateTo, clearDateRange } = useFinanceStore.getState()
 
@@ -422,6 +445,16 @@ function FinancesPageContent() {
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <Button
+              type="button"
+              variant="outline"
+              className="h-10 gap-2 rounded-lg px-4"
+              onClick={() => setIsExportOpen(true)}
+              disabled={meta.total === 0 && selectedIds.size === 0}
+            >
+              <FileDown className="h-4 w-4" />
+              Export Report
+            </Button>
+            <Button
               className="h-10 gap-2 rounded-lg bg-amber-400 px-4 text-[#1e2a4a] hover:bg-amber-400/90"
               onClick={openScanQr}
             >
@@ -444,6 +477,8 @@ function FinancesPageContent() {
             onChange={updatePeriod}
             recordCount={meta.total}
             onCustomClick={() => setIsDateRangeOpen(true)}
+            clearable={periodDrivesTableDates}
+            onClear={clearPeriodFilter}
           />
         </div>
 
@@ -476,8 +511,9 @@ function FinancesPageContent() {
             onFilterChange={updateFilter}
             search={search}
             onSearchChange={updateSearch}
-            dateFrom={dateFrom}
-            dateTo={dateTo}
+            dateFrom={tableDateFrom}
+            dateTo={tableDateTo}
+            dateFilterDisabled={periodDrivesTableDates}
             onDateFromChange={updateDateFrom}
             onDateToChange={updateDateTo}
             onClearDateRange={updateClearDateRange}
@@ -496,6 +532,16 @@ function FinancesPageContent() {
       </div>
 
       <ScanQRModal open={isScanParam} onOpenChange={(open) => !open && closeScanQr()} />
+      <ExportTransactionsReportModal
+        open={isExportOpen}
+        onOpenChange={setIsExportOpen}
+        typeFilter={activeFilter}
+        search={debouncedSearch}
+        dateFrom={tableDateFrom}
+        dateTo={tableDateTo}
+        dateRangeLabel={tableDateRangeLabel}
+        selectedTransactions={transactions.filter((transaction) => selectedIds.has(transaction.id))}
+      />
       <RecordTransactionModal
         open={isRecordingParam || (isEditParam && Boolean(editTransactionIdParam))}
         onOpenChange={(open) => {
@@ -518,6 +564,7 @@ function FinancesPageContent() {
         range={customRange}
         onApply={(range) => {
           const { from, to } = toDateRangeStrings(range)
+          useFinanceStore.getState().clearDateRange()
           updateParams({ period: "Custom", periodFrom: from, periodTo: to, page: 1 })
         }}
       />

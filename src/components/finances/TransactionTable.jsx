@@ -57,6 +57,7 @@ function TransactionTable({
   onSearchChange,
   dateFrom,
   dateTo,
+  dateFilterDisabled = false,
   onDateFromChange,
   onDateToChange,
   onClearDateRange,
@@ -100,7 +101,8 @@ function TransactionTable({
         <DateRangeButton
           hasRange={hasDateRange}
           label={hasDateRange ? `${dateFrom || "…"} – ${dateTo || "…"}` : null}
-          disabled={filtersDisabled}
+          disabled={filtersDisabled || dateFilterDisabled}
+          clearable={!dateFilterDisabled}
           onOpen={() => setIsDateRangeOpen(true)}
           onClear={onClearDateRange}
           className="h-8"

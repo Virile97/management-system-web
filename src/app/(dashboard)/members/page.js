@@ -19,6 +19,7 @@ import { AddMemberModal } from "@/components/members/AddMemberModal"
 import { EditMemberModal } from "@/components/members/EditMemberModal"
 import { PrintQrModal } from "@/components/members/PrintQrModal"
 import { PrintSelectedQrModal } from "@/components/members/PrintSelectedQrModal"
+import { ExportMembersReportModal } from "@/components/members/ExportMembersReportModal"
 import { MemberBreakdownChart } from "@/components/dashboard/MemberBreakdownChart"
 import { DateRangeButton } from "@/components/common/DateRangeButton"
 import { DateRangeFilterModal } from "@/components/soul-winning/DateRangeFilterModal"
@@ -27,7 +28,7 @@ import { formatDateRangeLabel, toDateRangeStrings } from "@/utils/helpers"
 import { register as registerAbortController } from "@/lib/abort-registry"
 import { listMembers, getMemberBreakdown, bulkDeleteMembers } from "@/services/member.service"
 import { useMembersStore } from "@/stores/members.store"
-import { Plus, QrCode, Trash2 } from "lucide-react"
+import { Plus, QrCode, Trash2, FileDown } from "lucide-react"
 
 export default function MembersPage() {
   return (
@@ -86,6 +87,7 @@ function MembersPageContent() {
   }
 
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false)
+  const [isExportOpen, setIsExportOpen] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
   const [selectedIds, setSelectedIds] = useState(new Set())
   const [printMember, setPrintMember] = useState(null)
@@ -355,6 +357,17 @@ function MembersPageContent() {
             />
 
             <Button
+              type="button"
+              variant="outline"
+              className="h-10 gap-2 rounded-lg px-4"
+              onClick={() => setIsExportOpen(true)}
+              disabled={meta.total === 0 && selectedIds.size === 0}
+            >
+              <FileDown className="h-4 w-4" />
+              Export Report
+            </Button>
+
+            <Button
               className="h-10 gap-2 rounded-lg bg-[#1e2a4a] px-4 text-white hover:bg-[#1e2a4a]/90"
               onClick={() => setIsAddMemberOpen(true)}
             >
@@ -422,6 +435,16 @@ function MembersPageContent() {
         open={isPrintSelectedOpen}
         onOpenChange={setIsPrintSelectedOpen}
         members={selectedMembers}
+      />
+      <ExportMembersReportModal
+        open={isExportOpen}
+        onOpenChange={setIsExportOpen}
+        statusFilter={activeFilter}
+        search={debouncedSearch}
+        dateFrom={dateFrom}
+        dateTo={dateTo}
+        dateRangeLabel={dateRange ? formatDateRangeLabel(dateRange) : ""}
+        selectedMembers={selectedMembers}
       />
 
       <DateRangeFilterModal

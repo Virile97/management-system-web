@@ -1,13 +1,22 @@
 import { cn } from "@/lib/utils"
+import { X } from "lucide-react"
 
 const DEFAULT_PERIODS = ["Today", "This Month", "This Year", "All Time", "Custom"]
 
-function PeriodTabs({ active, onChange, recordCount, onCustomClick, periods = DEFAULT_PERIODS }) {
+function PeriodTabs({
+  active,
+  onChange,
+  recordCount,
+  onCustomClick,
+  onClear,
+  clearable = false,
+  periods = DEFAULT_PERIODS,
+}) {
   function handleClick(period) {
     if (period === "Custom") {
-      onCustomClick()
+      onCustomClick?.()
     }
-    onChange(period)
+    onChange?.(period)
   }
 
   return (
@@ -28,9 +37,23 @@ function PeriodTabs({ active, onChange, recordCount, onCustomClick, periods = DE
             {period}
           </button>
         ))}
+
+        {clearable && (
+          <button
+            type="button"
+            onClick={onClear}
+            aria-label="Clear filter"
+            className="ml-1.5 inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <X className="h-3 w-3" />
+            Clear filter
+          </button>
+        )}
       </div>
 
-      <p className="text-sm text-muted-foreground">{recordCount} records in period</p>
+      {recordCount != null && (
+        <p className="text-sm text-muted-foreground">{recordCount} records in period</p>
+      )}
     </div>
   )
 }

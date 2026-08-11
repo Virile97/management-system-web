@@ -13,6 +13,7 @@ function DateRangeButton({
   onOpen,
   onClear,
   disabled = false,
+  clearable = true,
   className,
 }) {
   return (
@@ -29,7 +30,7 @@ function DateRangeButton({
     >
       <Calendar className="h-3.5 w-3.5" />
       {hasRange ? label : "Date Range"}
-      {hasRange && (
+      {hasRange && clearable && (
         <span
           role="button"
           tabIndex={0}

@@ -109,6 +109,42 @@ function formatDateRangeLabel(range) {
   return end ? `${start} – ${end}` : start
 }
 
+/**
+ * Resolves PeriodTabs labels into YYYY-MM-DD from/to bounds for list APIs.
+ * "All Time" and unknown labels return empty bounds. Custom uses the
+ * provided periodFrom/periodTo strings as-is.
+ */
+function toPeriodDateRange(period, periodFrom = "", periodTo = "", now = new Date()) {
+  if (period === "Custom") {
+    return { from: periodFrom || "", to: periodTo || "" }
+  }
+
+  if (!period || period === "All Time") {
+    return { from: "", to: "" }
+  }
+
+  const ymd = (date) => toDateInputValue(date)
+
+  if (period === "Today") {
+    const today = ymd(now)
+    return { from: today, to: today }
+  }
+
+  if (period === "This Month") {
+    const from = new Date(now.getFullYear(), now.getMonth(), 1)
+    const to = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+    return { from: ymd(from), to: ymd(to) }
+  }
+
+  if (period === "This Year") {
+    const from = new Date(now.getFullYear(), 0, 1)
+    const to = new Date(now.getFullYear(), 11, 31)
+    return { from: ymd(from), to: ymd(to) }
+  }
+
+  return { from: "", to: "" }
+}
+
 export {
   calculateAge,
   sanitizeDecimalInput,
@@ -118,4 +154,5 @@ export {
   toDatePoint,
   formatDatePoint,
   formatDateRangeLabel,
+  toPeriodDateRange,
 }
