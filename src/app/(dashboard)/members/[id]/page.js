@@ -15,10 +15,23 @@ import { register as registerAbortController } from "@/lib/abort-registry"
 import { useMembersStore } from "@/stores/members.store"
 import { Lock } from "lucide-react"
 
-const DEFAULT_PERIOD = "Yearly"
+const DEFAULT_PERIOD = "This Year"
 
-// Older bookmarks used Month/Year; map them onto the current tab labels.
-const PERIOD_ALIASES = { Month: "Monthly", Year: "Yearly" }
+// Auto-lock the unlocked finance breakdown after this much idle time so a
+// stepped-away session doesn't leave offerings on screen.
+const FINANCE_IDLE_MS = 60_000
+
+const FINANCE_ACTIVITY_EVENTS = ["mousemove", "mousedown", "keydown", "scroll", "touchstart", "wheel"]
+
+// Older bookmarks used Weekly/Monthly/Yearly (and earlier Month/Year); map
+// them onto the current tab labels.
+const PERIOD_ALIASES = {
+  Weekly: "This Week",
+  Month: "This Month",
+  Monthly: "This Month",
+  Year: "This Year",
+  Yearly: "This Year",
+}
 
 // Same allow-list the sidebar uses for /finances — the plain USER role can see
 // a member but never their financial breakdown.
@@ -205,6 +218,42 @@ function MemberDetailPageContent() {
   function handleLock() {
     setFinanceView(false)
   }
+
+  // While the breakdown is unlocked, any pointer/keyboard activity resets a
+  // 1-minute idle timer; when it fires we drop view=finance the same way the
+  // Lock button does, so the code is required again on re-entry. The lock
+  // reads window.location so a stale searchParams closure can't wipe filters
+  // the user applied after unlock.
+  useEffect(() => {
+    if (!isFinanceView || !isUnlocked) return
+
+    function lockFinance() {
+      const params = new URLSearchParams(window.location.search)
+      params.delete("view")
+
+      const query = params.toString()
+      router.push(`${pathname}${query ? `?${query}` : ""}`, { scroll: false })
+    }
+
+    let timeoutId = window.setTimeout(lockFinance, FINANCE_IDLE_MS)
+
+    function resetIdleTimer() {
+      window.clearTimeout(timeoutId)
+      timeoutId = window.setTimeout(lockFinance, FINANCE_IDLE_MS)
+    }
+
+    for (const event of FINANCE_ACTIVITY_EVENTS) {
+      window.addEventListener(event, resetIdleTimer, { passive: true })
+    }
+
+    return () => {
+      window.clearTimeout(timeoutId)
+
+      for (const event of FINANCE_ACTIVITY_EVENTS) {
+        window.removeEventListener(event, resetIdleTimer)
+      }
+    }
+  }, [isFinanceView, isUnlocked, pathname, router])
 
   // Same ?isEdit=true convention the list page uses, but the modal opens over
   // this page — the member id already comes from the route.

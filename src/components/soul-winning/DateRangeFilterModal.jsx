@@ -7,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
 import { Calendar, X, ChevronLeft, ChevronRight } from "lucide-react"
 
@@ -14,6 +15,11 @@ const monthNames = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December",
 ]
+
+// Calendar jump list: a couple of years ahead for planning, and far enough
+// back to cover typical historical filters without an endless scroll.
+const CURRENT_YEAR = new Date().getFullYear()
+const YEAR_OPTIONS = Array.from({ length: 22 }, (_, index) => CURRENT_YEAR + 1 - index)
 
 function getDaysInMonth(year, month) {
   return new Date(year, month + 1, 0).getDate()
@@ -81,6 +87,12 @@ function DateRangeFilterModal({ open, onOpenChange, range, hasSelection = true, 
 
   const daysInMonth = getDaysInMonth(viewYear, viewMonth)
   const days = Array.from({ length: daysInMonth }, (_, i) => i + 1)
+
+  // Keep the open view selectable even if it falls outside the default jump
+  // list (e.g. a saved range from further back than YEAR_OPTIONS covers).
+  const yearOptions = YEAR_OPTIONS.includes(viewYear)
+    ? YEAR_OPTIONS
+    : [...YEAR_OPTIONS, viewYear].sort((a, b) => b - a)
 
   function goToPrevMonth() {
     if (viewMonth === 0) {
@@ -165,21 +177,47 @@ function DateRangeFilterModal({ open, onOpenChange, range, hasSelection = true, 
         </DialogHeader>
 
         <div className="px-5 py-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2">
             <button
               type="button"
               onClick={goToPrevMonth}
-              className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
-            <p className="text-sm font-medium text-foreground/85">
-              {monthNames[viewMonth]} <span className="text-muted-foreground">{viewYear}</span>
-            </p>
+
+            <div className="flex min-w-0 flex-1 items-center justify-center gap-2">
+              <Select value={String(viewMonth)} onValueChange={(value) => setViewMonth(Number(value))}>
+                <SelectTrigger className="h-8 w-34 rounded-lg">
+                  <SelectValue>{(value) => monthNames[Number(value)]}</SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {monthNames.map((name, index) => (
+                    <SelectItem key={name} value={String(index)}>
+                      {name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={String(viewYear)} onValueChange={(value) => setViewYear(Number(value))}>
+                <SelectTrigger className="h-8 w-22 rounded-lg">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {yearOptions.map((year) => (
+                    <SelectItem key={year} value={String(year)}>
+                      {year}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <button
               type="button"
               onClick={goToNextMonth}
-              className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
             >
               <ChevronRight className="h-4 w-4" />
             </button>

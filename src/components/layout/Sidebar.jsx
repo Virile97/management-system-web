@@ -113,8 +113,8 @@ function Sidebar({ open = false, onClose }) {
             className="size-[3em] shrink-0 rounded-xl object-cover"
           />
           <div className="min-w-0 flex-1">
-            <p className="font-heading text-base font-semibold leading-tight text-white">
-              Lighthouse BBC Goa
+            <p className="font-heading text-sm font-semibold leading-tight text-white">
+              LIGHTHOUSE BBC GOA
             </p>
             <p className="text-xs text-white/50">Data Management System</p>
           </div>

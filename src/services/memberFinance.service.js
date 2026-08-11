@@ -25,9 +25,9 @@ async function verifyFinanceAccess(code) {
 
 // Tab labels, in display order, mapped onto the backend's period enum.
 const PERIOD_VALUES = {
-  Weekly: "week",
-  Monthly: "month",
-  Yearly: "year",
+  "This Week": "week",
+  "This Month": "month",
+  "This Year": "year",
   Custom: "custom",
 }
 
@@ -66,7 +66,7 @@ function normalizeOffering(item) {
  */
 async function getMemberOfferings(
   memberId,
-  { period = "Yearly", from = "", to = "", offeringTypeIds = [], page = 1, limit = 20 } = {},
+  { period = "This Year", from = "", to = "", offeringTypeIds = [], page = 1, limit = 20 } = {},
   signal
 ) {
   const params = new URLSearchParams({
