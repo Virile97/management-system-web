@@ -28,8 +28,15 @@ const statusStyles = {
 function TimeReadout({ label, value }) {
   return (
     <div className="min-w-0">
-      <p className="text-[10px] font-medium tracking-wide text-muted-foreground uppercase">{label}</p>
-      <p className={cn("mt-0.5 text-xs tabular-nums", value ? "text-foreground/85" : "text-muted-foreground/50")}>
+      <p className="text-[10px] font-medium tracking-wide text-muted-foreground uppercase">
+        {label}
+      </p>
+      <p
+        className={cn(
+          "mt-0.5 text-xs tabular-nums",
+          value ? "text-foreground/85" : "text-muted-foreground/50"
+        )}
+      >
         {value || "—"}
       </p>
     </div>
@@ -65,9 +72,16 @@ function AttendanceDayCard({ record }) {
   return (
     <div className="py-3">
       <div className="flex items-start justify-between gap-3">
-        <p className="text-sm font-medium text-foreground/85">{formatDate(record.date)}</p>
+        <p className="text-sm font-medium text-foreground/85">
+          {formatDate(record.date)}
+        </p>
         {record.status ? (
-          <Badge className={cn("shrink-0 border-0", statusStyles[record.status] ?? "bg-muted text-muted-foreground")}>
+          <Badge
+            className={cn(
+              "shrink-0 border-0",
+              statusStyles[record.status] ?? "bg-muted text-muted-foreground"
+            )}
+          >
             {record.status}
           </Badge>
         ) : (
@@ -117,7 +131,9 @@ function MemberOverviewPanel({
       <Card className="rounded-2xl p-4 sm:p-5">
         <div className="flex items-center gap-2">
           <LayoutGrid className="h-4 w-4 text-amber-500" />
-          <h2 className="text-sm font-medium text-foreground/85">Ministry &amp; Groups</h2>
+          <h2 className="text-sm font-medium text-foreground/85">
+            Ministry &amp; Groups
+          </h2>
         </div>
 
         {groups.length > 0 ? (
@@ -137,22 +153,31 @@ function MemberOverviewPanel({
             ))}
           </div>
         ) : (
-          <p className="mt-3 text-sm text-muted-foreground">No groups assigned.</p>
+          <p className="mt-3 text-sm text-muted-foreground">
+            No groups assigned.
+          </p>
         )}
       </Card>
 
       <Card className="overflow-hidden rounded-2xl p-0">
         <div className="flex items-center gap-2 px-4 pt-4 sm:px-5 sm:pt-5">
           <Clock className="h-4 w-4 text-amber-500" />
-          <h2 className="text-sm font-medium text-foreground/85">Recent Attendance</h2>
+          <h2 className="text-sm font-medium text-foreground/85">
+            Recent Attendance
+          </h2>
         </div>
 
         {attendanceError && (
-          <p className="px-4 pt-3 text-sm text-destructive sm:px-5">{attendanceError}</p>
+          <p className="px-4 pt-3 text-sm text-destructive sm:px-5">
+            {attendanceError}
+          </p>
         )}
 
         {isAttendanceLoading ? (
-          <ListCardSkeleton rows={5} className="border-0 p-4 shadow-none sm:p-5" />
+          <ListCardSkeleton
+            rows={5}
+            className="border-0 p-4 shadow-none sm:p-5"
+          />
         ) : attendance.length === 0 ? (
           <EmptyState
             icon={CalendarX}

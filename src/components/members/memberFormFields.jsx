@@ -19,7 +19,9 @@ import { MEMBER_FORM_VALIDATORS } from "@/utils/validators"
 function MemberDialogHeader({ title }) {
   return (
     <div className="relative flex items-center gap-2.5 rounded-t-xl bg-[#1e2a4a] px-4 py-4 sm:px-6 sm:py-5">
-      <span className="font-heading text-base font-medium text-white sm:text-lg">{title}</span>
+      <span className="font-heading text-base font-medium text-white sm:text-lg">
+        {title}
+      </span>
       <DialogClose className="absolute top-1/2 right-4 -translate-y-1/2 text-white/70 hover:text-white">
         <X className="h-4 w-4" />
         <span className="sr-only">Close</span>
@@ -33,17 +35,28 @@ function MemberDialogHeader({ title }) {
 // backend contract); Gender is the one fixed enum, since it isn't part of
 // the config response.
 function buildSelectFields(config) {
-  const toOptions = (items) => Object.fromEntries(items.map((item) => [item.id, item.name]))
+  const toOptions = (items) =>
+    Object.fromEntries(items.map((item) => [item.id, item.name]))
 
   return [
-    { name: "status", label: "Status", required: true, options: toOptions(config.statuses) },
+    {
+      name: "status",
+      label: "Status",
+      required: true,
+      options: toOptions(config.statuses),
+    },
     {
       name: "gender",
       label: "Gender",
       required: true,
       options: { MALE: "Male", FEMALE: "Female" },
     },
-    { name: "level", label: "Level", required: true, options: toOptions(config.levels) },
+    {
+      name: "level",
+      label: "Level",
+      required: true,
+      options: toOptions(config.levels),
+    },
     {
       name: "lighthouseGroup",
       label: "Lighthouse Group",
@@ -76,13 +89,28 @@ function buildInitialForm(selectFields) {
 // match the backend's member schema field names. Grouped into rows matching
 // the layout (name row / stacked / date+age row).
 const NAME_FIELDS = [
-  { name: "firstName", label: "First Name", placeholder: "e.g. Juan", required: true },
+  {
+    name: "firstName",
+    label: "First Name",
+    placeholder: "e.g. Juan",
+    required: true,
+  },
   { name: "middleName", label: "Middle Name", placeholder: "Optional" },
-  { name: "lastName", label: "Last Name", placeholder: "e.g. Dela Cruz", required: true },
+  {
+    name: "lastName",
+    label: "Last Name",
+    placeholder: "e.g. Dela Cruz",
+    required: true,
+  },
 ]
 
 const CONTACT_FIELDS = [
-  { name: "email", label: "Email", type: "email", placeholder: "name@gmail.com" },
+  {
+    name: "email",
+    label: "Email",
+    type: "email",
+    placeholder: "name@gmail.com",
+  },
   {
     name: "contact",
     label: "Phone",
@@ -92,13 +120,24 @@ const CONTACT_FIELDS = [
     maxDigits: 11,
     startsWith: "0",
   },
-  { name: "address", label: "Address", placeholder: "Street, City", required: true },
+  {
+    name: "address",
+    label: "Address",
+    placeholder: "Street, City",
+    required: true,
+  },
 ]
 
 const DATE_AGE_FIELDS = [
   { name: "birthDate", label: "Birth Date", type: "date", required: true },
   { name: "baptizedAt", label: "Baptized Date", type: "date", required: true },
-  { name: "age", label: "Age", inputMode: "numeric", placeholder: "e.g. 34", required: true },
+  {
+    name: "age",
+    label: "Age",
+    inputMode: "numeric",
+    placeholder: "e.g. 34",
+    required: true,
+  },
 ]
 
 function SelectField({ field, value, onChange }) {
@@ -145,7 +184,15 @@ function MultiSelectField({ label, options, value, onToggle }) {
 }
 
 function FormField({ field, value, error, onChange, onBlur }) {
-  const { name, label, required, digitsOnly, maxDigits, startsWith, ...inputProps } = field
+  const {
+    name,
+    label,
+    required,
+    digitsOnly,
+    maxDigits,
+    startsWith,
+    ...inputProps
+  } = field
 
   function handleChange(e) {
     let next = e.target.value

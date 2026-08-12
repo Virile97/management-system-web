@@ -6,6 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { TimePickerInput } from "@/components/attendance/TimePickerInput"
 import { Pagination } from "@/components/common/Pagination"
 import { EmptyState } from "@/components/common/EmptyState"
+import { ListCardSkeleton } from "@/components/dashboard/DashboardSkeletons"
 import { cn } from "@/lib/utils"
 import { ClipboardX } from "lucide-react"
 
@@ -42,7 +43,7 @@ const avatarColors = [
   "bg-blue-600",
 ]
 
-  const levelBadgeStyles = {
+const levelBadgeStyles = {
   Career: "bg-amber-50 text-amber-600",
   Ladies: "bg-rose-50 text-rose-600",
   Men: "bg-blue-50 text-blue-600",
@@ -70,8 +71,16 @@ function initials(name) {
 function TimeCell({ checked, value, disabled, onCheckedChange, onChange }) {
   return (
     <div className="flex items-center gap-1.5">
-      <Checkbox checked={checked} disabled={disabled} onCheckedChange={onCheckedChange} />
-      <TimePickerInput value={value} onChange={onChange} disabled={!checked || disabled} />
+      <Checkbox
+        checked={checked}
+        disabled={disabled}
+        onCheckedChange={onCheckedChange}
+      />
+      <TimePickerInput
+        value={value}
+        onChange={onChange}
+        disabled={!checked || disabled}
+      />
     </div>
   )
 }
@@ -188,11 +197,18 @@ function AttendanceRow({ member, index, onSlotChange }) {
           >
             {initials(member.name)}
           </div>
-          <p className="text-sm font-medium text-foreground/85">{member.name}</p>
+          <p className="text-sm font-medium text-foreground/85">
+            {member.name}
+          </p>
         </div>
       </td>
       <td className="py-4 pr-4">
-        <Badge className={cn("border-0", levelBadgeStyles[member.level] ?? "bg-muted text-muted-foreground")}>
+        <Badge
+          className={cn(
+            "border-0",
+            levelBadgeStyles[member.level] ?? "bg-muted text-muted-foreground"
+          )}
+        >
           {member.level}
         </Badge>
       </td>
@@ -234,7 +250,12 @@ function AttendanceRow({ member, index, onSlotChange }) {
       </td>
       <td className="border-l border-border p-4">
         {status ? (
-          <Badge className={cn("border-0", statusStyles[status] ?? "bg-muted text-muted-foreground")}>
+          <Badge
+            className={cn(
+              "border-0",
+              statusStyles[status] ?? "bg-muted text-muted-foreground"
+            )}
+          >
             {status}
           </Badge>
         ) : (
@@ -258,7 +279,18 @@ function AttendanceTable({
   const from = total === 0 ? 0 : (page - 1) * pageSize + 1
   const to = (page - 1) * pageSize + members.length
 
-  if (!isLoading && total === 0) {
+  if (isLoading) {
+    return (
+      <div className="overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/10">
+        <ListCardSkeleton
+          rows={Math.min(pageSize, 8)}
+          className="border-0 p-4 shadow-none sm:p-6"
+        />
+      </div>
+    )
+  }
+
+  if (total === 0) {
     return (
       <div className="overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/10">
         <EmptyState
@@ -321,16 +353,14 @@ function AttendanceTable({
         </table>
       </div>
 
-      {total > 0 && (
-        <Pagination
-          page={page}
-          totalPages={totalPages}
-          from={from}
-          to={to}
-          total={total}
-          onPageChange={onPageChange}
-        />
-      )}
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        from={from}
+        to={to}
+        total={total}
+        onPageChange={onPageChange}
+      />
     </div>
   )
 }

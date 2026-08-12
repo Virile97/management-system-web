@@ -27,10 +27,20 @@ function initials(name) {
     .toUpperCase()
 }
 
-function MemberRow({ member, checked, onCheckedChange, onPrint, onEdit, onOpen }) {
+function MemberRow({
+  member,
+  checked,
+  onCheckedChange,
+  onPrint,
+  onEdit,
+  onOpen,
+}) {
   return (
     <tr
-      className={cn("border-b border-border last:border-0", onOpen && "cursor-pointer hover:bg-muted/40")}
+      className={cn(
+        "border-b border-border last:border-0",
+        onOpen && "cursor-pointer hover:bg-muted/40"
+      )}
       onClick={() => onOpen?.(member)}
       role={onOpen ? "link" : undefined}
       tabIndex={onOpen ? 0 : undefined}
@@ -40,7 +50,10 @@ function MemberRow({ member, checked, onCheckedChange, onPrint, onEdit, onOpen }
     >
       {/* Checkbox and the action buttons sit inside the row, so their clicks
           must not also trigger the row's navigation. */}
-      <td className="w-10 py-4 pl-4" onClick={(event) => event.stopPropagation()}>
+      <td
+        className="w-10 py-4 pl-4"
+        onClick={(event) => event.stopPropagation()}
+      >
         <Checkbox checked={checked} onCheckedChange={onCheckedChange} />
       </td>
       <td className="py-4 pr-4">
@@ -48,7 +61,9 @@ function MemberRow({ member, checked, onCheckedChange, onPrint, onEdit, onOpen }
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#1e2a4a] text-xs font-semibold text-white">
             {initials(member.name)}
           </div>
-          <p className="text-sm font-medium text-foreground/85">{member.name}</p>
+          <p className="text-sm font-medium text-foreground/85">
+            {member.name}
+          </p>
         </div>
       </td>
       <td className="py-4 pr-4">
@@ -59,7 +74,11 @@ function MemberRow({ member, checked, onCheckedChange, onPrint, onEdit, onOpen }
         {member.groups?.length > 0 ? (
           <div className="flex flex-wrap gap-1">
             {member.groups.map((g) => (
-              <Badge key={g.role} variant="outline" className="text-muted-foreground">
+              <Badge
+                key={g.role}
+                variant="outline"
+                className="text-muted-foreground"
+              >
                 {g.role}
               </Badge>
             ))}
@@ -68,7 +87,9 @@ function MemberRow({ member, checked, onCheckedChange, onPrint, onEdit, onOpen }
           <span className="text-sm text-foreground/80">—</span>
         )}
       </td>
-      <td className="py-4 pr-4 text-sm text-foreground/80">{member.baptized}</td>
+      <td className="py-4 pr-4 text-sm text-foreground/80">
+        {member.baptized}
+      </td>
       <td className="py-4 pr-4">
         <span
           className={cn(
@@ -76,7 +97,12 @@ function MemberRow({ member, checked, onCheckedChange, onPrint, onEdit, onOpen }
             statusStyles[member.status] || defaultStatusStyle
           )}
         >
-          <span className={cn("h-1.5 w-1.5 rounded-full", dotStyles[member.status] || defaultDotStyle)} />
+          <span
+            className={cn(
+              "h-1.5 w-1.5 rounded-full",
+              dotStyles[member.status] || defaultDotStyle
+            )}
+          />
           {member.status}
         </span>
       </td>

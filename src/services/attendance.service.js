@@ -37,7 +37,10 @@ function formatAttendanceTime(iso) {
 function toAttendanceDateTime(date, timeDisplay) {
   if (!date || !timeDisplay) return null
 
-  const match = /^(\d{1,2}):(\d{2})\s*(AM|PM)$/i.exec(String(timeDisplay).trim())
+  const match = /^(\d{1,2}):(\d{2})\s*(AM|PM)$/i.exec(
+    String(timeDisplay).trim()
+  )
+
   if (!match) return null
 
   let hour = Number(match[1])
@@ -53,7 +56,12 @@ function toAttendanceDateTime(date, timeDisplay) {
 
 function formatStatusLabel(status) {
   if (!status) return null
-  return STATUS_LABELS[status] ?? String(status).replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+  return (
+    STATUS_LABELS[status] ??
+    String(status)
+      .replace(/_/g, " ")
+      .replace(/\b\w/g, (c) => c.toUpperCase())
+  )
 }
 
 function normalizeSummary(summary = {}) {
@@ -81,7 +89,11 @@ function normalizeLevel(level) {
 function formatMemberName(member) {
   if (!member) return "—"
   if (member.name) return member.name
-  return [member.firstName, member.middleName, member.lastName].filter(Boolean).join(" ") || "—"
+  return (
+    [member.firstName, member.middleName, member.lastName]
+      .filter(Boolean)
+      .join(" ") || "—"
+  )
 }
 
 /**
@@ -100,11 +112,15 @@ function pickAttendanceRecord(item, date) {
   if (records.length === 0) return null
 
   if (date) {
-    const match = records.find((record) => resolveRecordDate(record, record) === date)
+    const match = records.find(
+      (record) => resolveRecordDate(record, record) === date
+    )
     if (match) return match
   }
 
-  return [...records].sort((a, b) => String(b?.date || "").localeCompare(String(a?.date || "")))[0]
+  return [...records].sort((a, b) =>
+    String(b?.date || "").localeCompare(String(a?.date || ""))
+  )[0]
 }
 
 function normalizeItem(item, date) {
@@ -183,9 +199,9 @@ function mapMemberAttendances(attendances = []) {
       const statusLabel = derivePresentLabel(attendance)
       const hasAnyTime = Boolean(
         attendance?.morningIn ||
-          attendance?.morningOut ||
-          attendance?.afternoonIn ||
-          attendance?.afternoonOut
+        attendance?.morningOut ||
+        attendance?.afternoonIn ||
+        attendance?.afternoonOut
       )
 
       if (!hasAnyTime && (!attendance?.status || statusLabel === "Absent")) {
@@ -206,12 +222,27 @@ function mapMemberAttendances(attendances = []) {
 }
 
 async function listAttendance(
-  { date = toDateInputValue(), level = "", search = "", page = 1, limit = 20 } = {},
+  {
+    from = "",
+    to = "",
+    date = "",
+    level = "",
+    search = "",
+    page = 1,
+    limit = 20,
+  } = {},
   signal
 ) {
   const params = new URLSearchParams()
 
-  if (date) params.set("date", date)
+  const fromDate = from || date || toDateInputValue()
+  const toDate = to || date || fromDate
+  // Slot editing / row normalization still key off a single day — use the
+  // range end (or the legacy `date`) so a one-day range behaves as before.
+  const activeDate = toDate || fromDate
+
+  if (fromDate) params.set("from", fromDate)
+  if (toDate) params.set("to", toDate)
   if (level) params.set("level", level)
   if (search) params.set("search", search)
   params.set("page", String(page))
@@ -223,10 +254,12 @@ async function listAttendance(
   )
 
   return {
-    date: data?.date ?? data?.period?.from ?? date,
+    from: data?.period?.from ?? fromDate,
+    to: data?.period?.to ?? toDate,
+    date: data?.date ?? activeDate,
     summary: normalizeSummary(data?.summary),
     levels: (data?.levels ?? []).map(normalizeLevel),
-    items: (data?.items ?? []).map((item) => normalizeItem(item, date)),
+    items: (data?.items ?? []).map((item) => normalizeItem(item, activeDate)),
     meta: meta || { page, limit, total: 0, totalPages: 1 },
   }
 }

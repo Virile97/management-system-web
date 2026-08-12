@@ -1,7 +1,13 @@
 "use client"
 
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import { ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
+import {
+  ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart"
 import { EmptyState } from "@/components/common/EmptyState"
 import { BarChart, Bar, XAxis, CartesianGrid } from "recharts"
 import { Heart } from "lucide-react"
@@ -28,7 +34,9 @@ const chartData = [
 ]
 
 function SoulWinningChart({ data = chartData }) {
-  const hasData = data.some((entry) => entry.soulsWon > 0 || entry.becameActive > 0)
+  const hasData = data.some(
+    (entry) => entry.soulsWon > 0 || entry.becameActive > 0
+  )
   const totalThisYear = data.reduce((sum, entry) => sum + entry.soulsWon, 0)
 
   return (
@@ -52,8 +60,14 @@ function SoulWinningChart({ data = chartData }) {
             description="Souls won will show up here once recorded."
           />
         ) : (
-          <ChartContainer config={chartConfig} className="aspect-auto h-36 w-full">
-            <BarChart data={data} margin={{ left: 0, right: 0, top: 8, bottom: 0 }}>
+          <ChartContainer
+            config={chartConfig}
+            className="aspect-auto h-36 w-full"
+          >
+            <BarChart
+              data={data}
+              margin={{ left: 0, right: 0, top: 8, bottom: 0 }}
+            >
               <CartesianGrid vertical={false} stroke="transparent" />
               <XAxis
                 dataKey="month"
@@ -63,8 +77,18 @@ function SoulWinningChart({ data = chartData }) {
                 fontSize={12}
               />
               <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
-              <Bar dataKey="soulsWon" fill="var(--color-soulsWon)" radius={[4, 4, 0, 0]} isAnimationActive={false} />
-              <Bar dataKey="becameActive" fill="var(--color-becameActive)" radius={[4, 4, 0, 0]} isAnimationActive={false} />
+              <Bar
+                dataKey="soulsWon"
+                fill="var(--color-soulsWon)"
+                radius={[4, 4, 0, 0]}
+                isAnimationActive={false}
+              />
+              <Bar
+                dataKey="becameActive"
+                fill="var(--color-becameActive)"
+                radius={[4, 4, 0, 0]}
+                isAnimationActive={false}
+              />
               <ChartLegend content={<ChartLegendContent />} />
             </BarChart>
           </ChartContainer>

@@ -7,7 +7,10 @@ import { API_ENDPOINTS } from "@/utils/constants"
 export async function GET(request) {
   const token = getSessionToken()
   if (!token) {
-    return NextResponse.json({ success: false, message: "Not authenticated" }, { status: 401 })
+    return NextResponse.json(
+      { success: false, message: "Not authenticated" },
+      { status: 401 }
+    )
   }
 
   const page = request.nextUrl.searchParams.get("page")

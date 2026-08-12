@@ -1,7 +1,11 @@
 "use client"
 
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart"
 import { EmptyState } from "@/components/common/EmptyState"
 import { ChartCardSkeleton } from "@/components/dashboard/DashboardSkeletons"
 import { PieChart, Pie, Cell } from "recharts"
@@ -17,7 +21,10 @@ function MemberBreakdownChart({
   isLoading = false,
 }) {
   const chartConfig = breakdown.reduce((config, entry, index) => {
-    config[entry.status] = { label: entry.status, color: STATUS_COLORS[index % STATUS_COLORS.length] }
+    config[entry.status] = {
+      label: entry.status,
+      color: STATUS_COLORS[index % STATUS_COLORS.length],
+    }
     return config
   }, {})
 
@@ -31,7 +38,11 @@ function MemberBreakdownChart({
         <CardTitle className="font-heading text-lg font-normal text-foreground/80">
           {title}
         </CardTitle>
-        {total > 0 && <span className="text-sm text-muted-foreground">{total} {totalLabel}</span>}
+        {total > 0 && (
+          <span className="text-sm text-muted-foreground">
+            {total} {totalLabel}
+          </span>
+        )}
       </CardHeader>
 
       <CardContent className="flex h-full flex-col justify-end px-0">
@@ -43,7 +54,10 @@ function MemberBreakdownChart({
           />
         ) : (
           <div className="flex items-center gap-6">
-            <ChartContainer config={chartConfig} className="aspect-square size-34 shrink-0">
+            <ChartContainer
+              config={chartConfig}
+              className="aspect-square size-34 shrink-0"
+            >
               <PieChart>
                 <ChartTooltip content={<ChartTooltipContent hideLabel />} />
                 <Pie
@@ -56,7 +70,10 @@ function MemberBreakdownChart({
                   isAnimationActive={false}
                 >
                   {breakdown.map((entry, index) => (
-                    <Cell key={entry.status} fill={STATUS_COLORS[index % STATUS_COLORS.length]} />
+                    <Cell
+                      key={entry.status}
+                      fill={STATUS_COLORS[index % STATUS_COLORS.length]}
+                    />
                   ))}
                 </Pie>
               </PieChart>
@@ -69,7 +86,10 @@ function MemberBreakdownChart({
                     <span className="flex items-center gap-2 text-foreground/80">
                       <span
                         className="h-2.5 w-2.5 rounded-full"
-                        style={{ backgroundColor: STATUS_COLORS[index % STATUS_COLORS.length] }}
+                        style={{
+                          backgroundColor:
+                            STATUS_COLORS[index % STATUS_COLORS.length],
+                        }}
                       />
                       {entry.status}
                     </span>
@@ -80,7 +100,8 @@ function MemberBreakdownChart({
                       className="h-full rounded-full"
                       style={{
                         width: `${entry.percentage}%`,
-                        backgroundColor: STATUS_COLORS[index % STATUS_COLORS.length],
+                        backgroundColor:
+                          STATUS_COLORS[index % STATUS_COLORS.length],
                       }}
                     />
                   </div>

@@ -14,7 +14,8 @@ function FilterPills({ options, active, onChange, disabled = false }) {
             active === option
               ? "bg-[#1e2a4a] font-medium text-white"
               : "font-normal text-muted-foreground hover:text-foreground",
-            disabled && "cursor-not-allowed opacity-50 hover:text-muted-foreground"
+            disabled &&
+              "cursor-not-allowed opacity-50 hover:text-muted-foreground"
           )}
         >
           {option}

@@ -122,7 +122,9 @@ function MemberSearchModal({ open, onOpenChange, onSelect }) {
         showCloseButton={false}
       >
         <DialogHeader className="flex-row items-center justify-between gap-0 border-b border-border px-4 py-4 sm:px-5">
-          <DialogTitle className="font-heading text-lg font-normal">Search Member</DialogTitle>
+          <DialogTitle className="font-heading text-lg font-normal">
+            Search Member
+          </DialogTitle>
           <button
             type="button"
             onClick={() => onOpenChange(false)}
@@ -158,7 +160,9 @@ function MemberSearchModal({ open, onOpenChange, onSelect }) {
               Start typing to find a member.
             </p>
           ) : isSearching ? (
-            <p className="px-4 py-8 text-center text-sm text-muted-foreground sm:px-5">Searching…</p>
+            <p className="px-4 py-8 text-center text-sm text-muted-foreground sm:px-5">
+              Searching…
+            </p>
           ) : results.length === 0 ? (
             <p className="px-4 py-8 text-center text-sm text-muted-foreground sm:px-5">
               No members found
@@ -170,7 +174,8 @@ function MemberSearchModal({ open, onOpenChange, onSelect }) {
                   key={result.id}
                   className={cn(
                     "border-b border-border last:border-0",
-                    index === results.length - 1 && "overflow-hidden rounded-b-xl"
+                    index === results.length - 1 &&
+                      "overflow-hidden rounded-b-xl"
                   )}
                 >
                   <button
@@ -181,9 +186,13 @@ function MemberSearchModal({ open, onOpenChange, onSelect }) {
                     )}
                     onClick={() => handleSelect(result)}
                   >
-                    <span className="text-sm font-medium text-foreground/85">{result.name}</span>
+                    <span className="text-sm font-medium text-foreground/85">
+                      {result.name}
+                    </span>
                     {result.email && (
-                      <span className="text-xs text-muted-foreground">{result.email}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {result.email}
+                      </span>
                     )}
                   </button>
                 </li>

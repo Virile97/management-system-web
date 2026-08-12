@@ -7,7 +7,10 @@ import { API_ENDPOINTS } from "@/utils/constants"
 export async function DELETE(request, { params }) {
   const token = getSessionToken()
   if (!token) {
-    return NextResponse.json({ success: false, message: "Not authenticated" }, { status: 401 })
+    return NextResponse.json(
+      { success: false, message: "Not authenticated" },
+      { status: 401 }
+    )
   }
 
   try {

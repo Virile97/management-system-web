@@ -64,10 +64,18 @@ function RecordSoulWonModal({ open, onOpenChange }) {
                 <SelectValue>{(value) => soulWinnerLabels[value]}</SelectValue>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="kofi-agyeman">Kofi Agyeman — Youth</SelectItem>
-                <SelectItem value="emmanuel-boateng">Emmanuel Boateng — Elders</SelectItem>
-                <SelectItem value="grace-mensah">Grace Mensah — Women's Ministry</SelectItem>
-                <SelectItem value="yaa-amponsah">Yaa Amponsah — Choir</SelectItem>
+                <SelectItem value="kofi-agyeman">
+                  Kofi Agyeman — Youth
+                </SelectItem>
+                <SelectItem value="emmanuel-boateng">
+                  Emmanuel Boateng — Elders
+                </SelectItem>
+                <SelectItem value="grace-mensah">
+                  Grace Mensah — Women's Ministry
+                </SelectItem>
+                <SelectItem value="yaa-amponsah">
+                  Yaa Amponsah — Choir
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -76,7 +84,12 @@ function RecordSoulWonModal({ open, onOpenChange }) {
             <Label htmlFor="soul-date">
               Date <span className="text-red-500">*</span>
             </Label>
-            <Input id="soul-date" type="date" defaultValue="2026-08-04" className="h-10 rounded-lg" />
+            <Input
+              id="soul-date"
+              type="date"
+              defaultValue="2026-08-04"
+              className="h-10 rounded-lg"
+            />
           </div>
 
           <div className="flex flex-col gap-1.5">
@@ -96,7 +109,11 @@ function RecordSoulWonModal({ open, onOpenChange }) {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="convert-phone">Phone</Label>
-              <Input id="convert-phone" placeholder="+233 24 000 0000" className="h-10 rounded-lg" />
+              <Input
+                id="convert-phone"
+                placeholder="+233 24 000 0000"
+                className="h-10 rounded-lg"
+              />
             </div>
 
             <div className="flex flex-col gap-1.5">

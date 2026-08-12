@@ -2,47 +2,41 @@ import { getCsrfHeader } from "@/lib/auth"
 import { fetchJson, fetchWithMeta } from "@/services/api"
 import { APP_API_ENDPOINTS } from "@/utils/constants"
 
-function getFinanceStats({ period = "month", from = "", to = "" } = {}, signal) {
+const getPeriodParams = ({ period = "month", from = "", to = "" } = {}) => {
   const params = new URLSearchParams({ period })
   if (from) params.set("from", from)
   if (to) params.set("to", to)
-
-  return fetchJson(`${APP_API_ENDPOINTS.TRANSACTIONS_STATS}?${params.toString()}`, { signal })
+  return params
 }
 
-/**
- * Type/category/offering-type option lists for the Record Transaction form.
- * Rarely changes, so callers should cache this (see finance.store's
- * `config`) rather than refetching on every modal open.
- */
+function getFinanceStats(options, signal) {
+  return fetchJson(
+    `${APP_API_ENDPOINTS.TRANSACTIONS_STATS}?${getPeriodParams(options)}`,
+    { signal }
+  )
+}
+
 function getTransactionsConfig(signal) {
   return fetchJson(APP_API_ENDPOINTS.TRANSACTIONS_CONFIG, { signal })
 }
 
-function getFinanceByOfferingType({ period = "month", from = "", to = "" } = {}, signal) {
-  const params = new URLSearchParams({ period })
-  if (from) params.set("from", from)
-  if (to) params.set("to", to)
-
-  return fetchJson(`${APP_API_ENDPOINTS.TRANSACTIONS_BY_OFFERING_TYPE}?${params.toString()}`, { signal })
+function getFinanceByOfferingType(options, signal) {
+  return fetchJson(
+    `${APP_API_ENDPOINTS.TRANSACTIONS_BY_OFFERING_TYPE}?${getPeriodParams(options)}`,
+    { signal }
+  )
 }
 
-function getFinanceTrend({ period = "month", from = "", to = "" } = {}, signal) {
-  const params = new URLSearchParams({ period })
-  if (from) params.set("from", from)
-  if (to) params.set("to", to)
-
-  return fetchJson(`${APP_API_ENDPOINTS.TRANSACTIONS_TREND}?${params.toString()}`, { signal })
+function getFinanceTrend(options, signal) {
+  return fetchJson(
+    `${APP_API_ENDPOINTS.TRANSACTIONS_TREND}?${getPeriodParams(options)}`,
+    { signal }
+  )
 }
 
-/**
- * Flattens the API's nested { type: {name}, category: {name}, recordedByUser }
- * shape into flat fields the table renders directly, and signs the amount by
- * type (Income positive, Expense negative) to match existing UI conventions.
- */
 function normalizeTransaction(transaction) {
-  const amount = Number(transaction.amount)
   const type = transaction.type?.name ?? "—"
+  const amount = Number(transaction.amount)
 
   return {
     ...transaction,
@@ -54,13 +48,21 @@ function normalizeTransaction(transaction) {
 }
 
 async function listTransactions(
-  { page = 1, limit = 20, type = "", category = "", search = "", from = "", to = "" } = {},
+  {
+    page = 1,
+    limit = 20,
+    type = "",
+    category = "",
+    search = "",
+    from = "",
+    to = "",
+  } = {},
   signal
 ) {
-  const params = new URLSearchParams()
-
-  params.set("page", String(page))
-  params.set("limit", String(limit))
+  const params = new URLSearchParams({
+    page: String(page),
+    limit: String(limit),
+  })
 
   if (type) params.set("type", type)
   if (category) params.set("category", category)
@@ -68,7 +70,10 @@ async function listTransactions(
   if (from) params.set("from", from)
   if (to) params.set("to", to)
 
-  const { data, meta } = await fetchWithMeta(`${APP_API_ENDPOINTS.TRANSACTIONS}?${params.toString()}`, { signal })
+  const { data, meta } = await fetchWithMeta(
+    `${APP_API_ENDPOINTS.TRANSACTIONS}?${params}`,
+    { signal }
+  )
 
   return { data: data.map(normalizeTransaction), meta }
 }
@@ -77,37 +82,31 @@ function getTransactionById(id, signal) {
   return fetchJson(APP_API_ENDPOINTS.TRANSACTION_BY_ID(id), { signal })
 }
 
-/**
- * Creates a transaction. Either `amount` or `breakdown` is required;
- * `breakdown` wins when both are sent. Income should include `categoryId`.
- */
+const mutationOptions = (method, payload) => ({
+  method,
+  headers: { "Content-Type": "application/json", ...getCsrfHeader() },
+  body: JSON.stringify(payload),
+})
+
 function createTransaction(payload) {
-  return fetchJson(APP_API_ENDPOINTS.TRANSACTIONS, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...getCsrfHeader() },
-    body: JSON.stringify(payload),
-  })
+  return fetchJson(
+    APP_API_ENDPOINTS.TRANSACTIONS,
+    mutationOptions("POST", payload)
+  )
 }
 
-/**
- * Partial update for a transaction. At least one field must be present.
- * `breakdown` replaces line items and wins over `amount` when both are sent.
- * Pass `categoryId` / `memberId` / `description` as null to clear them.
- */
 function updateTransaction(id, payload) {
-  return fetchJson(APP_API_ENDPOINTS.TRANSACTION_BY_ID(id), {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json", ...getCsrfHeader() },
-    body: JSON.stringify(payload),
-  })
+  return fetchJson(
+    APP_API_ENDPOINTS.TRANSACTION_BY_ID(id),
+    mutationOptions("PATCH", payload)
+  )
 }
 
 function bulkDeleteTransactions(ids) {
-  return fetchJson(APP_API_ENDPOINTS.TRANSACTIONS_BULK_DELETE, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...getCsrfHeader() },
-    body: JSON.stringify({ ids }),
-  })
+  return fetchJson(
+    APP_API_ENDPOINTS.TRANSACTIONS_BULK_DELETE,
+    mutationOptions("POST", { ids })
+  )
 }
 
 export {

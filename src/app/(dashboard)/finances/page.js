@@ -22,7 +22,11 @@ import { ExportTransactionsReportModal } from "@/components/finances/ExportTrans
 import { PeriodTabs } from "@/components/soul-winning/PeriodTabs"
 import { DateRangeFilterModal } from "@/components/soul-winning/DateRangeFilterModal"
 import { useDebounce } from "@/hooks/use-debounce"
-import { toDatePoint, toDateRangeStrings, toPeriodDateRange } from "@/utils/helpers"
+import {
+  toDatePoint,
+  toDateRangeStrings,
+  toPeriodDateRange,
+} from "@/utils/helpers"
 import { register as registerAbortController } from "@/lib/abort-registry"
 import {
   getFinanceStats,
@@ -148,10 +152,14 @@ function FinancesPageContent() {
   // date-range control enabled and hides the Clear filter affordance.
   const periodDrivesTableDates = period !== DEFAULT_PERIOD
   const periodTableRange = toPeriodDateRange(period, periodFrom, periodTo)
-  const tableDateFrom = periodDrivesTableDates ? periodTableRange.from : dateFrom
+  const tableDateFrom = periodDrivesTableDates
+    ? periodTableRange.from
+    : dateFrom
   const tableDateTo = periodDrivesTableDates ? periodTableRange.to : dateTo
   const tableDateRangeLabel =
-    tableDateFrom || tableDateTo ? `${tableDateFrom || "…"} – ${tableDateTo || "…"}` : ""
+    tableDateFrom || tableDateTo
+      ? `${tableDateFrom || "…"} – ${tableDateTo || "…"}`
+      : ""
 
   const debouncedSearch = useDebounce(search, 300)
 
@@ -167,7 +175,10 @@ function FinancesPageContent() {
       }
     }
 
-    router.push(`${pathname}${params.toString() ? `?${params.toString()}` : ""}`, { scroll: false })
+    router.push(
+      `${pathname}${params.toString() ? `?${params.toString()}` : ""}`,
+      { scroll: false }
+    )
   }
 
   function goToPage(nextPage) {
@@ -192,7 +203,12 @@ function FinancesPageContent() {
   }
 
   function closeRecordTransaction() {
-    updateParams({ recording: "", recordType: "", isEdit: "", transactionId: "" })
+    updateParams({
+      recording: "",
+      recordType: "",
+      isEdit: "",
+      transactionId: "",
+    })
   }
 
   function openEditTransaction(transaction) {
@@ -231,7 +247,12 @@ function FinancesPageContent() {
 
   function clearPeriodFilter() {
     useFinanceStore.getState().clearDateRange()
-    updateParams({ period: DEFAULT_PERIOD, periodFrom: "", periodTo: "", page: 1 })
+    updateParams({
+      period: DEFAULT_PERIOD,
+      periodFrom: "",
+      periodTo: "",
+      page: 1,
+    })
   }
 
   // Stats/offering-type/trend are independent of the transaction table's own
@@ -240,28 +261,44 @@ function FinancesPageContent() {
     const controller = new AbortController()
     const unregister = registerAbortController(controller)
 
-    const { setStats, setOfferingTypeData, setTrendData, setSummaryLoading, setSummaryError } =
-      useFinanceStore.getState()
+    const {
+      setStats,
+      setOfferingTypeData,
+      setTrendData,
+      setSummaryLoading,
+      setSummaryError,
+    } = useFinanceStore.getState()
 
     async function loadSummary() {
       setSummaryLoading(true)
       setSummaryError("")
 
-      const periodParams = { period: periodValue, from: periodFrom, to: periodTo }
+      const periodParams = {
+        period: periodValue,
+        from: periodFrom,
+        to: periodTo,
+      }
 
-      const [statsResult, offeringTypeResult, trendResult] = await Promise.allSettled([
-        getFinanceStats(periodParams, controller.signal),
-        getFinanceByOfferingType(periodParams, controller.signal),
-        getFinanceTrend(periodParams, controller.signal),
-      ])
+      const [statsResult, offeringTypeResult, trendResult] =
+        await Promise.allSettled([
+          getFinanceStats(periodParams, controller.signal),
+          getFinanceByOfferingType(periodParams, controller.signal),
+          getFinanceTrend(periodParams, controller.signal),
+        ])
       if (controller.signal.aborted) return
 
       if (statsResult.status === "fulfilled") setStats(statsResult.value)
-      if (offeringTypeResult.status === "fulfilled") setOfferingTypeData(offeringTypeResult.value)
+      if (offeringTypeResult.status === "fulfilled")
+        setOfferingTypeData(offeringTypeResult.value)
       if (trendResult.status === "fulfilled") setTrendData(trendResult.value)
 
-      const failed = [statsResult, offeringTypeResult, trendResult].find((r) => r.status === "rejected")
-      if (failed) setSummaryError(failed.reason?.message || "Unable to load finance summary")
+      const failed = [statsResult, offeringTypeResult, trendResult].find(
+        (r) => r.status === "rejected"
+      )
+      if (failed)
+        setSummaryError(
+          failed.reason?.message || "Unable to load finance summary"
+        )
 
       setSummaryLoading(false)
     }
@@ -280,8 +317,12 @@ function FinancesPageContent() {
     const controller = new AbortController()
     const unregister = registerAbortController(controller)
 
-    const { config: existingConfig, setConfig, setConfigLoading, setConfigError } =
-      useFinanceStore.getState()
+    const {
+      config: existingConfig,
+      setConfig,
+      setConfigLoading,
+      setConfigError,
+    } = useFinanceStore.getState()
 
     if (existingConfig) return unregister
 
@@ -295,7 +336,9 @@ function FinancesPageContent() {
         setConfig(data)
       } catch (err) {
         if (controller.signal.aborted) return
-        setConfigError(err?.message || "Unable to load transaction form options")
+        setConfigError(
+          err?.message || "Unable to load transaction form options"
+        )
       } finally {
         if (!controller.signal.aborted) setConfigLoading(false)
       }
@@ -312,7 +355,8 @@ function FinancesPageContent() {
     const controller = new AbortController()
     const unregister = registerAbortController(controller)
 
-    const { setTransactions, setTableLoading, setTableError } = useFinanceStore.getState()
+    const { setTransactions, setTableLoading, setTableError } =
+      useFinanceStore.getState()
 
     async function loadTransactions() {
       setTableLoading(true)
@@ -331,7 +375,10 @@ function FinancesPageContent() {
         )
         if (controller.signal.aborted) return
 
-        const resolvedMeta = responseMeta || { total: data.length, totalPages: 1 }
+        const resolvedMeta = responseMeta || {
+          total: data.length,
+          totalPages: 1,
+        }
 
         // The current page can outlive its own data (e.g. a filter/date range
         // shrinks the result set) — snap back to a valid page instead of
@@ -355,9 +402,17 @@ function FinancesPageContent() {
       controller.abort()
       unregister()
     }
-  }, [page, activeFilter, debouncedSearch, tableDateFrom, tableDateTo, refreshKey])
+  }, [
+    page,
+    activeFilter,
+    debouncedSearch,
+    tableDateFrom,
+    tableDateTo,
+    refreshKey,
+  ])
 
-  const { setSearch, setDateFrom, setDateTo, clearDateRange } = useFinanceStore.getState()
+  const { setSearch, setDateFrom, setDateTo, clearDateRange } =
+    useFinanceStore.getState()
 
   function updateFilter(nextFilter) {
     updateParams({ type: nextFilter })
@@ -399,7 +454,9 @@ function FinancesPageContent() {
 
   function toggleSelectAll(pageRows) {
     setSelectedIds((prev) => {
-      const allSelected = pageRows.every((transaction) => prev.has(transaction.id))
+      const allSelected = pageRows.every((transaction) =>
+        prev.has(transaction.id)
+      )
       const next = new Set(prev)
 
       pageRows.forEach((transaction) => {
@@ -494,7 +551,10 @@ function FinancesPageContent() {
 
         <div className="mt-6 grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-[3fr_2fr]">
           <MonthlyTrendChart data={trendData} isLoading={isSummaryLoading} />
-          <OfferingTypeChart data={offeringTypeData} isLoading={isSummaryLoading} />
+          <OfferingTypeChart
+            data={offeringTypeData}
+            isLoading={isSummaryLoading}
+          />
         </div>
 
         {tableError && (
@@ -531,7 +591,10 @@ function FinancesPageContent() {
         </div>
       </div>
 
-      <ScanQRModal open={isScanParam} onOpenChange={(open) => !open && closeScanQr()} />
+      <ScanQRModal
+        open={isScanParam}
+        onOpenChange={(open) => !open && closeScanQr()}
+      />
       <ExportTransactionsReportModal
         open={isExportOpen}
         onOpenChange={setIsExportOpen}
@@ -540,10 +603,14 @@ function FinancesPageContent() {
         dateFrom={tableDateFrom}
         dateTo={tableDateTo}
         dateRangeLabel={tableDateRangeLabel}
-        selectedTransactions={transactions.filter((transaction) => selectedIds.has(transaction.id))}
+        selectedTransactions={transactions.filter((transaction) =>
+          selectedIds.has(transaction.id)
+        )}
       />
       <RecordTransactionModal
-        open={isRecordingParam || (isEditParam && Boolean(editTransactionIdParam))}
+        open={
+          isRecordingParam || (isEditParam && Boolean(editTransactionIdParam))
+        }
         onOpenChange={(open) => {
           if (open) return
           if (isEditParam) closeEditTransaction()
@@ -565,7 +632,12 @@ function FinancesPageContent() {
         onApply={(range) => {
           const { from, to } = toDateRangeStrings(range)
           useFinanceStore.getState().clearDateRange()
-          updateParams({ period: "Custom", periodFrom: from, periodTo: to, page: 1 })
+          updateParams({
+            period: "Custom",
+            periodFrom: from,
+            periodTo: to,
+            page: 1,
+          })
         }}
       />
 
@@ -579,14 +651,18 @@ function FinancesPageContent() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              Delete {selectedIds.size} transaction{selectedIds.size === 1 ? "" : "s"}?
+              Delete {selectedIds.size} transaction
+              {selectedIds.size === 1 ? "" : "s"}?
             </DialogTitle>
             <DialogDescription>
               This will permanently remove the selected transaction
-              {selectedIds.size === 1 ? "" : "s"} from the system. This action cannot be undone.
+              {selectedIds.size === 1 ? "" : "s"} from the system. This action
+              cannot be undone.
             </DialogDescription>
           </DialogHeader>
-          {deleteError && <p className="text-sm text-destructive">{deleteError}</p>}
+          {deleteError && (
+            <p className="text-sm text-destructive">{deleteError}</p>
+          )}
           <DialogFooter>
             <Button
               variant="outline"

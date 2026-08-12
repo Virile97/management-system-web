@@ -67,7 +67,9 @@ function attendanceToCsv(rows) {
     row.status || "",
   ])
 
-  return [headers, ...body].map((row) => row.map(escapeCsvValue).join(",")).join("\n")
+  return [headers, ...body]
+    .map((row) => row.map(escapeCsvValue).join(","))
+    .join("\n")
 }
 
 function downloadCsv(filename, csv) {
@@ -80,7 +82,7 @@ function downloadCsv(filename, csv) {
   URL.revokeObjectURL(url)
 }
 
-async function fetchAllMatchingAttendance({ date, level, search }, signal) {
+async function fetchAllMatchingAttendance({ from, to, level, search }, signal) {
   const all = []
   let page = 1
   let totalPages = 1
@@ -89,7 +91,8 @@ async function fetchAllMatchingAttendance({ date, level, search }, signal) {
   do {
     const response = await listAttendance(
       {
-        date,
+        from,
+        to,
         level: level === "All" ? "" : level,
         search,
         page,
@@ -118,10 +121,19 @@ function formatDateLabel(date) {
   })
 }
 
+function formatRangeLabel(from, to) {
+  const start = formatDateLabel(from)
+  const end = formatDateLabel(to)
+  if (!start) return end
+  if (!end || start === end) return start
+  return `${start} – ${end}`
+}
+
 function ExportAttendanceReportModal({
   open,
   onOpenChange,
-  date = "",
+  dateFrom = "",
+  dateTo = "",
   levelFilter = "All",
   search = "",
 }) {
@@ -143,10 +155,16 @@ function ExportAttendanceReportModal({
       setSummary(null)
 
       try {
-        const { rows: data, summary: nextSummary } = await fetchAllMatchingAttendance(
-          { date, level: levelFilter, search },
-          controller.signal
-        )
+        const { rows: data, summary: nextSummary } =
+          await fetchAllMatchingAttendance(
+            {
+              from: dateFrom,
+              to: dateTo || dateFrom,
+              level: levelFilter,
+              search,
+            },
+            controller.signal
+          )
         if (controller.signal.aborted) return
         setRows(data)
         setSummary(nextSummary)
@@ -161,9 +179,9 @@ function ExportAttendanceReportModal({
 
     loadAttendance()
     return () => controller.abort()
-  }, [open, date, levelFilter, search])
+  }, [open, dateFrom, dateTo, levelFilter, search])
 
-  const dateLabel = formatDateLabel(date)
+  const dateLabel = formatRangeLabel(dateFrom, dateTo || dateFrom)
   const reportProps = {
     rows,
     summary,
@@ -188,7 +206,7 @@ function ExportAttendanceReportModal({
   }
 
   function handleCsv() {
-    const stamp = date || new Date().toISOString().slice(0, 10)
+    const stamp = dateTo || dateFrom || new Date().toISOString().slice(0, 10)
     downloadCsv(`attendance-report-${stamp}.csv`, attendanceToCsv(rows))
   }
 
@@ -216,14 +234,17 @@ function ExportAttendanceReportModal({
 
         <div className="border-b border-border px-4 py-3 sm:px-6">
           <p className="text-sm text-muted-foreground">
-            Includes all members matching the current date, level, and search filters.
+            Includes all members matching the current date range, level, and
+            search filters.
           </p>
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto bg-muted/50 p-4 sm:p-6">
           {isLoading && <ReportPreviewSkeleton />}
           {error && (
-            <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>
+            <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              {error}
+            </p>
           )}
           {!isLoading && !error && (
             <div className="rounded-xl border border-border bg-white p-5 shadow-sm sm:p-6">

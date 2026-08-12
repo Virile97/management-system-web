@@ -1,4 +1,4 @@
-"use client";
+"use client"
 import * as React from "react"
 import * as RechartsPrimitive from "recharts"
 
@@ -7,12 +7,12 @@ import { cn } from "@/lib/utils"
 // Format: { THEME_NAME: CSS_SELECTOR }
 const THEMES = {
   light: "",
-  dark: ".dark"
+  dark: ".dark",
 }
 
 const INITIAL_DIMENSION = {
   width: 320,
-  height: 200
+  height: 200,
 }
 
 const ChartContext = React.createContext(null)
@@ -44,21 +44,23 @@ function ChartContainer({
         data-slot="chart"
         data-chart={chartId}
         className={cn(className)}
-        {...props}>
+        {...props}
+      >
         <ChartStyle id={chartId} config={config} />
-        <RechartsPrimitive.ResponsiveContainer initialDimension={initialDimension}>
+        <RechartsPrimitive.ResponsiveContainer
+          initialDimension={initialDimension}
+        >
           {children}
         </RechartsPrimitive.ResponsiveContainer>
       </div>
     </ChartContext.Provider>
-  );
+  )
 }
 
-const ChartStyle = ({
-  id,
-  config
-}) => {
-  const colorConfig = Object.entries(config).filter(([, config]) => config.theme ?? config.color)
+const ChartStyle = ({ id, config }) => {
+  const colorConfig = Object.entries(config).filter(
+    ([, config]) => config.theme ?? config.color
+  )
 
   if (!colorConfig.length) {
     return null
@@ -68,21 +70,22 @@ const ChartStyle = ({
     <style
       dangerouslySetInnerHTML={{
         __html: Object.entries(THEMES)
-          .map(([theme, prefix]) => `
+          .map(
+            ([theme, prefix]) => `
 ${prefix} [data-chart=${id}] {
 ${colorConfig
-.map(([key, itemConfig]) => {
-const color =
-  itemConfig.theme?.[theme] ??
-  itemConfig.color
-return color ? `  --color-${key}: ${color};` : null
-})
-.join("\n")}
+  .map(([key, itemConfig]) => {
+    const color = itemConfig.theme?.[theme] ?? itemConfig.color
+    return color ? `  --color-${key}: ${color};` : null
+  })
+  .join("\n")}
 }
-`)
+`
+          )
           .join("\n"),
-      }} />
-  );
+      }}
+    />
+  )
 }
 
 const ChartTooltip = RechartsPrimitive.Tooltip
@@ -100,7 +103,7 @@ function ChartTooltipContent({
   formatter,
   color,
   nameKey,
-  labelKey
+  labelKey,
 }) {
   const { config } = useChart()
 
@@ -122,14 +125,14 @@ function ChartTooltipContent({
         <div className={cn("font-medium", labelClassName)}>
           {labelFormatter(value, payload)}
         </div>
-      );
+      )
     }
 
     if (!value) {
       return null
     }
 
-    return <div className={cn("font-medium", labelClassName)}>{value}</div>;
+    return <div className={cn("font-medium", labelClassName)}>{value}</div>
   }, [
     label,
     labelFormatter,
@@ -151,7 +154,8 @@ function ChartTooltipContent({
       className={cn(
         "grid min-w-32 items-start gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-xs shadow-xl",
         className
-      )}>
+      )}
+    >
       {!nestLabel ? tooltipLabel : null}
       <div className="grid gap-1.5">
         {payload
@@ -167,7 +171,8 @@ function ChartTooltipContent({
                 className={cn(
                   "flex w-full flex-wrap items-stretch gap-2 [&>svg]:h-2.5 [&>svg]:w-2.5 [&>svg]:text-muted-foreground",
                   indicator === "dot" && "items-center"
-                )}>
+                )}
+              >
                 {formatter && item?.value !== undefined && item.name ? (
                   formatter(item.value, item.name, item, index, item.payload)
                 ) : (
@@ -177,26 +182,29 @@ function ChartTooltipContent({
                     ) : (
                       !hideIndicator && (
                         <div
-                          className={cn("shrink-0 rounded-xs border-(--color-border) bg-(--color-bg)", {
-                            "h-2.5 w-2.5": indicator === "dot",
-                            "w-1": indicator === "line",
-                            "w-0 border-[1.5px] border-dashed bg-transparent":
-                              indicator === "dashed",
-                            "my-0.5": nestLabel && indicator === "dashed",
-                          })}
-                          style={
+                          className={cn(
+                            "shrink-0 rounded-xs border-(--color-border) bg-(--color-bg)",
                             {
-                              "--color-bg": indicatorColor,
-                              "--color-border": indicatorColor
+                              "h-2.5 w-2.5": indicator === "dot",
+                              "w-1": indicator === "line",
+                              "w-0 border-[1.5px] border-dashed bg-transparent":
+                                indicator === "dashed",
+                              "my-0.5": nestLabel && indicator === "dashed",
                             }
-                          } />
+                          )}
+                          style={{
+                            "--color-bg": indicatorColor,
+                            "--color-border": indicatorColor,
+                          }}
+                        />
                       )
                     )}
                     <div
                       className={cn(
                         "flex flex-1 justify-between leading-none",
                         nestLabel ? "items-end" : "items-center"
-                      )}>
+                      )}
+                    >
                       <div className="grid gap-1.5">
                         {nestLabel ? tooltipLabel : null}
                         <span className="text-muted-foreground">
@@ -214,11 +222,11 @@ function ChartTooltipContent({
                   </>
                 )}
               </div>
-            );
+            )
           })}
       </div>
     </div>
-  );
+  )
 }
 
 const ChartLegend = RechartsPrimitive.Legend
@@ -228,7 +236,7 @@ function ChartLegendContent({
   hideIcon = false,
   payload,
   verticalAlign = "bottom",
-  nameKey
+  nameKey,
 }) {
   const { config } = useChart()
 
@@ -242,7 +250,8 @@ function ChartLegendContent({
         "flex items-center justify-center gap-4",
         verticalAlign === "top" ? "pb-3" : "pt-3",
         className
-      )}>
+      )}
+    >
       {payload
         .filter((item) => item.type !== "none")
         .map((item, index) => {
@@ -254,7 +263,8 @@ function ChartLegendContent({
               key={index}
               className={cn(
                 "flex items-center gap-1.5 [&>svg]:h-3 [&>svg]:w-3 [&>svg]:text-muted-foreground"
-              )}>
+              )}
+            >
               {itemConfig?.icon && !hideIcon ? (
                 <itemConfig.icon />
               ) : (
@@ -262,21 +272,18 @@ function ChartLegendContent({
                   className="h-2 w-2 shrink-0 rounded-xs"
                   style={{
                     backgroundColor: item.color,
-                  }} />
+                  }}
+                />
               )}
               {itemConfig?.label}
             </div>
-          );
+          )
         })}
     </div>
-  );
+  )
 }
 
-function getPayloadConfigFromPayload(
-  config,
-  payload,
-  key
-) {
+function getPayloadConfigFromPayload(config, payload, key) {
   if (typeof payload !== "object" || payload === null) {
     return undefined
   }
@@ -290,10 +297,7 @@ function getPayloadConfigFromPayload(
 
   let configLabelKey = key
 
-  if (
-    key in payload &&
-    typeof payload[key] === "string"
-  ) {
+  if (key in payload && typeof payload[key] === "string") {
     configLabelKey = payload[key]
   } else if (
     payloadPayload &&

@@ -1,7 +1,13 @@
 "use client"
 
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import { ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
+import {
+  ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart"
 import { EmptyState } from "@/components/common/EmptyState"
 import { ChartCardSkeleton } from "@/components/dashboard/DashboardSkeletons"
 import { AreaChart, Area, XAxis, CartesianGrid } from "recharts"
@@ -41,8 +47,14 @@ function MonthlyTrendChart({ data = [], isLoading }) {
             description="Monthly income and expenses will show up here once transactions are recorded."
           />
         ) : (
-          <ChartContainer config={chartConfig} className="aspect-auto h-56 w-full">
-            <AreaChart data={data} margin={{ left: 0, right: 0, top: 8, bottom: 0 }}>
+          <ChartContainer
+            config={chartConfig}
+            className="aspect-auto h-56 w-full"
+          >
+            <AreaChart
+              data={data}
+              margin={{ left: 0, right: 0, top: 8, bottom: 0 }}
+            >
               <defs>
                 <linearGradient id="incomeFill" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="#16a34a" stopOpacity={0.2} />
@@ -85,9 +97,13 @@ function MonthlyTrendChart({ data = [], isLoading }) {
                         <div className="flex items-center gap-1.5">
                           <div
                             className="h-2.5 w-2.5 shrink-0 rounded-xs"
-                            style={{ backgroundColor: item.color ?? item.payload?.fill }}
+                            style={{
+                              backgroundColor: item.color ?? item.payload?.fill,
+                            }}
                           />
-                          <span className="text-muted-foreground">{chartConfig[name]?.label ?? name}</span>
+                          <span className="text-muted-foreground">
+                            {chartConfig[name]?.label ?? name}
+                          </span>
                         </div>
                         <span className="font-mono font-medium tabular-nums text-foreground">
                           ₱{Number(value).toLocaleString()}
@@ -97,7 +113,9 @@ function MonthlyTrendChart({ data = [], isLoading }) {
                   />
                 }
               />
-              <ChartLegend content={<ChartLegendContent className="justify-start" />} />
+              <ChartLegend
+                content={<ChartLegendContent className="justify-start" />}
+              />
             </AreaChart>
           </ChartContainer>
         )}

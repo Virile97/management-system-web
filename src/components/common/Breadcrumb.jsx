@@ -10,7 +10,10 @@ import { ChevronRight } from "lucide-react"
  */
 function Breadcrumb({ items, className }) {
   return (
-    <nav aria-label="Breadcrumb" className={cn("flex items-center gap-1.5 overflow-x-auto", className)}>
+    <nav
+      aria-label="Breadcrumb"
+      className={cn("flex items-center gap-1.5 overflow-x-auto", className)}
+    >
       {items.map((item, index) => {
         const Icon = item.icon
         const content = (
@@ -26,10 +29,15 @@ function Breadcrumb({ items, className }) {
 
         return (
           <div key={item.label} className="flex shrink-0 items-center gap-1.5">
-            {index > 0 && <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50" />}
+            {index > 0 && (
+              <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50" />
+            )}
 
             {item.href ? (
-              <Link href={item.href} className={cn("flex items-center gap-1.5", interactiveClass)}>
+              <Link
+                href={item.href}
+                className={cn("flex items-center gap-1.5", interactiveClass)}
+              >
                 {content}
               </Link>
             ) : item.onClick ? (
@@ -44,7 +52,9 @@ function Breadcrumb({ items, className }) {
               <span
                 className={cn(
                   "flex items-center gap-1.5",
-                  item.active ? "font-medium text-amber-600" : "text-muted-foreground/70"
+                  item.active
+                    ? "font-medium text-amber-600"
+                    : "text-muted-foreground/70"
                 )}
               >
                 {content}

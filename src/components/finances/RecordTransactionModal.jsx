@@ -40,7 +40,10 @@ const TYPE_META = {
 const FALLBACK_TYPES = [{ name: "Income" }, { name: "Expense" }]
 
 function findConfigId(options, name) {
-  return options?.find((option) => option.name.toLowerCase() === name.toLowerCase())?.id ?? null
+  return (
+    options?.find((option) => option.name.toLowerCase() === name.toLowerCase())
+      ?.id ?? null
+  )
 }
 
 function emptyForm(type = "income") {
@@ -59,7 +62,11 @@ function emptyForm(type = "income") {
 function formatMemberLabel(member) {
   if (!member) return ""
   if (member.name && member.name !== "—") return member.name
-  return [member.firstName, member.middleName, member.lastName].filter(Boolean).join(" ") || ""
+  return (
+    [member.firstName, member.middleName, member.lastName]
+      .filter(Boolean)
+      .join(" ") || ""
+  )
 }
 
 function extractLinkedMember(transaction) {
@@ -103,7 +110,8 @@ async function resolveMemberName(memberId, existingName, signal) {
 }
 
 function transactionToForm(transaction, config) {
-  const typeName = transaction.type?.name?.toLowerCase() === "expense" ? "expense" : "income"
+  const typeName =
+    transaction.type?.name?.toLowerCase() === "expense" ? "expense" : "income"
   const items = transaction.items ?? transaction.breakdown ?? []
   const offeringAmounts = {}
 
@@ -118,11 +126,17 @@ function transactionToForm(transaction, config) {
   return {
     type: typeName,
     description: transaction.description ?? "",
-    amount: transaction.amount != null ? String(Math.abs(Number(transaction.amount))) : "",
+    amount:
+      transaction.amount != null
+        ? String(Math.abs(Number(transaction.amount)))
+        : "",
     date: toDateInputValue(transaction.createdAt || transaction.date),
     categoryId: transaction.category?.id || transaction.categoryId || "",
     offeringAmounts,
-    typeId: transaction.type?.id || transaction.typeId || findConfigId(config?.types, typeName),
+    typeId:
+      transaction.type?.id ||
+      transaction.typeId ||
+      findConfigId(config?.types, typeName),
     memberId,
     memberName,
   }
@@ -142,7 +156,9 @@ function RecordTransactionModal({
   const isEditing = Boolean(transactionId)
   // Edit mode keeps form null until the transaction (and config) finish loading,
   // matching EditMemberModal so empty fields never flash.
-  const [form, setForm] = useState(() => (transactionId ? null : emptyForm(type)))
+  const [form, setForm] = useState(() =>
+    transactionId ? null : emptyForm(type)
+  )
   const [isLoadingTransaction, setIsLoadingTransaction] = useState(false)
   const [loadError, setLoadError] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -157,18 +173,23 @@ function RecordTransactionModal({
   const types = [...rawTypes]
     .filter((option) => {
       if (!isEditing) return true
-      const optionKey = option.name.toLowerCase() === "expense" ? "expense" : "income"
+      const optionKey =
+        option.name.toLowerCase() === "expense" ? "expense" : "income"
       return optionKey === activeType
     })
     .sort(
-      (a, b) => (a.name.toLowerCase() === "expense" ? 1 : 0) - (b.name.toLowerCase() === "expense" ? 1 : 0)
+      (a, b) =>
+        (a.name.toLowerCase() === "expense" ? 1 : 0) -
+        (b.name.toLowerCase() === "expense" ? 1 : 0)
     )
   const categories = config?.categories ?? []
   const offeringTypes = config?.offeringTypes ?? []
 
   const offeringCategoryId = findConfigId(categories, "offering")
   const selectedCategoryId = form?.categoryId || categories[0]?.id || ""
-  const selectedCategoryName = categories.find((category) => category.id === selectedCategoryId)?.name
+  const selectedCategoryName = categories.find(
+    (category) => category.id === selectedCategoryId
+  )?.name
 
   function resetState() {
     setForm(null)
@@ -204,7 +225,10 @@ function RecordTransactionModal({
       setLoadError("")
 
       try {
-        const transaction = await getTransactionById(transactionId, controller.signal)
+        const transaction = await getTransactionById(
+          transactionId,
+          controller.signal
+        )
         if (controller.signal.aborted) return
 
         const nextForm = transactionToForm(transaction, config)
@@ -255,7 +279,9 @@ function RecordTransactionModal({
   }
 
   const isOfferingBreakdown =
-    activeType === "income" && offeringCategoryId && selectedCategoryId === offeringCategoryId
+    activeType === "income" &&
+    offeringCategoryId &&
+    selectedCategoryId === offeringCategoryId
   const hasOfferingAmount = offeringTypes.some(
     (offeringType) => Number(form?.offeringAmounts?.[offeringType.id]) > 0
   )
@@ -275,7 +301,10 @@ function RecordTransactionModal({
 
     const typeId =
       form.typeId ||
-      findConfigId(config?.types, activeType === "expense" ? "Expense" : "Income")
+      findConfigId(
+        config?.types,
+        activeType === "expense" ? "Expense" : "Income"
+      )
 
     if (!typeId) {
       setSubmitError("Unable to resolve transaction type")
@@ -293,7 +322,9 @@ function RecordTransactionModal({
 
     if (isOfferingBreakdown) {
       payload.breakdown = offeringTypes
-        .filter((offeringType) => Number(form.offeringAmounts[offeringType.id]) > 0)
+        .filter(
+          (offeringType) => Number(form.offeringAmounts[offeringType.id]) > 0
+        )
         .map((offeringType) => ({
           offeringTypeId: offeringType.id,
           amount: Number(form.offeringAmounts[offeringType.id]),
@@ -322,7 +353,10 @@ function RecordTransactionModal({
     } catch (err) {
       // Keep the filled form so the user can fix and retry.
       const message =
-        err?.message || (isEditing ? "Unable to update transaction" : "Unable to create transaction")
+        err?.message ||
+        (isEditing
+          ? "Unable to update transaction"
+          : "Unable to create transaction")
       setSubmitError(message)
       toast.error(message)
     } finally {
@@ -366,7 +400,10 @@ function RecordTransactionModal({
                   )}
                 >
                   {types.map((option) => {
-                    const optionKey = option.name.toLowerCase() === "expense" ? "expense" : "income"
+                    const optionKey =
+                      option.name.toLowerCase() === "expense"
+                        ? "expense"
+                        : "income"
 
                     return (
                       <button
@@ -401,8 +438,10 @@ function RecordTransactionModal({
                         categoryId: value,
                         // Member linkage only applies to Offering — clear it
                         // when switching away so a stale selection isn't submitted.
-                        memberId: value === offeringCategoryId ? prev.memberId : null,
-                        memberName: value === offeringCategoryId ? prev.memberName : "",
+                        memberId:
+                          value === offeringCategoryId ? prev.memberId : null,
+                        memberName:
+                          value === offeringCategoryId ? prev.memberName : "",
                       }))
                     }
                     disabled={isSubmitting}
@@ -431,7 +470,9 @@ function RecordTransactionModal({
                   </p>
                   <MemberPickerField
                     member={
-                      form.memberId ? { id: form.memberId, name: form.memberName } : null
+                      form.memberId
+                        ? { id: form.memberId, name: form.memberName }
+                        : null
                     }
                     onChange={(nextMember) =>
                       setForm((prev) => ({
@@ -453,7 +494,12 @@ function RecordTransactionModal({
                   id="transaction-note"
                   placeholder="e.g. Sunday Service Tithe"
                   value={form.description}
-                  onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
+                  onChange={(e) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      description: e.target.value,
+                    }))
+                  }
                   disabled={isSubmitting}
                   className="h-10 rounded-lg"
                 />
@@ -470,7 +516,10 @@ function RecordTransactionModal({
                     placeholder="0.00"
                     value={form.amount}
                     onChange={(e) =>
-                      setForm((prev) => ({ ...prev, amount: sanitizeDecimalInput(e.target.value) }))
+                      setForm((prev) => ({
+                        ...prev,
+                        amount: sanitizeDecimalInput(e.target.value),
+                      }))
                     }
                     disabled={isSubmitting}
                     required
@@ -489,8 +538,14 @@ function RecordTransactionModal({
                   </p>
                   <div className="flex max-h-70 flex-col gap-2 overflow-y-auto rounded-lg border border-input px-3 py-2.5">
                     {offeringTypes.map((offeringType) => (
-                      <div key={offeringType.id} className="flex items-center justify-between gap-3">
-                        <Label htmlFor={`offering-${offeringType.id}`} className="text-sm font-normal">
+                      <div
+                        key={offeringType.id}
+                        className="flex items-center justify-between gap-3"
+                      >
+                        <Label
+                          htmlFor={`offering-${offeringType.id}`}
+                          className="text-sm font-normal"
+                        >
                           {offeringType.name}:
                         </Label>
                         <Input
@@ -498,7 +553,12 @@ function RecordTransactionModal({
                           inputMode="decimal"
                           placeholder="0.00"
                           value={form.offeringAmounts[offeringType.id] ?? ""}
-                          onChange={(e) => handleOfferingChange(offeringType.id, e.target.value)}
+                          onChange={(e) =>
+                            handleOfferingChange(
+                              offeringType.id,
+                              e.target.value
+                            )
+                          }
                           disabled={isSubmitting}
                           className="h-9 w-32 rounded-lg"
                         />
@@ -516,7 +576,9 @@ function RecordTransactionModal({
                   id="transaction-date"
                   type="date"
                   value={form.date}
-                  onChange={(e) => setForm((prev) => ({ ...prev, date: e.target.value }))}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, date: e.target.value }))
+                  }
                   disabled={isSubmitting}
                   required
                   className="h-10 rounded-lg"
@@ -544,7 +606,11 @@ function RecordTransactionModal({
             onClick={handleSubmit}
             className="h-10 rounded-lg bg-[#1e2a4a] px-5 text-white hover:bg-[#1e2a4a]/90"
           >
-            {isSubmitting ? "Saving…" : isEditing ? "Save Changes" : "Save Transaction"}
+            {isSubmitting
+              ? "Saving…"
+              : isEditing
+                ? "Save Changes"
+                : "Save Transaction"}
           </Button>
         </DialogFooter>
       </DialogContent>

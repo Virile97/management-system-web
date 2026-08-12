@@ -68,7 +68,9 @@ function transactionsToCsv(transactions) {
     Number(transaction.amount) || 0,
   ])
 
-  return [headers, ...rows].map((row) => row.map(escapeCsvValue).join(",")).join("\n")
+  return [headers, ...rows]
+    .map((row) => row.map(escapeCsvValue).join(","))
+    .join("\n")
 }
 
 function downloadCsv(filename, csv) {
@@ -81,7 +83,10 @@ function downloadCsv(filename, csv) {
   URL.revokeObjectURL(url)
 }
 
-async function fetchAllMatchingTransactions({ type, search, from, to }, signal) {
+async function fetchAllMatchingTransactions(
+  { type, search, from, to },
+  signal
+) {
   const all = []
   let page = 1
   let totalPages = 1
@@ -125,7 +130,9 @@ function ExportTransactionsReportModal({
   const [error, setError] = useState("")
   const [generatedAt, setGeneratedAt] = useState(() => new Date())
 
-  const selectedKey = selectedTransactions.map((transaction) => transaction.id).join(",")
+  const selectedKey = selectedTransactions
+    .map((transaction) => transaction.id)
+    .join(",")
 
   useEffect(() => {
     if (!open) return
@@ -202,7 +209,10 @@ function ExportTransactionsReportModal({
 
   function handleCsv() {
     const stamp = new Date().toISOString().slice(0, 10)
-    downloadCsv(`transactions-report-${stamp}.csv`, transactionsToCsv(transactions))
+    downloadCsv(
+      `transactions-report-${stamp}.csv`,
+      transactionsToCsv(transactions)
+    )
   }
 
   return (
@@ -255,7 +265,8 @@ function ExportTransactionsReportModal({
                   : "border-border bg-background text-foreground/80 hover:bg-muted"
               )}
             >
-              Selected only{hasSelection ? ` (${selectedTransactions.length})` : ""}
+              Selected only
+              {hasSelection ? ` (${selectedTransactions.length})` : ""}
             </button>
           </div>
         </div>
@@ -263,7 +274,9 @@ function ExportTransactionsReportModal({
         <div className="min-h-0 flex-1 overflow-y-auto bg-muted/50 p-4 sm:p-6">
           {isLoading && <ReportPreviewSkeleton />}
           {error && (
-            <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>
+            <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              {error}
+            </p>
           )}
           {!isLoading && !error && (
             <div className="rounded-xl border border-border bg-white p-5 shadow-sm sm:p-6">
@@ -290,7 +303,9 @@ function ExportTransactionsReportModal({
               variant="outline"
               className="h-10 gap-2 rounded-lg px-5"
               onClick={handleCsv}
-              disabled={isLoading || Boolean(error) || transactions.length === 0}
+              disabled={
+                isLoading || Boolean(error) || transactions.length === 0
+              }
             >
               <FileSpreadsheet className="h-4 w-4" />
               Download CSV
@@ -299,7 +314,9 @@ function ExportTransactionsReportModal({
               type="button"
               className="h-10 gap-2 rounded-lg bg-[#1e2a4a] px-5 text-white hover:bg-[#1e2a4a]/90"
               onClick={handlePrint}
-              disabled={isLoading || Boolean(error) || transactions.length === 0}
+              disabled={
+                isLoading || Boolean(error) || transactions.length === 0
+              }
             >
               <FileDown className="h-4 w-4" />
               Export PDF

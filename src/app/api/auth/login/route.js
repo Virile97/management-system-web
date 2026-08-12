@@ -8,18 +8,21 @@ export async function POST(request) {
   const { email, password } = await request.json()
 
   try {
-    const backendRes = await api.post(API_ENDPOINTS.AUTH_LOGIN, { email, password })
+    const backendRes = await api.post(API_ENDPOINTS.AUTH_LOGIN, {
+      email,
+      password,
+    })
     const { data } = backendRes
 
     const res = NextResponse.json({
       success: true,
       message: data.message,
-      data: { user: data.data.user }
+      data: { user: data.data.user },
     })
 
     setSessionCookies(res, {
       token: data.data.token,
-      user: data.data.user
+      user: data.data.user,
     })
 
     // The backend also sets its own httpOnly refresh-token cookie on this
@@ -29,7 +32,9 @@ export async function POST(request) {
     return res
   } catch (err) {
     const status = err?.response?.status || 500
-    const message = err?.response?.data?.message || "Unable to sign in. Please check your credentials and try again."
+    const message =
+      err?.response?.data?.message ||
+      "Unable to sign in. Please check your credentials and try again."
 
     return NextResponse.json({ success: false, message }, { status })
   }

@@ -42,7 +42,11 @@ async function importRsaPublicKey(pem) {
 async function encryptWithPublicKey(publicKeyPem, plainText) {
   const key = await importRsaPublicKey(publicKeyPem)
   const encoded = new TextEncoder().encode(plainText)
-  const ciphertext = await window.crypto.subtle.encrypt({ name: "RSA-OAEP" }, key, encoded)
+  const ciphertext = await window.crypto.subtle.encrypt(
+    { name: "RSA-OAEP" },
+    key,
+    encoded
+  )
 
   return arrayBufferToBase64(ciphertext)
 }
@@ -56,7 +60,9 @@ async function hashWithNonce(nonce, value) {
   const encoded = new TextEncoder().encode(`${nonce}:${value}`)
   const digest = await window.crypto.subtle.digest("SHA-256", encoded)
 
-  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("")
+  return Array.from(new Uint8Array(digest), (byte) =>
+    byte.toString(16).padStart(2, "0")
+  ).join("")
 }
 
 function readCookie(name) {

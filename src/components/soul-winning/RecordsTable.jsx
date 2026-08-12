@@ -50,9 +50,14 @@ function RecordsTable({ records }) {
         </thead>
         <tbody>
           {records.map((record) => (
-            <tr key={record.id} className="border-b border-border last:border-0">
+            <tr
+              key={record.id}
+              className="border-b border-border last:border-0"
+            >
               <td className="py-4 pl-4 align-top">
-                <p className="text-sm font-medium text-foreground/85">{record.relativeDate}</p>
+                <p className="text-sm font-medium text-foreground/85">
+                  {record.relativeDate}
+                </p>
                 <p className="text-xs text-muted-foreground">{record.date}</p>
               </td>
               <td className="py-4 pr-4 align-top">
@@ -61,18 +66,26 @@ function RecordsTable({ records }) {
                     {initials(record.convert)}
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-foreground/85">{record.convert}</p>
-                    <p className="text-xs text-muted-foreground">{record.location}</p>
+                    <p className="text-sm font-medium text-foreground/85">
+                      {record.convert}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {record.location}
+                    </p>
                   </div>
                 </div>
               </td>
-              <td className="py-4 pr-4 align-top text-sm text-foreground/80">{record.contact}</td>
+              <td className="py-4 pr-4 align-top text-sm text-foreground/80">
+                {record.contact}
+              </td>
               <td className="py-4 pr-4 align-top">
                 <div className="flex items-center gap-2">
                   <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-400 text-[10px] font-semibold text-[#1e2a4a]">
                     {initials(record.soulWinner)}
                   </div>
-                  <span className="text-sm text-foreground/80">{record.soulWinner}</span>
+                  <span className="text-sm text-foreground/80">
+                    {record.soulWinner}
+                  </span>
                 </div>
               </td>
               <td className="py-4 pr-4 align-top">
@@ -82,7 +95,12 @@ function RecordsTable({ records }) {
                     statusStyles[record.status]
                   )}
                 >
-                  <span className={cn("h-1.5 w-1.5 rounded-full", dotStyles[record.status])} />
+                  <span
+                    className={cn(
+                      "h-1.5 w-1.5 rounded-full",
+                      dotStyles[record.status]
+                    )}
+                  />
                   {record.status}
                 </span>
               </td>
@@ -96,15 +114,22 @@ function RecordsTable({ records }) {
 
       <div className="md:hidden">
         {records.map((record) => (
-          <div key={record.id} className="flex flex-col gap-3 border-b border-border p-4 last:border-0">
+          <div
+            key={record.id}
+            className="flex flex-col gap-3 border-b border-border p-4 last:border-0"
+          >
             <div className="flex items-start justify-between gap-3">
               <div className="flex min-w-0 items-center gap-3">
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#1e2a4a] text-xs font-semibold text-white">
                   {initials(record.convert)}
                 </div>
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-foreground/85">{record.convert}</p>
-                  <p className="truncate text-xs text-muted-foreground">{record.location}</p>
+                  <p className="truncate text-sm font-medium text-foreground/85">
+                    {record.convert}
+                  </p>
+                  <p className="truncate text-xs text-muted-foreground">
+                    {record.location}
+                  </p>
                 </div>
               </div>
               <span
@@ -113,7 +138,12 @@ function RecordsTable({ records }) {
                   statusStyles[record.status]
                 )}
               >
-                <span className={cn("h-1.5 w-1.5 rounded-full", dotStyles[record.status])} />
+                <span
+                  className={cn(
+                    "h-1.5 w-1.5 rounded-full",
+                    dotStyles[record.status]
+                  )}
+                />
                 {record.status}
               </span>
             </div>
@@ -131,8 +161,12 @@ function RecordsTable({ records }) {
                 <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-amber-400 text-[9px] font-semibold text-[#1e2a4a]">
                   {initials(record.soulWinner)}
                 </div>
-                <span className="text-xs text-muted-foreground">Soul Winner:</span>
-                <span className="truncate text-foreground/80">{record.soulWinner}</span>
+                <span className="text-xs text-muted-foreground">
+                  Soul Winner:
+                </span>
+                <span className="truncate text-foreground/80">
+                  {record.soulWinner}
+                </span>
               </div>
               {record.notes && (
                 <div className="col-span-2">

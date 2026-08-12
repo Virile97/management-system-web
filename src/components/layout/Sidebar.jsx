@@ -3,7 +3,16 @@
 import { useEffect, useState } from "react"
 import { usePathname, useRouter } from "next/navigation"
 import { SidebarItem } from "@/components/layout/SidebarItem"
-import { LayoutGrid, Users, PhilippinePeso, Heart, Settings, X, LogOut, ClipboardCheck } from "lucide-react"
+import {
+  LayoutGrid,
+  Users,
+  PhilippinePeso,
+  Heart,
+  Settings,
+  X,
+  LogOut,
+  ClipboardCheck,
+} from "lucide-react"
 import { getCurrentUser } from "@/lib/auth"
 import { abortAll } from "@/lib/abort-registry"
 import { useDashboardStore } from "@/stores/dashboard.store"
@@ -20,12 +29,48 @@ const ALL_ROLES = ["ADMIN", "FINANCE_ADMIN", "USER"]
 // (top nav list vs. bottom block); `allowedFor` is an explicit role
 // allow-list so a new role defaults to hidden unless granted access.
 const sidebarItems = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutGrid, section: "top", allowedFor: ["ADMIN", "FINANCE_ADMIN"] },
-  { href: "/members", label: "Members", icon: Users, section: "top", allowedFor: ALL_ROLES },
-  { href: "/attendance", label: "Attendance", icon: ClipboardCheck, section: "top", allowedFor: ["ADMIN", "FINANCE_ADMIN"] },
-  { href: "/finances", label: "Finances", icon: PhilippinePeso, section: "top", allowedFor: ["ADMIN", "FINANCE_ADMIN"] },
-  { href: "/soul-winning", label: "Soul Winning", icon: Heart, section: "top", allowedFor: ["ADMIN", "FINANCE_ADMIN"] },
-  { href: "/settings", label: "Settings", icon: Settings, section: "bottom", allowedFor: ["ADMIN", "FINANCE_ADMIN"] },
+  {
+    href: "/dashboard",
+    label: "Dashboard",
+    icon: LayoutGrid,
+    section: "top",
+    allowedFor: ["ADMIN", "FINANCE_ADMIN"],
+  },
+  {
+    href: "/members",
+    label: "Members",
+    icon: Users,
+    section: "top",
+    allowedFor: ALL_ROLES,
+  },
+  {
+    href: "/attendance",
+    label: "Attendance",
+    icon: ClipboardCheck,
+    section: "top",
+    allowedFor: ["ADMIN", "FINANCE_ADMIN"],
+  },
+  {
+    href: "/finances",
+    label: "Finances",
+    icon: PhilippinePeso,
+    section: "top",
+    allowedFor: ["ADMIN", "FINANCE_ADMIN"],
+  },
+  {
+    href: "/soul-winning",
+    label: "Soul Winning",
+    icon: Heart,
+    section: "top",
+    allowedFor: ["ADMIN", "FINANCE_ADMIN"],
+  },
+  {
+    href: "/settings",
+    label: "Settings",
+    icon: Settings,
+    section: "bottom",
+    allowedFor: ["ADMIN", "FINANCE_ADMIN"],
+  },
 ]
 
 function Sidebar({ open = false, onClose }) {
@@ -53,7 +98,9 @@ function Sidebar({ open = false, onClose }) {
     .map((part) => part[0].toUpperCase())
     .join("")
 
-  const visibleItems = sidebarItems.filter((item) => item.allowedFor.includes(role))
+  const visibleItems = sidebarItems.filter((item) =>
+    item.allowedFor.includes(role)
+  )
   const topItems = visibleItems.filter((item) => item.section === "top")
   const bottomItems = visibleItems.filter((item) => item.section === "bottom")
 
@@ -73,9 +120,11 @@ function Sidebar({ open = false, onClose }) {
     abortAll()
 
     try {
-      const res = await fetch(APP_API_ENDPOINTS.AUTH_LOGOUT, { method: "POST" })
+      const res = await fetch(APP_API_ENDPOINTS.AUTH_LOGOUT, {
+        method: "POST",
+      })
       const body = await res.json().catch(() => null)
-  
+
       if (!res.ok || !body?.success) throw new Error()
 
       useDashboardStore.getState().reset()
@@ -130,27 +179,29 @@ function Sidebar({ open = false, onClose }) {
         </div>
 
         <nav className="flex flex-col gap-1">
-          {role && topItems.map((item) => (
-            <SidebarItem
-              key={item.href}
-              label={item.label}
-              icon={item.icon}
-              active={pathname.startsWith(item.href)}
-              onClick={() => goTo(item.href)}
-            />
-          ))}
+          {role &&
+            topItems.map((item) => (
+              <SidebarItem
+                key={item.href}
+                label={item.label}
+                icon={item.icon}
+                active={pathname.startsWith(item.href)}
+                onClick={() => goTo(item.href)}
+              />
+            ))}
         </nav>
 
         <div className="mt-auto flex flex-col gap-1">
-          {role && bottomItems.map((item) => (
-            <SidebarItem
-              key={item.href}
-              label={item.label}
-              icon={item.icon}
-              active={pathname.startsWith(item.href)}
-              onClick={() => goTo(item.href)}
-            />
-          ))}
+          {role &&
+            bottomItems.map((item) => (
+              <SidebarItem
+                key={item.href}
+                label={item.label}
+                icon={item.icon}
+                active={pathname.startsWith(item.href)}
+                onClick={() => goTo(item.href)}
+              />
+            ))}
 
           <div className="mt-3 flex items-center gap-3 border-t border-white/10 px-3 pt-4">
             {userLoaded ? (
@@ -159,8 +210,12 @@ function Sidebar({ open = false, onClose }) {
                   {initials || "U"}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold text-white">{displayName}</p>
-                  <p className="text-xs text-white/50">{user?.email && user?.name ? user.email : "Administrator"}</p>
+                  <p className="truncate text-sm font-semibold text-white">
+                    {displayName}
+                  </p>
+                  <p className="text-xs text-white/50">
+                    {user?.email && user?.name ? user.email : "Administrator"}
+                  </p>
                 </div>
               </>
             ) : (

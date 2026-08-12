@@ -22,7 +22,10 @@ function AttendanceReport({
   generatedAt = new Date(),
 }) {
   const stats = [
-    { label: "Present", value: summary?.present ?? rows.filter((row) => row.status).length },
+    {
+      label: "Present",
+      value: summary?.present ?? rows.filter((row) => row.status).length,
+    },
     { label: "Full day", value: summary?.fullDay ?? 0 },
     { label: "Partial", value: summary?.partial ?? 0 },
     { label: "Absent", value: summary?.absent ?? 0 },
@@ -59,20 +62,30 @@ function AttendanceReport({
           <dt className="text-[8px] font-medium tracking-wide text-[#1e2a4a]/45 uppercase">
             Generated
           </dt>
-          <dd className="text-[#1e2a4a]/85">{formatGeneratedAt(generatedAt)}</dd>
+          <dd className="text-[#1e2a4a]/85">
+            {formatGeneratedAt(generatedAt)}
+          </dd>
         </div>
         <div>
-          <dt className="text-[8px] font-medium tracking-wide text-[#1e2a4a]/45 uppercase">Scope</dt>
+          <dt className="text-[8px] font-medium tracking-wide text-[#1e2a4a]/45 uppercase">
+            Scope
+          </dt>
           <dd className="text-[#1e2a4a]/85">{scopeLabel}</dd>
         </div>
         <div>
-          <dt className="text-[8px] font-medium tracking-wide text-[#1e2a4a]/45 uppercase">Date</dt>
+          <dt className="text-[8px] font-medium tracking-wide text-[#1e2a4a]/45 uppercase">
+            Date
+          </dt>
           <dd className="text-[#1e2a4a]/85">{dateLabel || "—"}</dd>
         </div>
         <div>
-          <dt className="text-[8px] font-medium tracking-wide text-[#1e2a4a]/45 uppercase">Level</dt>
+          <dt className="text-[8px] font-medium tracking-wide text-[#1e2a4a]/45 uppercase">
+            Level
+          </dt>
           <dd className="text-[#1e2a4a]/85">
-            {levelFilter === "All" ? "All Members" : levelFilter || "All Members"}
+            {levelFilter === "All"
+              ? "All Members"
+              : levelFilter || "All Members"}
           </dd>
         </div>
         {search ? (
@@ -104,12 +117,15 @@ function AttendanceReport({
       {summary?.attendanceRate != null && (
         <p className="text-[10px] text-[#1e2a4a]/70">
           Attendance rate:{" "}
-          <span className="font-semibold text-[#1e2a4a]">{summary.attendanceRate}%</span>
-          {summary.partialMorning != null || summary.partialAfternoon != null ? (
+          <span className="font-semibold text-[#1e2a4a]">
+            {summary.attendanceRate}%
+          </span>
+          {summary.partialMorning != null ||
+          summary.partialAfternoon != null ? (
             <>
               {" "}
-              · Partial: {summary.partialMorning ?? 0} morning · {summary.partialAfternoon ?? 0}{" "}
-              afternoon
+              · Partial: {summary.partialMorning ?? 0} morning ·{" "}
+              {summary.partialAfternoon ?? 0} afternoon
             </>
           ) : null}
         </p>
@@ -151,15 +167,34 @@ function AttendanceReport({
           </thead>
           <tbody>
             {rows.map((row, index) => (
-              <tr key={row.id || index} className="border-b border-[#1e2a4a]/10 align-top">
-                <td className="py-1.5 pr-1.5 tabular-nums text-[#1e2a4a]/45">{index + 1}</td>
-                <td className="py-1.5 pr-2 font-medium text-[#1e2a4a]">{row.name || "—"}</td>
-                <td className="py-1.5 pr-2 text-[#1e2a4a]/80">{row.level || "—"}</td>
-                <td className="py-1.5 pr-2 tabular-nums text-[#1e2a4a]/80">{row.morningIn || "—"}</td>
-                <td className="py-1.5 pr-2 tabular-nums text-[#1e2a4a]/80">{row.morningOut || "—"}</td>
-                <td className="py-1.5 pr-2 tabular-nums text-[#1e2a4a]/80">{row.afternoonIn || "—"}</td>
-                <td className="py-1.5 pr-2 tabular-nums text-[#1e2a4a]/80">{row.afternoonOut || "—"}</td>
-                <td className="py-1.5 text-[#1e2a4a]/80">{row.status || "—"}</td>
+              <tr
+                key={row.id || index}
+                className="border-b border-[#1e2a4a]/10 align-top"
+              >
+                <td className="py-1.5 pr-1.5 tabular-nums text-[#1e2a4a]/45">
+                  {index + 1}
+                </td>
+                <td className="py-1.5 pr-2 font-medium text-[#1e2a4a]">
+                  {row.name || "—"}
+                </td>
+                <td className="py-1.5 pr-2 text-[#1e2a4a]/80">
+                  {row.level || "—"}
+                </td>
+                <td className="py-1.5 pr-2 tabular-nums text-[#1e2a4a]/80">
+                  {row.morningIn || "—"}
+                </td>
+                <td className="py-1.5 pr-2 tabular-nums text-[#1e2a4a]/80">
+                  {row.morningOut || "—"}
+                </td>
+                <td className="py-1.5 pr-2 tabular-nums text-[#1e2a4a]/80">
+                  {row.afternoonIn || "—"}
+                </td>
+                <td className="py-1.5 pr-2 tabular-nums text-[#1e2a4a]/80">
+                  {row.afternoonOut || "—"}
+                </td>
+                <td className="py-1.5 text-[#1e2a4a]/80">
+                  {row.status || "—"}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -167,7 +202,9 @@ function AttendanceReport({
       )}
 
       {dateLabel ? (
-        <p className="text-[9px] text-[#1e2a4a]/45">Service date: {dateLabel}</p>
+        <p className="text-[9px] text-[#1e2a4a]/45">
+          Service date: {dateLabel}
+        </p>
       ) : null}
     </div>
   )

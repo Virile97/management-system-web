@@ -39,13 +39,21 @@ const currencyFormatter = new Intl.NumberFormat("en-PH", {
 
 function formatDate(value) {
   if (!value) return "—"
-  return new Date(value).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+  return new Date(value).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  })
 }
 
 // dateFrom/dateTo are "YYYY-MM-DD" strings (or ""); this seeds the modal's
 // initial view/selection from whichever bound is set (defaulting to today).
 function toModalRange(dateFrom, dateTo) {
-  const seed = dateFrom ? new Date(dateFrom) : dateTo ? new Date(dateTo) : new Date()
+  const seed = dateFrom
+    ? new Date(dateFrom)
+    : dateTo
+      ? new Date(dateTo)
+      : new Date()
 
   return {
     year: seed.getFullYear(),
@@ -95,7 +103,8 @@ function MemberFinancePanel({
   // The dropdown's options come from the shared transactions config rather
   // than from the rows on screen: filtering by a type must not shrink the list
   // of types you can switch to.
-  const offeringTypes = useFinanceStore((state) => state.config?.offeringTypes) ?? []
+  const offeringTypes =
+    useFinanceStore((state) => state.config?.offeringTypes) ?? []
   const offeringTypeNames = offeringTypes.map((type) => type.name)
   // MultiSelectDropdown works with display labels; map selected ids ↔ names
   // so the URL/API keep using stable config ids.
@@ -107,7 +116,8 @@ function MemberFinancePanel({
   useEffect(() => {
     const controller = new AbortController()
 
-    const { config, setConfig, setConfigLoading, setConfigError } = useFinanceStore.getState()
+    const { config, setConfig, setConfigLoading, setConfigError } =
+      useFinanceStore.getState()
     if (config) return
 
     async function loadConfig() {
@@ -190,7 +200,9 @@ function MemberFinancePanel({
       return
     }
 
-    const ids = offeringTypes.filter((type) => names.includes(type.name)).map((type) => type.id)
+    const ids = offeringTypes
+      .filter((type) => names.includes(type.name))
+      .map((type) => type.id)
     onOfferingTypesChange(ids)
   }
 
@@ -228,7 +240,9 @@ function MemberFinancePanel({
       />
 
       {error && (
-        <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>
+        <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          {error}
+        </p>
       )}
 
       <Card className="rounded-2xl p-4 sm:p-5">
@@ -262,7 +276,9 @@ function MemberFinancePanel({
       <Card className="overflow-hidden rounded-2xl p-0">
         <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
-            <h2 className="text-sm font-medium text-foreground/85">Offering Records</h2>
+            <h2 className="text-sm font-medium text-foreground/85">
+              Offering Records
+            </h2>
             <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
               {totalRecords}
             </span>
@@ -277,7 +293,10 @@ function MemberFinancePanel({
         </div>
 
         {isLoading ? (
-          <ListCardSkeleton rows={6} className="border-0 p-4 shadow-none sm:p-5" />
+          <ListCardSkeleton
+            rows={6}
+            className="border-0 p-4 shadow-none sm:p-5"
+          />
         ) : records.length === 0 ? (
           <EmptyState
             icon={Receipt}
@@ -306,15 +325,22 @@ function MemberFinancePanel({
               </thead>
               <tbody>
                 {records.map((record) => (
-                  <tr key={record.id} className="border-b border-border last:border-0">
-                    <td className="py-3.5 pl-4 text-sm text-foreground/80">{formatDate(record.date)}</td>
+                  <tr
+                    key={record.id}
+                    className="border-b border-border last:border-0"
+                  >
+                    <td className="py-3.5 pl-4 text-sm text-foreground/80">
+                      {formatDate(record.date)}
+                    </td>
                     <td className="py-3.5 pr-4">
                       <TypeBadge type={record.type} />
                     </td>
                     <td className="py-3.5 pr-4 text-sm font-semibold text-foreground/85">
                       {currencyFormatter.format(record.amount)}
                     </td>
-                    <td className="py-3.5 pr-4 text-sm text-muted-foreground">{record.note || "—"}</td>
+                    <td className="py-3.5 pr-4 text-sm text-muted-foreground">
+                      {record.note || "—"}
+                    </td>
                   </tr>
                 ))}
               </tbody>

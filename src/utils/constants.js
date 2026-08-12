@@ -1,23 +1,24 @@
 const API_V1 = "/api/v1"
 
 export const API_ENDPOINTS = {
-  //Auth endpoints
+  // Auth
   AUTH_LOGIN: `${API_V1}/auth/login`,
   AUTH_LOGOUT: `${API_V1}/auth/logout`,
   AUTH_REFRESH: `${API_V1}/auth/refresh`,
   AUTH_PUBLIC_KEY: `${API_V1}/auth/public-key`,
 
-  // Dashboard endpoints
+  // Dashboard
   DASHBOARD_STATS: `${API_V1}/dashboard/stats`,
   DASHBOARD_FINANCE_SUMMARY: `${API_V1}/dashboard/finance-summary`,
   DASHBOARD_RECENT_ACTIVITY: `${API_V1}/dashboard/recent-activity`,
   DASHBOARD_MEMBER_BREAKDOWN: `${API_V1}/dashboard/member-breakdown`,
+  DASHBOARD_ATTENDANCE_SUMMARY: `${API_V1}/dashboard/attendance-summary`,
 
-  // Users endpoints
+  // Users
   USERS: `${API_V1}/users`,
   USER_BY_ID: (id) => `${API_V1}/users/${id}`,
 
-  // Members endpoints
+  // Members
   MEMBERS: `${API_V1}/members`,
   MEMBERS_CONFIG: `${API_V1}/members/config`,
   MEMBERS_BREAKDOWN: `${API_V1}/members/breakdown`,
@@ -25,7 +26,7 @@ export const API_ENDPOINTS = {
   MEMBER_OFFERINGS: (id) => `${API_V1}/members/${id}/offerings`,
   MEMBERS_BULK_DELETE: `${API_V1}/members/bulk-delete`,
 
-  // Finances endpoints
+  // Finances
   TRANSACTIONS: `${API_V1}/transactions`,
   TRANSACTIONS_TREND: `${API_V1}/transactions/trend`,
   TRANSACTIONS_STATS: `${API_V1}/transactions/stats`,
@@ -34,40 +35,40 @@ export const API_ENDPOINTS = {
   TRANSACTIONS_BULK_DELETE: `${API_V1}/transactions/bulk-delete`,
   TRANSACTIONS_CONFIG: `${API_V1}/transactions/config`,
 
-  // Attendance endpoints
+  // Attendance
   ATTENDANCE: `${API_V1}/attendance`,
   ATTENDANCE_BY_MEMBER: (memberId) => `${API_V1}/attendance/${memberId}`,
 }
 
 export const APP_API_ENDPOINTS = {
-  // App Auth endpoints
+  // Auth
   AUTH_ME: "/api/auth/me",
   AUTH_LOGIN: "/api/auth/login",
   AUTH_LOGOUT: "/api/auth/logout",
   AUTH_REFRESH: "/api/auth/refresh",
   AUTH_PUBLIC_KEY: "/api/auth/public-key",
 
-  // App Dashboard endpoints
+  // Dashboard
   DASHBOARD_STATS: "/api/dashboard",
   DASHBOARD_FINANCE_SUMMARY: "/api/dashboard/finance-summary",
   DASHBOARD_RECENT_ACTIVITY: "/api/dashboard/recent-activity",
   DASHBOARD_MEMBER_BREAKDOWN: "/api/dashboard/member-breakdown",
+  DASHBOARD_ATTENDANCE_SUMMARY: "/api/dashboard/attendance-summary",
 
-  // App Users endpoints
+  // Users
   USERS: "/api/users",
   USER_BY_ID: (id) => `/api/users/${id}`,
 
-  // App Members endpoints
+  // Members
   MEMBERS: "/api/members",
   MEMBERS_CONFIG: "/api/members/config",
   MEMBERS_BREAKDOWN: "/api/members/breakdown",
   MEMBER_BY_ID: (id) => `/api/members/${id}`,
   MEMBER_OFFERINGS: (id) => `/api/members/${id}/offerings`,
   MEMBERS_BULK_DELETE: "/api/members/bulk-delete",
-  // Verified against this app's own FINANCE_ACCESS_CODE — no backend counterpart.
   MEMBERS_FINANCE_ACCESS: "/api/members/finance-access",
 
-  // App Finances endpoints
+  // Finances
   TRANSACTIONS: "/api/finances",
   TRANSACTIONS_STATS: "/api/finances/stats",
   TRANSACTIONS_TREND: "/api/finances/trend",
@@ -76,33 +77,27 @@ export const APP_API_ENDPOINTS = {
   TRANSACTIONS_BULK_DELETE: "/api/finances/bulk-delete",
   TRANSACTIONS_CONFIG: "/api/finances/config",
 
-  // App Attendance endpoints
+  // Attendance
   ATTENDANCE: "/api/attendance",
   ATTENDANCE_BY_MEMBER: (memberId) => `/api/attendance/${memberId}`,
 }
 
 /**
- * auth_user: non-httpOnly, holds { id, email, name, role } — safe for client JS to read (no secret)
- * auth_token: httpOnly, holds the raw JWT used as the Authorization bearer token against the backend
- * csrf_token: non-httpOnly, double-submitted as the X-CSRF-Token header on mutating /api/* requests
+ * auth_user: non-httpOnly, contains { id, email, name, role }.
+ * auth_token: httpOnly JWT used for backend Authorization.
+ * csrf_token: non-httpOnly token sent as X-CSRF-Token on mutating /api/* requests.
  *
- * The backend also sets its own httpOnly refresh-token cookie directly via Set-Cookie on
- * /auth/login and /auth/refresh responses. This app never reads or names that cookie — it's
- * opaque to us — but login/refresh route handlers must forward the backend's Set-Cookie header
- * onto the browser response so it round-trips back to the backend on the next refresh call.
+ * The backend's refresh-token cookie is httpOnly and opaque to this app.
+ * Login/refresh handlers must forward its Set-Cookie header to the browser.
  */
 export const CSRF_COOKIE_NAME = "csrf_token"
 export const CSRF_HEADER_NAME = "x-csrf-token"
 export const AUTH_USER_COOKIE_NAME = "auth_user"
 export const AUTH_TOKEN_COOKIE_NAME = "auth_token"
 
-export const AUTH_SESSION_MAX_AGE = 60 * 60 * 24 // 24 hours, slides forward on each authenticated request
-export const AUTH_SESSION_ABSOLUTE_MAX_AGE = 60 * 60 * 24 * 7 // 7 days, hard cap regardless of activity
+export const AUTH_SESSION_MAX_AGE = 60 * 60 * 24
+export const AUTH_SESSION_ABSOLUTE_MAX_AGE = 60 * 60 * 24 * 7
 
-/**
- * Offering line items, in printed-slip order. Shared by the offering slip
- * preview and the Record Transaction form so both stay in sync.
- */
 export const OFFERING_CATEGORIES = [
   "Tithes",
   "Love",

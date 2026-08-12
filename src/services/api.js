@@ -116,10 +116,14 @@ function sleep(ms, signal) {
   return new Promise((resolve, reject) => {
     const timer = setTimeout(resolve, ms)
 
-    signal?.addEventListener("abort", () => {
-      clearTimeout(timer)
-      reject(new DOMException("Aborted", "AbortError"))
-    }, { once: true })
+    signal?.addEventListener(
+      "abort",
+      () => {
+        clearTimeout(timer)
+        reject(new DOMException("Aborted", "AbortError"))
+      },
+      { once: true }
+    )
   })
 }
 
@@ -139,7 +143,10 @@ function sleep(ms, signal) {
  * AbortSignal as its last argument if it's abortable. Retries stop early
  * if the signal is already aborted.
  */
-async function withRetry(fn, { maxAttempts = DEFAULT_MAX_ATTEMPTS, signal } = {}) {
+async function withRetry(
+  fn,
+  { maxAttempts = DEFAULT_MAX_ATTEMPTS, signal } = {}
+) {
   let lastError
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -150,14 +157,21 @@ async function withRetry(fn, { maxAttempts = DEFAULT_MAX_ATTEMPTS, signal } = {}
     try {
       return await fn(attempt)
     } catch (err) {
-      if (err?.name === "AbortError" || err?.name === "RateLimitError" || err?.name === "SessionExpiredError") {
+      if (
+        err?.name === "AbortError" ||
+        err?.name === "RateLimitError" ||
+        err?.name === "SessionExpiredError"
+      ) {
         throw err
       }
 
       lastError = err
 
       if (attempt < maxAttempts) {
-        const backoff = Math.min(MAX_DELAY_MS, BASE_DELAY_MS * 2 ** (attempt - 1))
+        const backoff = Math.min(
+          MAX_DELAY_MS,
+          BASE_DELAY_MS * 2 ** (attempt - 1)
+        )
         const jitter = Math.random() * backoff * 0.5
 
         await sleep(backoff + jitter, signal)

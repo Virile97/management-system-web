@@ -1,8 +1,18 @@
 "use client"
 
 import { useState } from "react"
-import { Card, CardHeader, CardTitle, CardAction, CardContent } from "@/components/ui/card"
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardAction,
+  CardContent,
+} from "@/components/ui/card"
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart"
 import { EmptyState } from "@/components/common/EmptyState"
 import { ChartCardSkeleton } from "@/components/dashboard/DashboardSkeletons"
 import { MultiSelectDropdown } from "@/components/common/MultiSelectDropdown"
@@ -10,7 +20,16 @@ import { PieChart, Pie, Cell } from "recharts"
 import { PieChart as PieChartIcon } from "lucide-react"
 
 // Fixed palette cycled across however many offering types the backend returns.
-const COLORS = ["#1e2a4a", "#2f5233", "#b3492f", "#d98e3f", "#7a4a2b", "#c9a24b", "#4a6fa5", "#8e4162"]
+const COLORS = [
+  "#1e2a4a",
+  "#2f5233",
+  "#b3492f",
+  "#d98e3f",
+  "#7a4a2b",
+  "#c9a24b",
+  "#4a6fa5",
+  "#8e4162",
+]
 
 function OfferingTypeChart({ data = [], isLoading }) {
   const [selectedTypes, setSelectedTypes] = useState([])
@@ -20,9 +39,10 @@ function OfferingTypeChart({ data = [], isLoading }) {
   }
 
   const allTypeNames = data.map((entry) => entry.offeringType)
-  const visibleData = selectedTypes.length > 0
-    ? data.filter((entry) => selectedTypes.includes(entry.offeringType))
-    : data
+  const visibleData =
+    selectedTypes.length > 0
+      ? data.filter((entry) => selectedTypes.includes(entry.offeringType))
+      : data
 
   const offeringTypes = visibleData.map((entry) => ({
     name: entry.offeringType,
@@ -31,7 +51,10 @@ function OfferingTypeChart({ data = [], isLoading }) {
   }))
 
   const chartConfig = offeringTypes.reduce((config, offeringType) => {
-    config[offeringType.name] = { label: offeringType.name, color: offeringType.color }
+    config[offeringType.name] = {
+      label: offeringType.name,
+      color: offeringType.color,
+    }
     return config
   }, {})
 
@@ -63,7 +86,10 @@ function OfferingTypeChart({ data = [], isLoading }) {
           />
         ) : (
           <>
-            <ChartContainer config={chartConfig} className="mx-auto aspect-square h-36">
+            <ChartContainer
+              config={chartConfig}
+              className="mx-auto aspect-square h-36"
+            >
               <PieChart>
                 <ChartTooltip
                   content={
@@ -76,7 +102,9 @@ function OfferingTypeChart({ data = [], isLoading }) {
                               className="h-2.5 w-2.5 shrink-0 rounded-xs"
                               style={{ backgroundColor: item.payload?.color }}
                             />
-                            <span className="text-muted-foreground">{name}</span>
+                            <span className="text-muted-foreground">
+                              {name}
+                            </span>
                           </div>
                           <span className="font-mono font-medium tabular-nums text-foreground">
                             ₱{Number(value).toLocaleString()}
@@ -105,7 +133,10 @@ function OfferingTypeChart({ data = [], isLoading }) {
 
             <div className="mt-4 grid grid-cols-2 gap-x-6 gap-y-1.5">
               {offeringTypes.map((offeringType) => (
-                <div key={offeringType.name} className="flex items-center gap-2 text-xs text-foreground/80">
+                <div
+                  key={offeringType.name}
+                  className="flex items-center gap-2 text-xs text-foreground/80"
+                >
                   <span
                     className="h-1.5 w-1.5 shrink-0 rounded-full"
                     style={{ backgroundColor: offeringType.color }}

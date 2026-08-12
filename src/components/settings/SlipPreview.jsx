@@ -1,7 +1,10 @@
 import Image from "next/image"
 import { cn } from "@/lib/utils"
 import { QrCode } from "lucide-react"
-import { OFFERING_CATEGORIES, OTHER_OFFERING_CATEGORIES } from "@/utils/constants"
+import {
+  OFFERING_CATEGORIES,
+  OTHER_OFFERING_CATEGORIES,
+} from "@/utils/constants"
 
 const copyLabels = Array.from({ length: 10 }, () => null)
 
@@ -12,13 +15,21 @@ function isVisible(fields, key) {
 const qrSizeClasses = {
   Small: { print: "h-4 w-4", compact: "h-10 w-10", full: "h-20 w-20" },
   Medium: { print: "h-5 w-5", compact: "h-14 w-14", full: "h-28 w-28" },
-  Large: { print: "h-6 w-6", compact: "h-[4.5rem] w-[4.5rem]", full: "h-36 w-36" },
+  Large: {
+    print: "h-6 w-6",
+    compact: "h-[4.5rem] w-[4.5rem]",
+    full: "h-36 w-36",
+  },
 }
 
 const qrIconSizeClasses = {
   Small: { print: "h-3 w-3", compact: "h-7 w-7", full: "h-14 w-14" },
   Medium: { print: "h-3.5 w-3.5", compact: "h-10 w-10", full: "h-20 w-20" },
-  Large: { print: "h-4.5 w-4.5", compact: "h-[3.25rem] w-[3.25rem]", full: "h-[6.5rem] w-[6.5rem]" },
+  Large: {
+    print: "h-4.5 w-4.5",
+    compact: "h-[3.25rem] w-[3.25rem]",
+    full: "h-[6.5rem] w-[6.5rem]",
+  },
 }
 
 // Density tokens per size variant. "print" is calibrated so 8 copies (a
@@ -79,7 +90,12 @@ function QrBlock({ qr, size }) {
 
   return (
     <div className="flex flex-col items-center gap-1">
-      <div className={cn("flex items-center justify-center rounded bg-foreground/5", boxSize)}>
+      <div
+        className={cn(
+          "flex items-center justify-center rounded bg-foreground/5",
+          boxSize
+        )}
+      >
         <QrCode className={cn("text-foreground/60", iconSize)} />
       </div>
     </div>
@@ -108,17 +124,34 @@ function MiniSlip({ label, size = "compact", branding, qr, fields }) {
         <div className={cn("flex w-full items-start", d.headerGap)}>
           {branding.showLogo && (
             <div className={cn("relative shrink-0", d.logo)}>
-              <Image src="/images/logo-black.png" alt="" fill className="object-contain" />
+              <Image
+                src="/images/logo-black.png"
+                alt=""
+                fill
+                className="object-contain"
+              />
             </div>
           )}
           <div>
-            <p className={cn("font-heading leading-tight font-bold text-foreground/85", d.churchName)}>
+            <p
+              className={cn(
+                "font-heading leading-tight font-bold text-foreground/85",
+                d.churchName
+              )}
+            >
               {branding.churchName}
             </p>
-            <p className={cn("leading-tight text-muted-foreground", d.addressText)}>
+            <p
+              className={cn(
+                "leading-tight text-muted-foreground",
+                d.addressText
+              )}
+            >
               {branding.address}
             </p>
-            <p className={cn("font-medium text-foreground/70", d.slipTitle)}>{branding.slipTitle}</p>
+            <p className={cn("font-medium text-foreground/70", d.slipTitle)}>
+              {branding.slipTitle}
+            </p>
           </div>
         </div>
 
@@ -153,30 +186,75 @@ function MiniSlip({ label, size = "compact", branding, qr, fields }) {
         <div className={d.sectionPad}>
           <div className={cn("flex flex-col", d.offeringRowGap)}>
             {OFFERING_CATEGORIES.map((category) => (
-              <div key={category} className="flex items-center justify-between gap-3">
-                <span className={cn("normal-case text-foreground/80", d.offeringLabelText)}>{category}</span>
-                <div className={cn("flex-1 border-b border-dotted border-foreground/40", d.offeringLine)} />
+              <div
+                key={category}
+                className="flex items-center justify-between gap-3"
+              >
+                <span
+                  className={cn(
+                    "normal-case text-foreground/80",
+                    d.offeringLabelText
+                  )}
+                >
+                  {category}
+                </span>
+                <div
+                  className={cn(
+                    "flex-1 border-b border-dotted border-foreground/40",
+                    d.offeringLine
+                  )}
+                />
               </div>
             ))}
           </div>
 
-          <p className={cn("font-medium tracking-wide text-muted-foreground uppercase", d.labelText)}>
+          <p
+            className={cn(
+              "font-medium tracking-wide text-muted-foreground uppercase",
+              d.labelText
+            )}
+          >
             Others
           </p>
           <div className={cn("mt-0.5 flex flex-col", d.offeringRowGap)}>
             {OTHER_OFFERING_CATEGORIES.map((category) => (
-              <div key={category} className="flex items-center justify-between gap-3">
-                <span className={cn("normal-case text-foreground/80", d.offeringLabelText)}>{category}</span>
-                <div className={cn("flex-1 border-b border-dotted border-foreground/40", d.offeringLine)} />
+              <div
+                key={category}
+                className="flex items-center justify-between gap-3"
+              >
+                <span
+                  className={cn(
+                    "normal-case text-foreground/80",
+                    d.offeringLabelText
+                  )}
+                >
+                  {category}
+                </span>
+                <div
+                  className={cn(
+                    "flex-1 border-b border-dotted border-foreground/40",
+                    d.offeringLine
+                  )}
+                />
               </div>
             ))}
           </div>
 
           <div className="mt-1 flex items-center justify-between gap-3 pt-0.5">
-            <span className={cn("font-semibold tracking-wide text-foreground/85 uppercase", d.labelText)}>
+            <span
+              className={cn(
+                "font-semibold tracking-wide text-foreground/85 uppercase",
+                d.labelText
+              )}
+            >
               Total
             </span>
-            <div className={cn("flex-1 border-b border-dotted border-foreground/40", d.offeringLine)} />
+            <div
+              className={cn(
+                "flex-1 border-b border-dotted border-foreground/40",
+                d.offeringLine
+              )}
+            />
           </div>
         </div>
       )}
@@ -214,11 +292,20 @@ function SlipPreview({ size = "compact", branding, qr, fields }) {
       <div
         className={cn(
           "grid grid-cols-2 rounded-xl bg-white ring-1 ring-border sm:grid-cols-5",
-          isFull ? "mt-6 aspect-8.5/5.5 gap-2 p-4 sm:gap-3 sm:p-6" : "mt-4 gap-1.5 p-3"
+          isFull
+            ? "mt-6 aspect-8.5/5.5 gap-2 p-4 sm:gap-3 sm:p-6"
+            : "mt-4 gap-1.5 p-3"
         )}
       >
         {copyLabels.map((label, index) => (
-          <MiniSlip key={index} label={label} size={slipSize} branding={branding} qr={qr} fields={fields} />
+          <MiniSlip
+            key={index}
+            label={label}
+            size={slipSize}
+            branding={branding}
+            qr={qr}
+            fields={fields}
+          />
         ))}
       </div>
     </div>

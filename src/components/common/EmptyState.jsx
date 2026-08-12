@@ -15,8 +15,12 @@ function EmptyState({ icon: Icon, title, description, action, className }) {
       )}
 
       <div className="space-y-1">
-        {title && <p className="text-sm font-medium text-foreground/80">{title}</p>}
-        {description && <p className="text-sm text-muted-foreground">{description}</p>}
+        {title && (
+          <p className="text-sm font-medium text-foreground/80">{title}</p>
+        )}
+        {description && (
+          <p className="text-sm text-muted-foreground">{description}</p>
+        )}
       </div>
 
       {action && <div className="mt-1">{action}</div>}

@@ -20,6 +20,7 @@ import {
   getStats,
   getMemberBreakdown,
   getFinanceSummary,
+  getAttendanceSummary,
   getRecentActivity,
 } from "@/services/dashboard.service"
 import { useAsyncData } from "@/hooks/use-async-data"
@@ -32,23 +33,36 @@ const today = new Date().toLocaleDateString("en-US", {
 })
 
 export default function DashboardPage() {
-  const { stats, memberBreakdown, financeSummary, recentActivity } = useDashboardStore(
+  const {
+    stats,
+    memberBreakdown,
+    financeSummary,
+    attendanceSummary,
+    recentActivity,
+  } = useDashboardStore(
     useShallow((state) => ({
       stats: state.stats,
       memberBreakdown: state.memberBreakdown,
       financeSummary: state.financeSummary,
+      attendanceSummary: state.attendanceSummary,
       recentActivity: state.recentActivity,
     }))
   )
 
   const buildTasks = useCallback(() => {
-    const { setStats, setMemberBreakdown, setFinanceSummary, setRecentActivity } =
-      useDashboardStore.getState()
+    const {
+      setStats,
+      setMemberBreakdown,
+      setFinanceSummary,
+      setAttendanceSummary,
+      setRecentActivity,
+    } = useDashboardStore.getState()
 
     return [
       [getStats, setStats],
       [getMemberBreakdown, setMemberBreakdown],
       [(signal) => getFinanceSummary("6m", signal), setFinanceSummary],
+      [(signal) => getAttendanceSummary("5w", signal), setAttendanceSummary],
       [(signal) => getRecentActivity(5, signal), setRecentActivity],
     ]
   }, [])
@@ -149,7 +163,7 @@ export default function DashboardPage() {
 
           <FinanceChart data={financeSummary} />
 
-          <AttendanceChart />
+          <AttendanceChart data={attendanceSummary} />
         </div>
 
         <div className="mt-4 sm:mt-6">

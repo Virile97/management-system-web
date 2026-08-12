@@ -43,11 +43,16 @@ function TransactionsReport({
   generatedAt = new Date(),
 }) {
   const incomeTotal = transactions.reduce(
-    (sum, transaction) => sum + (Number(transaction.amount) > 0 ? Number(transaction.amount) : 0),
+    (sum, transaction) =>
+      sum + (Number(transaction.amount) > 0 ? Number(transaction.amount) : 0),
     0
   )
   const expenseTotal = transactions.reduce(
-    (sum, transaction) => sum + (Number(transaction.amount) < 0 ? Math.abs(Number(transaction.amount)) : 0),
+    (sum, transaction) =>
+      sum +
+      (Number(transaction.amount) < 0
+        ? Math.abs(Number(transaction.amount))
+        : 0),
     0
   )
   const netTotal = incomeTotal - expenseTotal
@@ -83,10 +88,14 @@ function TransactionsReport({
           <dt className="text-[8px] font-medium tracking-wide text-[#1e2a4a]/45 uppercase">
             Generated
           </dt>
-          <dd className="text-[#1e2a4a]/85">{formatGeneratedAt(generatedAt)}</dd>
+          <dd className="text-[#1e2a4a]/85">
+            {formatGeneratedAt(generatedAt)}
+          </dd>
         </div>
         <div>
-          <dt className="text-[8px] font-medium tracking-wide text-[#1e2a4a]/45 uppercase">Scope</dt>
+          <dt className="text-[8px] font-medium tracking-wide text-[#1e2a4a]/45 uppercase">
+            Scope
+          </dt>
           <dd className="text-[#1e2a4a]/85">{scopeLabel}</dd>
         </div>
         <div>
@@ -113,19 +122,25 @@ function TransactionsReport({
 
       <div className="grid grid-cols-3 gap-2">
         <div className="rounded-md border border-emerald-600/20 bg-emerald-50/60 px-2.5 py-1.5">
-          <p className="text-[8px] font-medium tracking-wide text-emerald-700/70 uppercase">Income</p>
+          <p className="text-[8px] font-medium tracking-wide text-emerald-700/70 uppercase">
+            Income
+          </p>
           <p className="mt-0.5 text-[11px] font-semibold tabular-nums text-emerald-700">
             {currencyFormatter.format(incomeTotal)}
           </p>
         </div>
         <div className="rounded-md border border-red-500/20 bg-red-50/60 px-2.5 py-1.5">
-          <p className="text-[8px] font-medium tracking-wide text-red-600/70 uppercase">Expense</p>
+          <p className="text-[8px] font-medium tracking-wide text-red-600/70 uppercase">
+            Expense
+          </p>
           <p className="mt-0.5 text-[11px] font-semibold tabular-nums text-red-600">
             {currencyFormatter.format(expenseTotal)}
           </p>
         </div>
         <div className="rounded-md border border-[#1e2a4a]/15 bg-[#1e2a4a]/5 px-2.5 py-1.5">
-          <p className="text-[8px] font-medium tracking-wide text-[#1e2a4a]/45 uppercase">Net</p>
+          <p className="text-[8px] font-medium tracking-wide text-[#1e2a4a]/45 uppercase">
+            Net
+          </p>
           <p
             className={`mt-0.5 text-[11px] font-semibold tabular-nums ${
               netTotal >= 0 ? "text-emerald-700" : "text-red-600"
@@ -172,20 +187,35 @@ function TransactionsReport({
               const amount = Number(transaction.amount) || 0
 
               return (
-                <tr key={transaction.id} className="border-b border-[#1e2a4a]/10 align-top">
-                  <td className="py-1.5 pr-1.5 tabular-nums text-[#1e2a4a]/45">{index + 1}</td>
+                <tr
+                  key={transaction.id}
+                  className="border-b border-[#1e2a4a]/10 align-top"
+                >
+                  <td className="py-1.5 pr-1.5 tabular-nums text-[#1e2a4a]/45">
+                    {index + 1}
+                  </td>
                   <td className="py-1.5 pr-2 whitespace-nowrap text-[#1e2a4a]/80">
                     {formatDate(transaction.createdAt || transaction.date)}
                   </td>
                   <td className="py-1.5 pr-2 font-medium text-[#1e2a4a]">
                     {transaction.description || "—"}
                   </td>
-                  <td className="py-1.5 pr-2 text-[#1e2a4a]/80">{transaction.category || "—"}</td>
-                  <td className="py-1.5 pr-2 text-[#1e2a4a]/80">{transaction.type || "—"}</td>
-                  <td className="py-1.5 pr-2 text-[#1e2a4a]/80">{transaction.recordedBy || "—"}</td>
+                  <td className="py-1.5 pr-2 text-[#1e2a4a]/80">
+                    {transaction.category || "—"}
+                  </td>
+                  <td className="py-1.5 pr-2 text-[#1e2a4a]/80">
+                    {transaction.type || "—"}
+                  </td>
+                  <td className="py-1.5 pr-2 text-[#1e2a4a]/80">
+                    {transaction.recordedBy || "—"}
+                  </td>
                   <td
                     className={`py-1.5 text-right font-semibold tabular-nums ${
-                      amount > 0 ? "text-emerald-700" : amount < 0 ? "text-red-600" : "text-[#1e2a4a]"
+                      amount > 0
+                        ? "text-emerald-700"
+                        : amount < 0
+                          ? "text-red-600"
+                          : "text-[#1e2a4a]"
                     }`}
                   >
                     {formatAmount(amount)}
@@ -196,7 +226,10 @@ function TransactionsReport({
           </tbody>
           <tfoot>
             <tr className="border-t-2 border-[#1e2a4a]/20">
-              <td colSpan={6} className="pt-2 pr-2 text-right text-[9px] font-medium text-[#1e2a4a]">
+              <td
+                colSpan={6}
+                className="pt-2 pr-2 text-right text-[9px] font-medium text-[#1e2a4a]"
+              >
                 Net total
               </td>
               <td

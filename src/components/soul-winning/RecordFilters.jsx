@@ -15,7 +15,16 @@ const statusLabels = {
   inactive: "Inactive",
 }
 
-function RecordFilters({ search, onSearchChange, status, onStatusChange, soulWinner, onSoulWinnerChange, soulWinners, resultCount }) {
+function RecordFilters({
+  search,
+  onSearchChange,
+  status,
+  onStatusChange,
+  soulWinner,
+  onSoulWinnerChange,
+  soulWinners,
+  resultCount,
+}) {
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
       <div className="flex flex-col gap-3 sm:flex-1 sm:flex-row sm:items-center sm:gap-3">
@@ -62,7 +71,9 @@ function RecordFilters({ search, onSearchChange, status, onStatusChange, soulWin
         </div>
       </div>
 
-      <p className="shrink-0 text-sm text-muted-foreground">{resultCount} results</p>
+      <p className="shrink-0 text-sm text-muted-foreground">
+        {resultCount} results
+      </p>
     </div>
   )
 }

@@ -32,7 +32,9 @@ function MemberMonthlyOfferingsReport({
         <p className="text-[11px] font-medium tracking-[0.14em] text-[#1e2a4a]/55 uppercase">
           Monthly Offerings Report
         </p>
-        <h1 className="mt-1 font-heading text-2xl font-normal text-[#1e2a4a]">{memberName}</h1>
+        <h1 className="mt-1 font-heading text-2xl font-normal text-[#1e2a4a]">
+          {memberName}
+        </h1>
         <p className="mt-2 text-sm text-[#1e2a4a]/70">
           For firstfruit computation — totals of offerings given each month
         </p>
@@ -40,21 +42,27 @@ function MemberMonthlyOfferingsReport({
 
       <dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
         <div>
-          <dt className="text-[11px] font-medium tracking-wide text-[#1e2a4a]/45 uppercase">Period</dt>
+          <dt className="text-[11px] font-medium tracking-wide text-[#1e2a4a]/45 uppercase">
+            Period
+          </dt>
           <dd className="text-[#1e2a4a]/85">{periodLabel}</dd>
         </div>
         <div>
           <dt className="text-[11px] font-medium tracking-wide text-[#1e2a4a]/45 uppercase">
             Date range
           </dt>
-          <dd className="text-[#1e2a4a]/85">{formatRangeLabel(periodFrom, periodTo)}</dd>
+          <dd className="text-[#1e2a4a]/85">
+            {formatRangeLabel(periodFrom, periodTo)}
+          </dd>
         </div>
         <div className="col-span-2">
           <dt className="text-[11px] font-medium tracking-wide text-[#1e2a4a]/45 uppercase">
             Offering types
           </dt>
           <dd className="text-[#1e2a4a]/85">
-            {offeringTypeLabels.length > 0 ? offeringTypeLabels.join(", ") : "All types"}
+            {offeringTypeLabels.length > 0
+              ? offeringTypeLabels.join(", ")
+              : "All types"}
           </dd>
         </div>
       </dl>
@@ -82,7 +90,9 @@ function MemberMonthlyOfferingsReport({
         </tbody>
         <tfoot>
           <tr className="border-t-2 border-[#1e2a4a]/25">
-            <td className="pt-3 pr-3 text-sm font-medium text-[#1e2a4a]">Total</td>
+            <td className="pt-3 pr-3 text-sm font-medium text-[#1e2a4a]">
+              Total
+            </td>
             <td className="pt-3 pl-3 text-right text-sm font-semibold text-[#1e2a4a]">
               {currencyFormatter.format(total)}
             </td>

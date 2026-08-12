@@ -15,7 +15,8 @@ function useAuthGuard(require, redirectTo) {
   useEffect(() => {
     function check() {
       const isAuthenticated = Boolean(getCurrentUser())
-      const satisfied = require === "authenticated" ? isAuthenticated : !isAuthenticated
+      const satisfied =
+        require === "authenticated" ? isAuthenticated : !isAuthenticated
 
       if (!satisfied) window.location.replace(redirectTo)
     }

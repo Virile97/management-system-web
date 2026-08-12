@@ -37,12 +37,22 @@ function SettingsPageContent() {
     } else {
       params.set("tab", nextTab)
     }
-    router.push(`${pathname}${params.toString() ? `?${params.toString()}` : ""}`, { scroll: false })
+    router.push(
+      `${pathname}${params.toString() ? `?${params.toString()}` : ""}`,
+      { scroll: false }
+    )
   }
 
   const [isPreviewing, setIsPreviewing] = useState(false)
-  const { branding, qr, fields, updateBranding, updateQr, toggleFieldVisibility, reset } =
-    useSlipConfig()
+  const {
+    branding,
+    qr,
+    fields,
+    updateBranding,
+    updateQr,
+    toggleFieldVisibility,
+    reset,
+  } = useSlipConfig()
 
   return (
     <div className="min-h-screen bg-background p-4 sm:p-6 md:p-8">
@@ -66,12 +76,17 @@ function SettingsPageContent() {
                   Offering Slip
                 </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Configure the 10-copy slip printed on short bond paper (8.5 x 5.5 in)
+                  Configure the 10-copy slip printed on short bond paper (8.5 x
+                  5.5 in)
                 </p>
               </div>
 
               <div className="flex flex-wrap items-center gap-3">
-                <Button variant="outline" className="h-10 gap-2 rounded-lg px-4" onClick={reset}>
+                <Button
+                  variant="outline"
+                  className="h-10 gap-2 rounded-lg px-4"
+                  onClick={reset}
+                >
                   <RotateCcw className="h-4 w-4" />
                   Reset
                 </Button>
@@ -99,18 +114,33 @@ function SettingsPageContent() {
 
             {isPreviewing ? (
               <div className="mt-6">
-                <SlipPreview size="full" branding={branding} qr={qr} fields={fields} />
+                <SlipPreview
+                  size="full"
+                  branding={branding}
+                  qr={qr}
+                  fields={fields}
+                />
               </div>
             ) : (
               <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
                 <div className="flex flex-col gap-6">
-                  <BrandingSettings branding={branding} onChange={updateBranding} />
+                  <BrandingSettings
+                    branding={branding}
+                    onChange={updateBranding}
+                  />
                   <QRSettings qr={qr} onChange={updateQr} />
-                  <SlipFields fields={fields} onToggleVisibility={toggleFieldVisibility} />
+                  <SlipFields
+                    fields={fields}
+                    onToggleVisibility={toggleFieldVisibility}
+                  />
                 </div>
 
                 <div className="lg:sticky lg:top-8 lg:self-start">
-                  <SingleSlipPreview branding={branding} qr={qr} fields={fields} />
+                  <SingleSlipPreview
+                    branding={branding}
+                    qr={qr}
+                    fields={fields}
+                  />
                 </div>
               </div>
             )}
@@ -119,7 +149,13 @@ function SettingsPageContent() {
               <div className="print-slip-page">
                 <div className="print-slip-sheet grid grid-cols-5 grid-rows-2 gap-1">
                   {Array.from({ length: 10 }, (_, index) => (
-                    <MiniSlip key={index} size="print" branding={branding} qr={qr} fields={fields} />
+                    <MiniSlip
+                      key={index}
+                      size="print"
+                      branding={branding}
+                      qr={qr}
+                      fields={fields}
+                    />
                   ))}
                 </div>
               </div>

@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server"
 
 import { api } from "@/lib/axios"
-import { setAccessTokenCookie, forwardBackendSetCookie, getSessionLoginAt } from "@/lib/session"
+import {
+  setAccessTokenCookie,
+  forwardBackendSetCookie,
+  getSessionLoginAt,
+} from "@/lib/session"
 import { API_ENDPOINTS } from "@/utils/constants"
 
 /**
@@ -21,14 +25,20 @@ export async function POST(request) {
 
     const token = backendRes.data?.data?.token
     if (!token) {
-      return NextResponse.json({ success: false, message: "Refresh failed" }, { status: 401 })
+      return NextResponse.json(
+        { success: false, message: "Refresh failed" },
+        { status: 401 }
+      )
     }
 
     const res = NextResponse.json({ success: true, data: { refreshed: true } })
 
     // Preserve the original loginAt so the absolute session cap keeps
     // counting from first login rather than resetting on every refresh.
-    setAccessTokenCookie(res, { token, loginAt: getSessionLoginAt() ?? Date.now() })
+    setAccessTokenCookie(res, {
+      token,
+      loginAt: getSessionLoginAt() ?? Date.now(),
+    })
 
     // The backend may rotate the refresh token itself — relay whatever it sets.
     forwardBackendSetCookie(res, backendRes)

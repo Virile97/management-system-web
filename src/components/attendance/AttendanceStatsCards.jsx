@@ -41,7 +41,12 @@ function AttendanceStatsCards({ stats }) {
             {card.label}
           </span>
 
-          <div className={cn("mt-3 font-heading text-2xl font-normal text-foreground/85", card.valueClassName)}>
+          <div
+            className={cn(
+              "mt-3 font-heading text-2xl font-normal text-foreground/85",
+              card.valueClassName
+            )}
+          >
             {card.value}
           </div>
 

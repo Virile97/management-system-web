@@ -1,7 +1,13 @@
 "use client"
 
 import { useState } from "react"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { verifyFinanceAccess } from "@/services/memberFinance.service"
@@ -38,7 +44,9 @@ function FinanceAccessModal({ open, onOpenChange, onUnlocked }) {
       // "the user dismissed it" so the two outcomes can be told apart.
       onUnlocked()
     } catch (err) {
-      setError(err?.message || "Unable to verify the access code. Please try again.")
+      setError(
+        err?.message || "Unable to verify the access code. Please try again."
+      )
     } finally {
       setIsSubmitting(false)
     }
@@ -51,7 +59,9 @@ function FinanceAccessModal({ open, onOpenChange, onUnlocked }) {
           <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-50">
             <Lock className="h-5 w-5 text-amber-500" />
           </div>
-          <DialogTitle className="font-heading text-lg font-medium">Finance Access</DialogTitle>
+          <DialogTitle className="font-heading text-lg font-medium">
+            Finance Access
+          </DialogTitle>
           <DialogDescription className="text-center">
             Enter your admin code to view financial records for this member.
           </DialogDescription>
@@ -75,7 +85,11 @@ function FinanceAccessModal({ open, onOpenChange, onUnlocked }) {
               aria-label={isRevealed ? "Hide access code" : "Show access code"}
               className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground hover:text-foreground"
             >
-              {isRevealed ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              {isRevealed ? (
+                <EyeOff className="h-4 w-4" />
+              ) : (
+                <Eye className="h-4 w-4" />
+              )}
             </button>
           </div>
 

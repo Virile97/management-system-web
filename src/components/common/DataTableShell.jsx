@@ -38,13 +38,21 @@ function DataTableShell({
   onPageChange,
 }) {
   if (isLoading && !toolbar) {
-    return <ListCardSkeleton rows={pageSize} className="overflow-hidden rounded-2xl p-4 sm:p-6" />
+    return (
+      <ListCardSkeleton
+        rows={pageSize}
+        className="overflow-hidden rounded-2xl p-4 sm:p-6"
+      />
+    )
   }
 
   const from = total === 0 ? 0 : (page - 1) * pageSize + 1
   const to = (page - 1) * pageSize + rows.length
 
-  const allSelected = enableSelection && rows.length > 0 && rows.every((row) => selected.has(getRowId(row)))
+  const allSelected =
+    enableSelection &&
+    rows.length > 0 &&
+    rows.every((row) => selected.has(getRowId(row)))
 
   const selection = enableSelection
     ? {
@@ -60,9 +68,17 @@ function DataTableShell({
       {toolbar}
 
       {isLoading ? (
-        <ListCardSkeleton rows={pageSize} className="border-0 p-4 shadow-none sm:p-6" />
+        <ListCardSkeleton
+          rows={pageSize}
+          className="border-0 p-4 shadow-none sm:p-6"
+        />
       ) : rows.length === 0 ? (
-        <EmptyState icon={emptyIcon} title={emptyTitle} description={emptyDescription} className="py-16" />
+        <EmptyState
+          icon={emptyIcon}
+          title={emptyTitle}
+          description={emptyDescription}
+          className="py-16"
+        />
       ) : (
         <>
           <table className="hidden w-full border-collapse md:table">
@@ -73,7 +89,10 @@ function DataTableShell({
           {enableSelection && (
             <div className="border-b border-border bg-muted/60 px-4 py-3 md:hidden">
               <label className="flex items-center gap-3 text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                <Checkbox checked={allSelected} onCheckedChange={selection.onToggleAll} />
+                <Checkbox
+                  checked={allSelected}
+                  onCheckedChange={selection.onToggleAll}
+                />
                 Select all
               </label>
             </div>

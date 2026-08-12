@@ -1,18 +1,32 @@
 "use client"
 
 import { useState } from "react"
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover"
 import { Checkbox } from "@/components/ui/checkbox"
 import { cn } from "@/lib/utils"
 import { ListFilter, X } from "lucide-react"
 
-function MultiSelectDropdown({ label = "Filter", options, selected, onChange, className }) {
+function MultiSelectDropdown({
+  label = "Filter",
+  options,
+  selected,
+  onChange,
+  className,
+}) {
   const [open, setOpen] = useState(false)
 
   const hasSelection = selected.length > 0 && selected.length < options.length
 
   function toggleOption(option) {
-    onChange(selected.includes(option) ? selected.filter((item) => item !== option) : [...selected, option])
+    onChange(
+      selected.includes(option)
+        ? selected.filter((item) => item !== option)
+        : [...selected, option]
+    )
   }
 
   function clearSelection(event) {

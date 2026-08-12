@@ -22,9 +22,21 @@ import {
 } from "@/components/ui/select"
 
 const ROLE_OPTIONS = [
-  { value: "ADMIN", label: "Administrator", description: "Full access to all settings and data" },
-  { value: "FINANCE_ADMIN", label: "Finance Admin", description: "Manage finances and view reports" },
-  { value: "USER", label: "Viewer — Read-only access", description: "Read-only access" },
+  {
+    value: "ADMIN",
+    label: "Administrator",
+    description: "Full access to all settings and data",
+  },
+  {
+    value: "FINANCE_ADMIN",
+    label: "Finance Admin",
+    description: "Manage finances and view reports",
+  },
+  {
+    value: "USER",
+    label: "Viewer — Read-only access",
+    description: "Read-only access",
+  },
 ]
 
 function AddUserDialog({ open, onOpenChange }) {
@@ -33,10 +45,15 @@ function AddUserDialog({ open, onOpenChange }) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="gap-0 overflow-hidden p-0 sm:max-w-md" showCloseButton={false}>
+      <DialogContent
+        className="gap-0 overflow-hidden p-0 sm:max-w-md"
+        showCloseButton={false}
+      >
         <div className="relative flex items-center gap-2.5 rounded-t-xl bg-[#1e2a4a] px-4 py-4">
           <User className="h-4 w-4 text-white" />
-          <span className="font-heading text-base font-medium text-white">Add New User</span>
+          <span className="font-heading text-base font-medium text-white">
+            Add New User
+          </span>
           <DialogClose className="absolute top-1/2 right-4 -translate-y-1/2 text-white/70 hover:text-white">
             <X className="h-4 w-4" />
             <span className="sr-only">Close</span>
@@ -51,12 +68,20 @@ function AddUserDialog({ open, onOpenChange }) {
 
           <div className="space-y-1.5">
             <Label htmlFor="add-user-email">Email Address *</Label>
-            <Input id="add-user-email" type="email" placeholder="user@church.org" />
+            <Input
+              id="add-user-email"
+              type="email"
+              placeholder="user@church.org"
+            />
           </div>
 
           <div className="space-y-1.5">
             <Label htmlFor="add-user-contact">Contact Number *</Label>
-            <Input id="add-user-contact" type="tel" placeholder="+233 24 000 0000" />
+            <Input
+              id="add-user-contact"
+              type="tel"
+              placeholder="+233 24 000 0000"
+            />
           </div>
 
           <div className="space-y-1.5">
@@ -74,12 +99,15 @@ function AddUserDialog({ open, onOpenChange }) {
               </SelectContent>
             </Select>
             {selectedRole && (
-              <p className="text-xs text-muted-foreground">{selectedRole.description}</p>
+              <p className="text-xs text-muted-foreground">
+                {selectedRole.description}
+              </p>
             )}
           </div>
 
           <DialogDescription className="rounded-lg bg-muted px-3 py-2 text-xs">
-            Adding users isn't available yet. This form is a preview of what's coming.
+            Adding users isn't available yet. This form is a preview of what's
+            coming.
           </DialogDescription>
         </form>
 

@@ -3,14 +3,32 @@ import { EmptyState } from "@/components/common/EmptyState"
 import { cn } from "@/lib/utils"
 import { Users, UserCog, DollarSign, Calendar, Clock } from "lucide-react"
 
-const DEFAULT_META = { icon: Clock, iconClassName: "bg-muted text-muted-foreground" }
+const DEFAULT_META = {
+  icon: Clock,
+  iconClassName: "bg-muted text-muted-foreground",
+}
 
 const ACTIVITY_META = {
-  MEMBER_REGISTERED: { icon: Users, iconClassName: "bg-muted text-muted-foreground" },
-  MEMBER_STATUS_CHANGED: { icon: UserCog, iconClassName: "bg-muted text-muted-foreground" },
-  MEMBER_UPDATED: { icon: UserCog, iconClassName: "bg-muted text-muted-foreground" },
-  INCOME_RECORDED: { icon: DollarSign, iconClassName: "bg-amber-50/60 text-amber-500" },
-  EXPENSE_RECORDED: { icon: DollarSign, iconClassName: "bg-amber-50/60 text-amber-500" },
+  MEMBER_REGISTERED: {
+    icon: Users,
+    iconClassName: "bg-muted text-muted-foreground",
+  },
+  MEMBER_STATUS_CHANGED: {
+    icon: UserCog,
+    iconClassName: "bg-muted text-muted-foreground",
+  },
+  MEMBER_UPDATED: {
+    icon: UserCog,
+    iconClassName: "bg-muted text-muted-foreground",
+  },
+  INCOME_RECORDED: {
+    icon: DollarSign,
+    iconClassName: "bg-amber-50/60 text-amber-500",
+  },
+  EXPENSE_RECORDED: {
+    icon: DollarSign,
+    iconClassName: "bg-amber-50/60 text-amber-500",
+  },
 }
 
 function formatRelativeTime(timestamp) {
@@ -19,10 +37,12 @@ function formatRelativeTime(timestamp) {
   const diffMinutes = Math.round(diffMs / 60000)
 
   if (diffMinutes < 1) return "Just now"
-  if (diffMinutes < 60) return `${diffMinutes} min${diffMinutes === 1 ? "" : "s"} ago`
+  if (diffMinutes < 60)
+    return `${diffMinutes} min${diffMinutes === 1 ? "" : "s"} ago`
 
   const diffHours = Math.round(diffMinutes / 60)
-  if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? "" : "s"} ago`
+  if (diffHours < 24)
+    return `${diffHours} hour${diffHours === 1 ? "" : "s"} ago`
 
   const diffDays = Math.round(diffHours / 24)
   if (diffDays === 1) return "Yesterday"
@@ -67,8 +87,12 @@ function RecentActivity({ items = [] }) {
                       <meta.icon className="h-4 w-4" />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-sm font-normal text-foreground/80">{item.message}</p>
-                      <p className="truncate text-xs text-muted-foreground">{item.detail}</p>
+                      <p className="text-sm font-normal text-foreground/80">
+                        {item.message}
+                      </p>
+                      <p className="truncate text-xs text-muted-foreground">
+                        {item.detail}
+                      </p>
                     </div>
                   </div>
 

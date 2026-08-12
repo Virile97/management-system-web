@@ -28,17 +28,26 @@ function SoulWinnersTable({ soulWinners }) {
         </thead>
         <tbody>
           {soulWinners.map((winner) => (
-            <tr key={winner.name} className="border-b border-border last:border-0">
+            <tr
+              key={winner.name}
+              className="border-b border-border last:border-0"
+            >
               <td className="py-4 pl-4">
                 <div className="flex items-center gap-3">
                   <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#1e2a4a] text-xs font-semibold text-white">
                     {initials(winner.name)}
                   </div>
-                  <p className="text-sm font-medium text-foreground/85">{winner.name}</p>
+                  <p className="text-sm font-medium text-foreground/85">
+                    {winner.name}
+                  </p>
                 </div>
               </td>
-              <td className="py-4 pr-4 text-sm text-foreground/80">{winner.email}</td>
-              <td className="py-4 pr-4 text-sm text-foreground/80">{winner.phone}</td>
+              <td className="py-4 pr-4 text-sm text-foreground/80">
+                {winner.email}
+              </td>
+              <td className="py-4 pr-4 text-sm text-foreground/80">
+                {winner.phone}
+              </td>
             </tr>
           ))}
         </tbody>

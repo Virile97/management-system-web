@@ -63,7 +63,9 @@ function BrandingSettings({ branding, onChange }) {
                 onClick={() => onChange("accent", color.name)}
                 className={cn(
                   "h-7 w-7 shrink-0 rounded-full ring-2 ring-offset-2 ring-offset-card transition-all",
-                  branding.accent === color.name ? "ring-foreground/60" : "ring-transparent"
+                  branding.accent === color.name
+                    ? "ring-foreground/60"
+                    : "ring-transparent"
                 )}
                 style={{ backgroundColor: color.value }}
               />

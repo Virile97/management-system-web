@@ -6,11 +6,11 @@ const initialState = {
   summary: null,
   levels: [],
   meta: { page: 1, limit: 20, total: 0, totalPages: 1 },
-  // { date, level, search, page } the persisted list was fetched for
+  // { from, to, level, search, page } the persisted list was fetched for
   query: null,
-  // id -> attendance row for the active date; powers the search fast-path
+  // id -> attendance row for the active range; powers the search fast-path
   cache: {},
-  cacheDate: null,
+  cacheKey: null,
 }
 
 /**
@@ -36,21 +36,21 @@ const useAttendanceStore = create(
       setLevels: (levels) => set({ levels }),
 
       /**
-       * Accumulates rows for a single calendar day. Switching date wipes the
-       * prior cache so search never mixes times from another day.
+       * Accumulates rows for one from/to window. Switching range wipes the
+       * prior cache so search never mixes times from another filter.
        */
-      cacheItems: (items, date) =>
+      cacheItems: (items, cacheKey) =>
         set((state) => {
-          const cache = state.cacheDate === date ? { ...state.cache } : {}
+          const cache = state.cacheKey === cacheKey ? { ...state.cache } : {}
           for (const item of items) {
             if (item?.id != null) cache[item.id] = item
           }
-          return { cache, cacheDate: date }
+          return { cache, cacheKey }
         }),
 
-      getCachedItems: (date) => {
+      getCachedItems: (cacheKey) => {
         const state = get()
-        if (!date || state.cacheDate !== date) return []
+        if (!cacheKey || state.cacheKey !== cacheKey) return []
         return Object.values(state.cache)
       },
 
@@ -60,7 +60,8 @@ const useAttendanceStore = create(
             item.id === memberId ? { ...item, ...patch } : item
           )
           const cache = { ...state.cache }
-          if (cache[memberId]) cache[memberId] = { ...cache[memberId], ...patch }
+          if (cache[memberId])
+            cache[memberId] = { ...cache[memberId], ...patch }
           return { items: nextItems, cache }
         }),
 

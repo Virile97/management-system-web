@@ -184,7 +184,10 @@ function SoulWinningPageContent() {
     } else {
       params.set("section", nextSection)
     }
-    router.push(`${pathname}${params.toString() ? `?${params.toString()}` : ""}`, { scroll: false })
+    router.push(
+      `${pathname}${params.toString() ? `?${params.toString()}` : ""}`,
+      { scroll: false }
+    )
   }
 
   const [period, setPeriod] = useState("This Month")
@@ -205,7 +208,9 @@ function SoulWinningPageContent() {
 
   const filteredRecords = records
     .filter((record) => status === "all" || record.status === statusMap[status])
-    .filter((record) => soulWinner === "all" || record.soulWinner === soulWinner)
+    .filter(
+      (record) => soulWinner === "all" || record.soulWinner === soulWinner
+    )
     .filter((record) => {
       const query = search.trim().toLowerCase()
       if (!query) return true
@@ -298,7 +303,10 @@ function SoulWinningPageContent() {
         */}
       </div>
 
-      <RecordSoulWonModal open={isRecordSoulOpen} onOpenChange={setIsRecordSoulOpen} />
+      <RecordSoulWonModal
+        open={isRecordSoulOpen}
+        onOpenChange={setIsRecordSoulOpen}
+      />
       <DateRangeFilterModal
         open={isDateRangeOpen}
         onOpenChange={setIsDateRangeOpen}

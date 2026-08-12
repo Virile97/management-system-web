@@ -46,7 +46,10 @@ function digestsMatch(given, expected) {
 export async function GET() {
   const token = getSessionToken()
   if (!token) {
-    return NextResponse.json({ success: false, message: "Not authenticated" }, { status: 401 })
+    return NextResponse.json(
+      { success: false, message: "Not authenticated" },
+      { status: 401 }
+    )
   }
 
   const now = Date.now()
@@ -61,13 +64,20 @@ export async function GET() {
 export async function POST(request) {
   const token = getSessionToken()
   if (!token) {
-    return NextResponse.json({ success: false, message: "Not authenticated" }, { status: 401 })
+    return NextResponse.json(
+      { success: false, message: "Not authenticated" },
+      { status: 401 }
+    )
   }
 
   const expectedCode = process.env.FINANCE_ACCESS_CODE
   if (!expectedCode) {
     return NextResponse.json(
-      { success: false, message: "Finance access is not configured. Contact your administrator." },
+      {
+        success: false,
+        message:
+          "Finance access is not configured. Contact your administrator.",
+      },
       { status: 503 }
     )
   }
@@ -89,7 +99,10 @@ export async function POST(request) {
   if (!digest || !digestsMatch(digest, digestFor(nonce, expectedCode))) {
     // 403 rather than 401: the session is valid, only the extra code is wrong,
     // and a 401 would put the client's fetch layer into its refresh/logout path.
-    return NextResponse.json({ success: false, message: "Incorrect access code" }, { status: 403 })
+    return NextResponse.json(
+      { success: false, message: "Incorrect access code" },
+      { status: 403 }
+    )
   }
 
   return NextResponse.json({ success: true, data: { unlocked: true } })

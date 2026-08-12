@@ -48,7 +48,12 @@ function MemberQrCard({ member, size = "full", className }) {
         />
       </div>
 
-      <p className={cn("w-full truncate font-medium text-[#1e2a4a]", styles.name)}>
+      <p
+        className={cn(
+          "w-full truncate font-medium text-[#1e2a4a]",
+          styles.name
+        )}
+      >
         {member.name}
       </p>
     </div>

@@ -75,21 +75,33 @@ function Ellipsis() {
   )
 }
 
-function Pagination({ page = 1, totalPages = 2, from = 1, to = 10, total = 12, onPageChange }) {
+function Pagination({
+  page = 1,
+  totalPages = 2,
+  from = 1,
+  to = 10,
+  total = 12,
+  onPageChange,
+}) {
   const safeTotalPages = Math.max(1, totalPages)
   const visiblePages = getVisiblePages(page, safeTotalPages)
   const firstVisible = visiblePages[0] ?? 1
   const lastVisible = visiblePages[visiblePages.length - 1] ?? 1
   const showLeadingEllipsis = firstVisible > 1
   const showTrailingEllipsis = lastVisible < safeTotalPages
-  const pageOptions = Array.from({ length: safeTotalPages }, (_, index) => index + 1)
+  const pageOptions = Array.from(
+    { length: safeTotalPages },
+    (_, index) => index + 1
+  )
 
   return (
     <div className="flex flex-col gap-3 border-t border-border px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
       <p className="text-sm text-muted-foreground">
-        Showing <span className="font-medium text-foreground/80">{from}-{to}</span>
-        {" "}of{" "}
-        <span className="font-medium text-foreground/80">{total}</span>
+        Showing{" "}
+        <span className="font-medium text-foreground/80">
+          {from}-{to}
+        </span>{" "}
+        of <span className="font-medium text-foreground/80">{total}</span>
       </p>
 
       <div className="flex flex-wrap items-center gap-3">
@@ -110,7 +122,12 @@ function Pagination({ page = 1, totalPages = 2, from = 1, to = 10, total = 12, o
             {showLeadingEllipsis && <Ellipsis />}
 
             {visiblePages.map((number) => (
-              <PageButton key={number} number={number} page={page} onPageChange={onPageChange} />
+              <PageButton
+                key={number}
+                number={number}
+                page={page}
+                onPageChange={onPageChange}
+              />
             ))}
 
             {showTrailingEllipsis && <Ellipsis />}
@@ -146,7 +163,11 @@ function Pagination({ page = 1, totalPages = 2, from = 1, to = 10, total = 12, o
               </SelectTrigger>
               <SelectContent align="end" className="max-h-60 min-w-20">
                 {pageOptions.map((number) => (
-                  <SelectItem key={number} value={String(number)} className="tabular-nums">
+                  <SelectItem
+                    key={number}
+                    value={String(number)}
+                    className="tabular-nums"
+                  >
                     {number}
                   </SelectItem>
                 ))}

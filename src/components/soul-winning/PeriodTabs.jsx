@@ -1,7 +1,13 @@
 import { cn } from "@/lib/utils"
 import { X } from "lucide-react"
 
-const DEFAULT_PERIODS = ["Today", "This Month", "This Year", "All Time", "Custom"]
+const DEFAULT_PERIODS = [
+  "Today",
+  "This Month",
+  "This Year",
+  "All Time",
+  "Custom",
+]
 
 function PeriodTabs({
   active,
@@ -52,7 +58,9 @@ function PeriodTabs({
       </div>
 
       {recordCount != null && (
-        <p className="text-sm text-muted-foreground">{recordCount} records in period</p>
+        <p className="text-sm text-muted-foreground">
+          {recordCount} records in period
+        </p>
       )}
     </div>
   )

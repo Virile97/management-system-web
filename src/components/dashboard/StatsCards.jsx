@@ -2,7 +2,14 @@ import { Card } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 import { TrendingUp, TrendingDown } from "lucide-react"
 
-function StatCard({ label, value, icon: Icon, iconClassName, trend, trendDirection = "up" }) {
+function StatCard({
+  label,
+  value,
+  icon: Icon,
+  iconClassName,
+  trend,
+  trendDirection = "up",
+}) {
   const isUp = trendDirection === "up"
 
   return (
@@ -32,7 +39,11 @@ function StatCard({ label, value, icon: Icon, iconClassName, trend, trendDirecti
             isUp ? "text-emerald-500/90" : "text-muted-foreground"
           )}
         >
-          {isUp ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
+          {isUp ? (
+            <TrendingUp className="h-3.5 w-3.5" />
+          ) : (
+            <TrendingDown className="h-3.5 w-3.5" />
+          )}
           <span>{trend}</span>
         </div>
       )}

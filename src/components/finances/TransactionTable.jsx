@@ -10,14 +10,24 @@ import { DateRangeFilterModal } from "@/components/soul-winning/DateRangeFilterM
 import { cn } from "@/lib/utils"
 import { toDateRangeStrings, toDatePoint } from "@/utils/helpers"
 import { Button } from "@/components/ui/button"
-import { Search, ArrowUpRight, ArrowDownRight, Receipt, Trash2 } from "lucide-react"
+import {
+  Search,
+  ArrowUpRight,
+  ArrowDownRight,
+  Receipt,
+  Trash2,
+} from "lucide-react"
 
 const FILTERS = ["All", "Income", "Expense"]
 
 // dateFrom/dateTo are "YYYY-MM-DD" strings (or ""); this seeds the modal's
 // initial view/selection from whichever bound is set (defaulting to today).
 function toModalRange(dateFrom, dateTo) {
-  const seed = dateFrom ? new Date(dateFrom) : dateTo ? new Date(dateTo) : new Date()
+  const seed = dateFrom
+    ? new Date(dateFrom)
+    : dateTo
+      ? new Date(dateTo)
+      : new Date()
 
   return {
     year: seed.getFullYear(),
@@ -45,7 +55,11 @@ const currencyFormatter = new Intl.NumberFormat("en-PH", {
 
 function formatDate(value) {
   if (!value) return "—"
-  return new Date(value).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+  return new Date(value).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  })
 }
 
 function TransactionTable({
@@ -76,7 +90,8 @@ function TransactionTable({
 
   const selectedCount = selected?.size ?? 0
   const hasDateRange = Boolean(dateFrom || dateTo)
-  const hasActiveFilters = activeFilter !== "All" || Boolean(search) || hasDateRange
+  const hasActiveFilters =
+    activeFilter !== "All" || Boolean(search) || hasDateRange
   // Nothing to filter — no transactions exist at all (not just for the
   // current filter combination) — so disable the controls rather than let
   // the user open filters with no possible effect.
@@ -156,7 +171,10 @@ function TransactionTable({
       renderTableHead={(selection) => (
         <tr className="border-y border-border bg-muted/60">
           <th className="w-10 py-3 pl-4">
-            <Checkbox checked={selection.allSelected} onCheckedChange={selection.onToggleAll} />
+            <Checkbox
+              checked={selection.allSelected}
+              onCheckedChange={selection.onToggleAll}
+            />
           </th>
           <th className="py-3 pr-4 text-left text-xs font-medium tracking-wide text-muted-foreground uppercase">
             Date
@@ -183,7 +201,10 @@ function TransactionTable({
       )}
       renderDesktopRows={(rows, selection) =>
         rows.map((transaction) => (
-          <tr key={transaction.id} className="border-b border-border last:border-0">
+          <tr
+            key={transaction.id}
+            className="border-b border-border last:border-0"
+          >
             <td className="w-10 py-4 pl-4">
               <Checkbox
                 checked={selection.isSelected(transaction)}
@@ -207,12 +228,16 @@ function TransactionTable({
                 {transaction.category}
               </span>
             </td>
-            <td className="py-4 pr-4 text-sm text-foreground/80">{transaction.recordedBy}</td>
+            <td className="py-4 pr-4 text-sm text-foreground/80">
+              {transaction.recordedBy}
+            </td>
             <td className="py-4 pr-4">
               <span
                 className={cn(
                   "inline-flex items-center gap-1 text-sm font-medium",
-                  transaction.type === "Income" ? "text-emerald-600" : "text-red-500"
+                  transaction.type === "Income"
+                    ? "text-emerald-600"
+                    : "text-red-500"
                 )}
               >
                 {transaction.type === "Income" ? (
@@ -257,7 +282,9 @@ function TransactionTable({
                   checked={selection.isSelected(transaction)}
                   onCheckedChange={() => selection.toggle(transaction)}
                 />
-                <p className="text-sm font-medium text-foreground/85">{transaction.description}</p>
+                <p className="text-sm font-medium text-foreground/85">
+                  {transaction.description}
+                </p>
               </div>
               <span
                 className={cn(
@@ -284,7 +311,9 @@ function TransactionTable({
               <span
                 className={cn(
                   "inline-flex items-center gap-1 text-xs font-medium",
-                  transaction.type === "Income" ? "text-emerald-600" : "text-red-500"
+                  transaction.type === "Income"
+                    ? "text-emerald-600"
+                    : "text-red-500"
                 )}
               >
                 {transaction.type === "Income" ? (

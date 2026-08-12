@@ -27,7 +27,14 @@ function initials(name) {
     .toUpperCase()
 }
 
-function MemberCard({ member, checked, onCheckedChange, onPrint, onEdit, onOpen }) {
+function MemberCard({
+  member,
+  checked,
+  onCheckedChange,
+  onPrint,
+  onEdit,
+  onOpen,
+}) {
   return (
     <div
       className={cn(
@@ -46,7 +53,9 @@ function MemberCard({ member, checked, onCheckedChange, onPrint, onEdit, onOpen 
             {initials(member.name)}
           </div>
           <div className="min-w-0">
-            <p className="truncate text-sm font-medium text-foreground/85">{member.name}</p>
+            <p className="truncate text-sm font-medium text-foreground/85">
+              {member.name}
+            </p>
           </div>
         </div>
 
@@ -56,7 +65,12 @@ function MemberCard({ member, checked, onCheckedChange, onPrint, onEdit, onOpen 
             statusStyles[member.status] || defaultStatusStyle
           )}
         >
-          <span className={cn("h-1.5 w-1.5 rounded-full", dotStyles[member.status] || defaultDotStyle)} />
+          <span
+            className={cn(
+              "h-1.5 w-1.5 rounded-full",
+              dotStyles[member.status] || defaultDotStyle
+            )}
+          />
           {member.status}
         </span>
       </div>
@@ -72,7 +86,11 @@ function MemberCard({ member, checked, onCheckedChange, onPrint, onEdit, onOpen 
           {member.groups?.length > 0 ? (
             <div className="mt-0.5 flex flex-wrap gap-1">
               {member.groups.map((g) => (
-                <Badge key={g.role} variant="outline" className="text-muted-foreground">
+                <Badge
+                  key={g.role}
+                  variant="outline"
+                  className="text-muted-foreground"
+                >
                   {g.role}
                 </Badge>
               ))}
@@ -87,7 +105,10 @@ function MemberCard({ member, checked, onCheckedChange, onPrint, onEdit, onOpen 
         </div>
       </div>
 
-      <div className="flex items-center gap-3 pl-13" onClick={(event) => event.stopPropagation()}>
+      <div
+        className="flex items-center gap-3 pl-13"
+        onClick={(event) => event.stopPropagation()}
+      >
         <button
           type="button"
           onClick={() => onEdit?.(member)}

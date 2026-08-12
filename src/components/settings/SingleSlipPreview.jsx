@@ -8,7 +8,11 @@ function SingleSlipPreview({ branding, qr, fields }) {
         Single Slip Preview
       </p>
 
-      <div className={cn("mx-auto mt-4 max-w-lg rounded-xl bg-white ring-1 ring-border")}>
+      <div
+        className={cn(
+          "mx-auto mt-4 max-w-lg rounded-xl bg-white ring-1 ring-border"
+        )}
+      >
         <MiniSlip size="full" branding={branding} qr={qr} fields={fields} />
       </div>
     </div>

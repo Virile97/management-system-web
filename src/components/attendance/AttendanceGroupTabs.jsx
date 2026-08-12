@@ -29,9 +29,16 @@ function AttendanceGroupTabs({ groups, active, onChange }) {
                 : "border-border text-muted-foreground hover:text-foreground"
             )}
           >
-            <span className={cn("h-1.5 w-1.5 rounded-full", dotColors[name] ?? "bg-foreground/50")} />
+            <span
+              className={cn(
+                "h-1.5 w-1.5 rounded-full",
+                dotColors[name] ?? "bg-foreground/50"
+              )}
+            />
             {label}
-            <span className={isActive ? "text-white/70" : "text-muted-foreground"}>
+            <span
+              className={isActive ? "text-white/70" : "text-muted-foreground"}
+            >
               ({group.count})
             </span>
           </button>

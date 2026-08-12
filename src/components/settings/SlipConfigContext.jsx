@@ -4,9 +4,27 @@ import { createContext, useContext, useState } from "react"
 
 const defaultFields = [
   { key: "date", label: "Date", type: "date", width: "full", visible: true },
-  { key: "memberName", label: "Member Name", type: "text", width: "full", visible: true },
-  { key: "offeringType", label: "Offering Type", type: "select", width: "full", visible: true },
-  { key: "amount", label: "Amount (GHS)", type: "amount", width: "full", visible: true },
+  {
+    key: "memberName",
+    label: "Member Name",
+    type: "text",
+    width: "full",
+    visible: true,
+  },
+  {
+    key: "offeringType",
+    label: "Offering Type",
+    type: "select",
+    width: "full",
+    visible: true,
+  },
+  {
+    key: "amount",
+    label: "Amount (GHS)",
+    type: "amount",
+    width: "full",
+    visible: true,
+  },
 ]
 
 const initialBranding = {
@@ -41,7 +59,9 @@ function SlipConfigProvider({ children }) {
 
   function toggleFieldVisibility(key) {
     setFields((prev) =>
-      prev.map((field) => (field.key === key ? { ...field, visible: !field.visible } : field))
+      prev.map((field) =>
+        field.key === key ? { ...field, visible: !field.visible } : field
+      )
     )
   }
 
@@ -53,7 +73,15 @@ function SlipConfigProvider({ children }) {
 
   return (
     <SlipConfigContext.Provider
-      value={{ branding, qr, fields, updateBranding, updateQr, toggleFieldVisibility, reset }}
+      value={{
+        branding,
+        qr,
+        fields,
+        updateBranding,
+        updateQr,
+        toggleFieldVisibility,
+        reset,
+      }}
     >
       {children}
     </SlipConfigContext.Provider>

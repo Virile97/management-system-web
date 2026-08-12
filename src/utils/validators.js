@@ -35,7 +35,8 @@ function isValidPhilippinePhoneNumber(value) {
  * decimals, or signs), within a sane human range.
  */
 function isValidAge(value) {
-  if (typeof value === "number") return Number.isInteger(value) && value >= 0 && value <= 120
+  if (typeof value === "number")
+    return Number.isInteger(value) && value >= 0 && value <= 120
 
   if (typeof value !== "string") return false
 
@@ -47,7 +48,7 @@ function isValidAge(value) {
 }
 
 /**
- * Letters, spaces, hyphens, and apostrophes only (covers names like "Mary Anne" or "D'Souza") 
+ * Letters, spaces, hyphens, and apostrophes only (covers names like "Mary Anne" or "D'Souza")
  * — no digits or other symbols
  */
 const NAME_REGEX = /^[a-zA-Z]+(?:[ '-][a-zA-Z]+)*$/
@@ -74,22 +75,31 @@ function isValidName(value, { optional = false } = {}) {
 const MEMBER_FORM_VALIDATORS = {
   firstName: {
     required: "First name is required",
-    validate: (value) => (!isValidName(value) ? "Letters only, no numbers or symbols" : ""),
+    validate: (value) =>
+      !isValidName(value) ? "Letters only, no numbers or symbols" : "",
   },
   middleName: {
     validate: (value) =>
-      !isValidName(value, { optional: true }) ? "Letters only, no numbers or symbols" : "",
+      !isValidName(value, { optional: true })
+        ? "Letters only, no numbers or symbols"
+        : "",
   },
   lastName: {
     required: "Last name is required",
-    validate: (value) => (!isValidName(value) ? "Letters only, no numbers or symbols" : ""),
+    validate: (value) =>
+      !isValidName(value) ? "Letters only, no numbers or symbols" : "",
   },
   email: {
-    validate: (value) => (!isValidEmail(value) ? "Enter a valid Gmail address (e.g. name@gmail.com)" : ""),
+    validate: (value) =>
+      !isValidEmail(value)
+        ? "Enter a valid Gmail address (e.g. name@gmail.com)"
+        : "",
   },
   contact: {
     validate: (value) =>
-      !isValidPhilippinePhoneNumber(value) ? "Enter an 11-digit phone number (e.g. 09171234567)" : "",
+      !isValidPhilippinePhoneNumber(value)
+        ? "Enter an 11-digit phone number (e.g. 09171234567)"
+        : "",
   },
   address: {
     required: "Address is required",
@@ -102,7 +112,8 @@ const MEMBER_FORM_VALIDATORS = {
   },
   age: {
     required: "Age is required",
-    validate: (value) => (!isValidAge(value) ? "Enter a valid age (numbers only)" : ""),
+    validate: (value) =>
+      !isValidAge(value) ? "Enter a valid age (numbers only)" : "",
   },
   status: {
     required: "Status is required",
@@ -115,4 +126,10 @@ const MEMBER_FORM_VALIDATORS = {
   },
 }
 
-export { isValidEmail, isValidPhilippinePhoneNumber, isValidAge, isValidName, MEMBER_FORM_VALIDATORS }
+export {
+  isValidEmail,
+  isValidPhilippinePhoneNumber,
+  isValidAge,
+  isValidName,
+  MEMBER_FORM_VALIDATORS,
+}

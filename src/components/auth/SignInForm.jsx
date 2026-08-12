@@ -36,7 +36,10 @@ function SignInForm() {
         if (!res.ok || !body.success) throw new Error(body?.message)
         if (isMounted) setPublicKey(body.data.publicKey)
       } catch {
-        if (isMounted) setKeyError("Unable to reach the server. Please refresh the page to try again.")
+        if (isMounted)
+          setKeyError(
+            "Unable to reach the server. Please refresh the page to try again."
+          )
       } finally {
         if (isMounted) setIsKeyLoading(false)
       }
@@ -66,12 +69,18 @@ function SignInForm() {
       })
       const body = await res.json()
       if (!res.ok || !body.success) {
-        throw new Error(body?.message || "Unable to sign in. Please check your credentials and try again.")
+        throw new Error(
+          body?.message ||
+            "Unable to sign in. Please check your credentials and try again."
+        )
       }
 
       router.push("/dashboard")
     } catch (err) {
-      setError(err?.message || "Unable to sign in. Please check your credentials and try again.")
+      setError(
+        err?.message ||
+          "Unable to sign in. Please check your credentials and try again."
+      )
     } finally {
       setIsSubmitting(false)
     }
@@ -80,21 +89,32 @@ function SignInForm() {
   return (
     <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-6">
       <div className="space-y-2">
-        <h1 className="font-heading text-3xl font-medium text-foreground">Welcome back</h1>
-        <p className="text-sm text-muted-foreground">Sign in to continue to your dashboard.</p>
+        <h1 className="font-heading text-3xl font-medium text-foreground">
+          Welcome back
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          Sign in to continue to your dashboard.
+        </p>
       </div>
 
       {keyError && (
-        <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{keyError}</p>
+        <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          {keyError}
+        </p>
       )}
 
       {!keyError && error && (
-        <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>
+        <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          {error}
+        </p>
       )}
 
       <div className="space-y-4">
         <div className="space-y-1.5">
-          <Label htmlFor="email" className="text-xs font-semibold tracking-wide text-foreground uppercase">
+          <Label
+            htmlFor="email"
+            className="text-xs font-semibold tracking-wide text-foreground uppercase"
+          >
             Email address
           </Label>
           <Input
@@ -112,10 +132,16 @@ function SignInForm() {
 
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
-            <Label htmlFor="password" className="text-xs font-semibold tracking-wide text-foreground uppercase">
+            <Label
+              htmlFor="password"
+              className="text-xs font-semibold tracking-wide text-foreground uppercase"
+            >
               Password
             </Label>
-            <a href="/forgot-password" className="text-sm font-medium text-primary hover:underline">
+            <a
+              href="/forgot-password"
+              className="text-sm font-medium text-primary hover:underline"
+            >
               Forgot password?
             </a>
           </div>
@@ -145,7 +171,10 @@ function SignInForm() {
 
       <p className="text-center text-sm text-muted-foreground">
         Need access?{" "}
-        <a href="/contact" className="font-semibold text-foreground hover:underline">
+        <a
+          href="/contact"
+          className="font-semibold text-foreground hover:underline"
+        >
           Contact your administrator
         </a>
       </p>

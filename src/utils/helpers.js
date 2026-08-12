@@ -10,11 +10,13 @@ function calculateAge(birthDate, now = new Date()) {
   if (Number.isNaN(birth.getTime())) return ""
 
   let age = now.getFullYear() - birth.getFullYear()
-  const hasHadBirthdayThisYear =
-    now.getMonth() > birth.getMonth() ||
-    (now.getMonth() === birth.getMonth() && now.getDate() >= birth.getDate())
 
-  if (!hasHadBirthdayThisYear) age -= 1
+  if (
+    now.getMonth() < birth.getMonth() ||
+    (now.getMonth() === birth.getMonth() && now.getDate() < birth.getDate())
+  ) {
+    age--
+  }
 
   return age >= 0 ? age : ""
 }
@@ -82,7 +84,11 @@ function toDatePoint(dateString) {
   if (!dateString) return null
 
   const date = new Date(dateString)
-  return { year: date.getFullYear(), month: date.getMonth(), day: date.getDate() }
+  return {
+    year: date.getFullYear(),
+    month: date.getMonth(),
+    day: date.getDate(),
+  }
 }
 
 /**
@@ -100,13 +106,15 @@ function formatDateRangeLabel(range) {
   if (!range?.start) return null
 
   const start = formatDatePoint(range.start)
-  const end = range.end && (
-    range.end.year !== range.start.year ||
-    range.end.month !== range.start.month ||
-    range.end.day !== range.start.day
-  ) ? formatDatePoint(range.end) : null
+  const { end } = range
 
-  return end ? `${start} – ${end}` : start
+  const hasDifferentEnd =
+    end &&
+    (end.year !== range.start.year ||
+      end.month !== range.start.month ||
+      end.day !== range.start.day)
+
+  return hasDifferentEnd ? `${start} – ${formatDatePoint(end)}` : start
 }
 
 /**
@@ -114,7 +122,14 @@ function formatDateRangeLabel(range) {
  * "All Time" and unknown labels return empty bounds. Custom uses the
  * provided periodFrom/periodTo strings as-is.
  */
-function toPeriodDateRange(period, periodFrom = "", periodTo = "", now = new Date()) {
+function toPeriodDateRange(
+  period,
+  periodFrom = "",
+  periodTo = "",
+  now = new Date()
+) {
+  const ymd = toDateInputValue
+
   if (period === "Custom") {
     return { from: periodFrom || "", to: periodTo || "" }
   }
@@ -123,23 +138,23 @@ function toPeriodDateRange(period, periodFrom = "", periodTo = "", now = new Dat
     return { from: "", to: "" }
   }
 
-  const ymd = (date) => toDateInputValue(date)
-
   if (period === "Today") {
     const today = ymd(now)
     return { from: today, to: today }
   }
 
   if (period === "This Month") {
-    const from = new Date(now.getFullYear(), now.getMonth(), 1)
-    const to = new Date(now.getFullYear(), now.getMonth() + 1, 0)
-    return { from: ymd(from), to: ymd(to) }
+    return {
+      from: ymd(new Date(now.getFullYear(), now.getMonth(), 1)),
+      to: ymd(new Date(now.getFullYear(), now.getMonth() + 1, 0)),
+    }
   }
 
   if (period === "This Year") {
-    const from = new Date(now.getFullYear(), 0, 1)
-    const to = new Date(now.getFullYear(), 11, 31)
-    return { from: ymd(from), to: ymd(to) }
+    return {
+      from: ymd(new Date(now.getFullYear(), 0, 1)),
+      to: ymd(new Date(now.getFullYear(), 11, 31)),
+    }
   }
 
   return { from: "", to: "" }

@@ -26,7 +26,11 @@ import { DateRangeFilterModal } from "@/components/soul-winning/DateRangeFilterM
 import { useDebounce } from "@/hooks/use-debounce"
 import { formatDateRangeLabel, toDateRangeStrings } from "@/utils/helpers"
 import { register as registerAbortController } from "@/lib/abort-registry"
-import { listMembers, getMemberBreakdown, bulkDeleteMembers } from "@/services/member.service"
+import {
+  listMembers,
+  getMemberBreakdown,
+  bulkDeleteMembers,
+} from "@/services/member.service"
 import { useMembersStore } from "@/stores/members.store"
 import { Plus, QrCode, Trash2, FileDown } from "lucide-react"
 
@@ -42,7 +46,13 @@ const DEFAULT_STATUS = "All"
 const PAGE_SIZE = 10
 
 function queriesMatch(a, b) {
-  return a.page === b.page && a.status === b.status && a.search === b.search && a.from === b.from && a.to === b.to
+  return (
+    a.page === b.page &&
+    a.status === b.status &&
+    a.search === b.search &&
+    a.from === b.from &&
+    a.to === b.to
+  )
 }
 
 function MembersPageContent() {
@@ -57,16 +67,17 @@ function MembersPageContent() {
   const [search, setSearch] = useState("")
   const debouncedSearch = useDebounce(search, 300)
 
-  const { members, meta, query, setMembers, cacheMembers, getCachedMembers } = useMembersStore(
-    useShallow((state) => ({
-      members: state.members,
-      meta: state.meta,
-      query: state.query,
-      setMembers: state.setMembers,
-      cacheMembers: state.cacheMembers,
-      getCachedMembers: state.getCachedMembers,
-    }))
-  )
+  const { members, meta, query, setMembers, cacheMembers, getCachedMembers } =
+    useMembersStore(
+      useShallow((state) => ({
+        members: state.members,
+        meta: state.meta,
+        query: state.query,
+        setMembers: state.setMembers,
+        cacheMembers: state.cacheMembers,
+        getCachedMembers: state.getCachedMembers,
+      }))
+    )
 
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState("")
@@ -109,18 +120,27 @@ function MembersPageContent() {
     endTime: "11:59 PM",
     utc: true,
   }
-  const { from: dateFrom, to: dateTo } = dateRange ? toDateRangeStrings(dateRange) : { from: "", to: "" }
+  const { from: dateFrom, to: dateTo } = dateRange
+    ? toDateRangeStrings(dateRange)
+    : { from: "", to: "" }
 
   function updateParams(updates) {
     const params = new URLSearchParams(searchParams)
     for (const [key, value] of Object.entries(updates)) {
-      if (!value || value === DEFAULT_STATUS || (key === "page" && value <= 1)) {
+      if (
+        !value ||
+        value === DEFAULT_STATUS ||
+        (key === "page" && value <= 1)
+      ) {
         params.delete(key)
       } else {
         params.set(key, String(value))
       }
     }
-    router.push(`${pathname}${params.toString() ? `?${params.toString()}` : ""}`, { scroll: false })
+    router.push(
+      `${pathname}${params.toString() ? `?${params.toString()}` : ""}`,
+      { scroll: false }
+    )
   }
 
   function goToPage(nextPage) {
@@ -151,7 +171,13 @@ function MembersPageContent() {
   const isFirstRun = useRef(true)
 
   useEffect(() => {
-    const currentQuery = { page, status: activeFilter, search: debouncedSearch, from: dateFrom, to: dateTo }
+    const currentQuery = {
+      page,
+      status: activeFilter,
+      search: debouncedSearch,
+      from: dateFrom,
+      to: dateTo,
+    }
     const hasDateRange = Boolean(dateFrom || dateTo)
 
     // On mount only: if the persisted store already holds members for this
@@ -178,7 +204,11 @@ function MembersPageContent() {
       if (debouncedSearch && !hasDateRange) {
         const cached = searchCache(debouncedSearch, activeFilter)
         if (cached) {
-          setMembers(cached, { total: cached.length, totalPages: 1 }, currentQuery)
+          setMembers(
+            cached,
+            { total: cached.length, totalPages: 1 },
+            currentQuery
+          )
           setIsLoading(false)
           setError("")
           return
@@ -201,7 +231,10 @@ function MembersPageContent() {
         )
         if (controller.signal.aborted) return
 
-        const resolvedMeta = responseMeta || { total: data.length, totalPages: 1 }
+        const resolvedMeta = responseMeta || {
+          total: data.length,
+          totalPages: 1,
+        }
 
         // The current page can outlive its own data (e.g. deleting members
         // shrinks the total page count) — snap back to a valid page instead
@@ -243,7 +276,10 @@ function MembersPageContent() {
     async function loadBreakdown() {
       setIsBreakdownLoading(true)
       try {
-        const data = await getMemberBreakdown({ from: dateFrom, to: dateTo }, controller.signal)
+        const data = await getMemberBreakdown(
+          { from: dateFrom, to: dateTo },
+          controller.signal
+        )
         if (controller.signal.aborted) return
         setBreakdown(data)
       } catch {
@@ -262,7 +298,8 @@ function MembersPageContent() {
 
   const selectedMembers = members.filter((member) => selectedIds.has(member.id))
 
-  const hasActiveFilters = activeFilter !== DEFAULT_STATUS || Boolean(search) || Boolean(dateRange)
+  const hasActiveFilters =
+    activeFilter !== DEFAULT_STATUS || Boolean(search) || Boolean(dateRange)
   // Nothing to filter — no members exist at all (not just for the current
   // filter combination) — so disable the controls rather than let the user
   // open filters with no possible effect. Never disable while a filter is
@@ -387,13 +424,23 @@ function MembersPageContent() {
 
         <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-wrap items-center gap-3">
-            <MemberFilters active={activeFilter} onChange={updateFilter} disabled={filtersDisabled} />
+            <MemberFilters
+              active={activeFilter}
+              onChange={updateFilter}
+              disabled={filtersDisabled}
+            />
           </div>
-          <MemberSearch value={search} onChange={updateSearch} disabled={filtersDisabled} />
+          <MemberSearch
+            value={search}
+            onChange={updateSearch}
+            disabled={filtersDisabled}
+          />
         </div>
 
         {error && (
-          <p className="mt-4 rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>
+          <p className="mt-4 rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            {error}
+          </p>
         )}
 
         <div className="mt-6">
@@ -464,13 +511,19 @@ function MembersPageContent() {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete {selectedIds.size} member{selectedIds.size === 1 ? "" : "s"}?</DialogTitle>
+            <DialogTitle>
+              Delete {selectedIds.size} member
+              {selectedIds.size === 1 ? "" : "s"}?
+            </DialogTitle>
             <DialogDescription>
-              This will permanently remove the selected member{selectedIds.size === 1 ? "" : "s"} from
-              the system. This action cannot be undone.
+              This will permanently remove the selected member
+              {selectedIds.size === 1 ? "" : "s"} from the system. This action
+              cannot be undone.
             </DialogDescription>
           </DialogHeader>
-          {deleteError && <p className="text-sm text-destructive">{deleteError}</p>}
+          {deleteError && (
+            <p className="text-sm text-destructive">{deleteError}</p>
+          )}
           <DialogFooter>
             <Button
               variant="outline"

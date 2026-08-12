@@ -7,9 +7,14 @@ import { API_ENDPOINTS } from "@/utils/constants"
 export async function GET(request) {
   const token = getSessionToken()
   if (!token) {
-    return NextResponse.json({ success: false, message: "Not authenticated" }, { status: 401 })
+    return NextResponse.json(
+      { success: false, message: "Not authenticated" },
+      { status: 401 }
+    )
   }
 
+  const from = request.nextUrl.searchParams.get("from")
+  const to = request.nextUrl.searchParams.get("to")
   const date = request.nextUrl.searchParams.get("date")
   const level = request.nextUrl.searchParams.get("level")
   const search = request.nextUrl.searchParams.get("search")
@@ -19,13 +24,16 @@ export async function GET(request) {
   try {
     const { data } = await api.get(API_ENDPOINTS.ATTENDANCE, {
       ...withAuthHeader(token),
-      params: { date, level, search, page, limit },
+      params: { from, to, date, level, search, page, limit },
     })
     return NextResponse.json(data)
   } catch (err) {
     const responseStatus = err?.response?.status || 500
     const message = err?.response?.data?.message || "Unable to fetch attendance"
 
-    return NextResponse.json({ success: false, message }, { status: responseStatus })
+    return NextResponse.json(
+      { success: false, message },
+      { status: responseStatus }
+    )
   }
 }

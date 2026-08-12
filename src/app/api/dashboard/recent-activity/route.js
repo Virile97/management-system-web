@@ -7,7 +7,10 @@ import { API_ENDPOINTS } from "@/utils/constants"
 export async function GET(request) {
   const token = getSessionToken()
   if (!token) {
-    return NextResponse.json({ success: false, message: "Not authenticated" }, { status: 401 })
+    return NextResponse.json(
+      { success: false, message: "Not authenticated" },
+      { status: 401 }
+    )
   }
 
   const limit = request.nextUrl.searchParams.get("limit") || "5"
@@ -20,7 +23,8 @@ export async function GET(request) {
     return NextResponse.json(data)
   } catch (err) {
     const status = err?.response?.status || 500
-    const message = err?.response?.data?.message || "Unable to fetch recent activity"
+    const message =
+      err?.response?.data?.message || "Unable to fetch recent activity"
 
     return NextResponse.json({ success: false, message }, { status })
   }

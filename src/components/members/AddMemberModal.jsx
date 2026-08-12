@@ -75,7 +75,11 @@ function AddMemberModal({ open, onOpenChange, onCreated }) {
 
   function handleChange(field, value) {
     if (field === "birthDate") {
-      setForm((prev) => ({ ...prev, birthDate: value, age: String(calculateAge(value)) }))
+      setForm((prev) => ({
+        ...prev,
+        birthDate: value,
+        age: String(calculateAge(value)),
+      }))
       return
     }
 
@@ -92,19 +96,27 @@ function AddMemberModal({ open, onOpenChange, onCreated }) {
   }
 
   function handleBlur(field) {
-    setErrors((prev) => ({ ...prev, [field]: getFieldError(field, form[field]) }))
+    setErrors((prev) => ({
+      ...prev,
+      [field]: getFieldError(field, form[field]),
+    }))
   }
 
   function resetForm() {
     const latestConfig = useMemberFormStore.getState().config
-    setForm(latestConfig ? buildInitialForm(buildSelectFields(latestConfig)) : null)
+    setForm(
+      latestConfig ? buildInitialForm(buildSelectFields(latestConfig)) : null
+    )
     setErrors({})
     setSubmitError("")
   }
 
   async function handleSubmit() {
     const nextErrors = Object.fromEntries(
-      Object.keys(MEMBER_FORM_VALIDATORS).map((field) => [field, getFieldError(field, form[field])])
+      Object.keys(MEMBER_FORM_VALIDATORS).map((field) => [
+        field,
+        getFieldError(field, form[field]),
+      ])
     )
     setErrors(nextErrors)
 
@@ -144,7 +156,11 @@ function AddMemberModal({ open, onOpenChange, onCreated }) {
         <MemberDialogHeader title="Add New Member" />
 
         <div className="flex flex-col gap-5 overflow-y-auto px-4 py-5 sm:px-6">
-          {isConfigLoading && <p className="text-sm text-muted-foreground">Loading form options…</p>}
+          {isConfigLoading && (
+            <p className="text-sm text-muted-foreground">
+              Loading form options…
+            </p>
+          )}
 
           {configError && <p className="text-sm text-red-500">{configError}</p>}
 

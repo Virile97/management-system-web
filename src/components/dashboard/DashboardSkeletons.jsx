@@ -36,7 +36,10 @@ function ListCardSkeleton({ rows = 5, className }) {
       <CardContent className="px-0">
         <div className="divide-y divide-border">
           {Array.from({ length: rows }).map((_, index) => (
-            <div key={index} className="flex items-center gap-4 py-4 first:pt-0 last:pb-0">
+            <div
+              key={index}
+              className="flex items-center gap-4 py-4 first:pt-0 last:pb-0"
+            >
               <Skeleton className="h-10 w-10 shrink-0 rounded-full" />
               <div className="min-w-0 flex-1 space-y-2">
                 <Skeleton className="h-3.5 w-40" />

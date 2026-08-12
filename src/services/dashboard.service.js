@@ -10,11 +10,43 @@ function getMemberBreakdown(signal) {
 }
 
 function getFinanceSummary(range = "6m", signal) {
-  return fetchJson(`${APP_API_ENDPOINTS.DASHBOARD_FINANCE_SUMMARY}?range=${range}`, { signal })
+  return fetchJson(
+    `${APP_API_ENDPOINTS.DASHBOARD_FINANCE_SUMMARY}?range=${range}`,
+    { signal }
+  )
 }
 
 function getRecentActivity(limit = 5, signal) {
-  return fetchJson(`${APP_API_ENDPOINTS.DASHBOARD_RECENT_ACTIVITY}?limit=${limit}`, { signal })
+  return fetchJson(
+    `${APP_API_ENDPOINTS.DASHBOARD_RECENT_ACTIVITY}?limit=${limit}`,
+    { signal }
+  )
 }
 
-export { getStats, getMemberBreakdown, getFinanceSummary, getRecentActivity }
+/**
+ * Weekly attendance rates for the Member Attendance chart.
+ * Maps API `{ label, percentage }` points onto `{ date, rate }` for AttendanceChart.
+ */
+function normalizeAttendanceSummary(points = []) {
+  return (Array.isArray(points) ? points : []).map((point) => ({
+    date: point.label || "—",
+    rate: Number(point.percentage ?? 0),
+  }))
+}
+
+function getAttendanceSummary(range = "5w", signal) {
+  return fetchJson(
+    `${APP_API_ENDPOINTS.DASHBOARD_ATTENDANCE_SUMMARY}?range=${range}`,
+    {
+      signal,
+    }
+  ).then(normalizeAttendanceSummary)
+}
+
+export {
+  getStats,
+  getMemberBreakdown,
+  getFinanceSummary,
+  getRecentActivity,
+  getAttendanceSummary,
+}

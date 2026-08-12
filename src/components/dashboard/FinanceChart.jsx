@@ -1,7 +1,13 @@
 "use client"
 
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import { ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
+import {
+  ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart"
 import { EmptyState } from "@/components/common/EmptyState"
 import { BarChart, Bar, XAxis, CartesianGrid } from "recharts"
 import { DollarSign } from "lucide-react"
@@ -36,8 +42,14 @@ function FinanceChart({ data = [] }) {
             description="Income and expenses will show up here once transactions are recorded."
           />
         ) : (
-          <ChartContainer config={chartConfig} className="aspect-auto h-36 w-full">
-            <BarChart data={data} margin={{ left: 0, right: 0, top: 8, bottom: 0 }}>
+          <ChartContainer
+            config={chartConfig}
+            className="aspect-auto h-36 w-full"
+          >
+            <BarChart
+              data={data}
+              margin={{ left: 0, right: 0, top: 8, bottom: 0 }}
+            >
               <CartesianGrid vertical={false} stroke="transparent" />
               <XAxis
                 dataKey="label"
@@ -47,8 +59,18 @@ function FinanceChart({ data = [] }) {
                 fontSize={12}
               />
               <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
-              <Bar dataKey="income" fill="var(--color-income)" radius={[4, 4, 0, 0]} isAnimationActive={false} />
-              <Bar dataKey="expense" fill="var(--color-expense)" radius={[4, 4, 0, 0]} isAnimationActive={false} />
+              <Bar
+                dataKey="income"
+                fill="var(--color-income)"
+                radius={[4, 4, 0, 0]}
+                isAnimationActive={false}
+              />
+              <Bar
+                dataKey="expense"
+                fill="var(--color-expense)"
+                radius={[4, 4, 0, 0]}
+                isAnimationActive={false}
+              />
               <ChartLegend content={<ChartLegendContent />} />
             </BarChart>
           </ChartContainer>

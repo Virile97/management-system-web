@@ -7,19 +7,38 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { cn } from "@/lib/utils"
 import { Calendar, X, ChevronLeft, ChevronRight } from "lucide-react"
 
 const monthNames = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ]
 
 // Calendar jump list: a couple of years ahead for planning, and far enough
 // back to cover typical historical filters without an endless scroll.
 const CURRENT_YEAR = new Date().getFullYear()
-const YEAR_OPTIONS = Array.from({ length: 22 }, (_, index) => CURRENT_YEAR + 1 - index)
+const YEAR_OPTIONS = Array.from(
+  { length: 22 },
+  (_, index) => CURRENT_YEAR + 1 - index
+)
 
 function getDaysInMonth(year, month) {
   return new Date(year, month + 1, 0).getDate()
@@ -27,7 +46,11 @@ function getDaysInMonth(year, month) {
 
 function isToday(year, month, day) {
   const now = new Date()
-  return now.getFullYear() === year && now.getMonth() === month && now.getDate() === day
+  return (
+    now.getFullYear() === year &&
+    now.getMonth() === month &&
+    now.getDate() === day
+  )
 }
 
 // Comparable ordinal for a { year, month, day } point, so start/end can be
@@ -52,14 +75,24 @@ function normalizePoint(range, key) {
   return { year: range.year, month: range.month, day: value }
 }
 
-function DateRangeFilterModal({ open, onOpenChange, range, hasSelection = true, onApply }) {
+function DateRangeFilterModal({
+  open,
+  onOpenChange,
+  range,
+  hasSelection = true,
+  onApply,
+  onReset,
+  resetEnabled = false,
+}) {
   const initialStart = normalizePoint(range, "start")
   const initialEnd = normalizePoint(range, "end")
 
   const [viewYear, setViewYear] = useState(initialStart?.year ?? range.year)
   const [viewMonth, setViewMonth] = useState(initialStart?.month ?? range.month)
   const [selection, setSelection] = useState(
-    hasSelection ? { start: initialStart, end: initialEnd } : { start: null, end: null }
+    hasSelection
+      ? { start: initialStart, end: initialEnd }
+      : { start: null, end: null }
   )
   const [startTime, setStartTime] = useState(range.startTime ?? "12:00 AM")
   const [endTime, setEndTime] = useState(range.endTime ?? "11:59 PM")
@@ -135,7 +168,10 @@ function DateRangeFilterModal({ open, onOpenChange, range, hasSelection = true, 
   }
 
   function isRangeStart(day) {
-    return selection.start && samePoint(selection.start, { year: viewYear, month: viewMonth, day })
+    return (
+      selection.start &&
+      samePoint(selection.start, { year: viewYear, month: viewMonth, day })
+    )
   }
 
   function isRangeEnd(day) {
@@ -152,6 +188,21 @@ function DateRangeFilterModal({ open, onOpenChange, range, hasSelection = true, 
       utc: useUtc,
     })
     onOpenChange(false)
+  }
+
+  function handleReset() {
+    const now = new Date()
+    setSelection({ start: null, end: null })
+    setViewYear(now.getFullYear())
+    setViewMonth(now.getMonth())
+    setStartTime(range.startTime ?? "12:00 AM")
+    setEndTime(range.endTime ?? "11:59 PM")
+    setUseUtc(range.utc ?? true)
+
+    if (onReset) {
+      onReset()
+      onOpenChange(false)
+    }
   }
 
   return (
@@ -187,9 +238,14 @@ function DateRangeFilterModal({ open, onOpenChange, range, hasSelection = true, 
             </button>
 
             <div className="flex min-w-0 flex-1 items-center justify-center gap-2">
-              <Select value={String(viewMonth)} onValueChange={(value) => setViewMonth(Number(value))}>
+              <Select
+                value={String(viewMonth)}
+                onValueChange={(value) => setViewMonth(Number(value))}
+              >
                 <SelectTrigger className="h-8 w-34 rounded-lg">
-                  <SelectValue>{(value) => monthNames[Number(value)]}</SelectValue>
+                  <SelectValue>
+                    {(value) => monthNames[Number(value)]}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {monthNames.map((name, index) => (
@@ -200,7 +256,10 @@ function DateRangeFilterModal({ open, onOpenChange, range, hasSelection = true, 
                 </SelectContent>
               </Select>
 
-              <Select value={String(viewYear)} onValueChange={(value) => setViewYear(Number(value))}>
+              <Select
+                value={String(viewYear)}
+                onValueChange={(value) => setViewYear(Number(value))}
+              >
                 <SelectTrigger className="h-8 w-22 rounded-lg">
                   <SelectValue />
                 </SelectTrigger>
@@ -225,7 +284,8 @@ function DateRangeFilterModal({ open, onOpenChange, range, hasSelection = true, 
 
           {selection.start && (
             <p className="mt-2 text-center text-xs text-muted-foreground">
-              {monthNames[selection.start.month]} {selection.start.day}, {selection.start.year}
+              {monthNames[selection.start.month]} {selection.start.day},{" "}
+              {selection.start.year}
               {" – "}
               {selection.end
                 ? `${monthNames[selection.end.month]} ${selection.end.day}, ${selection.end.year}`
@@ -255,7 +315,9 @@ function DateRangeFilterModal({ open, onOpenChange, range, hasSelection = true, 
                     // solid selected/range fill, so it reads as related but
                     // distinct — findable at a glance without being mistaken
                     // for an actual selection.
-                    !inRange && today && "bg-[#1e2a4a]/10 font-medium text-[#1e2a4a]"
+                    !inRange &&
+                      today &&
+                      "bg-[#1e2a4a]/10 font-medium text-[#1e2a4a]"
                   )}
                 >
                   {day}
@@ -289,7 +351,7 @@ function DateRangeFilterModal({ open, onOpenChange, range, hasSelection = true, 
           </label>
         </div>
 
-        <div className="flex items-center justify-between border-t border-border px-5 py-4">
+        <div className="flex items-center justify-between gap-3 border-t border-border px-5 py-4">
           <button
             type="button"
             onClick={() => onOpenChange(false)}
@@ -298,14 +360,26 @@ function DateRangeFilterModal({ open, onOpenChange, range, hasSelection = true, 
             <ChevronLeft className="h-4 w-4" />
             Back
           </button>
-          <button
-            type="button"
-            onClick={handleApply}
-            disabled={!selection.start}
-            className="rounded-lg bg-[#1e2a4a] px-5 py-2 text-sm font-medium text-white hover:bg-[#1e2a4a]/90 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            Apply
-          </button>
+          <div className="flex items-center gap-2">
+            {resetEnabled && (
+              <button
+                type="button"
+                onClick={handleReset}
+                className="flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+              >
+                <X className="h-3.5 w-3.5" />
+                Reset
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={handleApply}
+              disabled={!selection.start}
+              className="rounded-lg bg-[#1e2a4a] px-5 py-2 text-sm font-medium text-white hover:bg-[#1e2a4a]/90 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Apply
+            </button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

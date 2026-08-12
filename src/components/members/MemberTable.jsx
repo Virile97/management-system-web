@@ -33,7 +33,10 @@ function MemberTable({
       renderTableHead={(selection) => (
         <tr className="border-b border-border bg-muted/60">
           <th className="w-10 py-3 pl-4">
-            <Checkbox checked={selection.allSelected} onCheckedChange={selection.onToggleAll} />
+            <Checkbox
+              checked={selection.allSelected}
+              onCheckedChange={selection.onToggleAll}
+            />
           </th>
           <th className="py-3 pr-4 text-left text-xs font-medium tracking-wide text-muted-foreground uppercase">
             Member

@@ -32,7 +32,11 @@ function LeaderboardRow({ winner, rank, topScore }) {
         <div className="flex w-6 shrink-0 items-center justify-center">
           {rank <= 3 ? (
             <div className="relative flex items-center justify-center">
-              <Medal className="h-6 w-6" style={{ color: medalColors[rank - 1] }} fill={medalColors[rank - 1]} />
+              <Medal
+                className="h-6 w-6"
+                style={{ color: medalColors[rank - 1] }}
+                fill={medalColors[rank - 1]}
+              />
               <span
                 className="absolute bottom-0 flex h-3 w-3 items-center justify-center rounded-full text-[8px] font-bold text-white"
                 style={{ backgroundColor: medalColors[rank - 1] }}
@@ -41,7 +45,9 @@ function LeaderboardRow({ winner, rank, topScore }) {
               </span>
             </div>
           ) : (
-            <span className="text-sm font-medium text-muted-foreground">#{rank}</span>
+            <span className="text-sm font-medium text-muted-foreground">
+              #{rank}
+            </span>
           )}
         </div>
 
@@ -53,7 +59,9 @@ function LeaderboardRow({ winner, rank, topScore }) {
         </div>
 
         <div className="min-w-0 flex-1 md:w-56 md:shrink-0 md:flex-none">
-          <p className="truncate text-sm font-semibold text-foreground/90">{winner.name}</p>
+          <p className="truncate text-sm font-semibold text-foreground/90">
+            {winner.name}
+          </p>
           <p className="truncate text-xs text-muted-foreground">
             {winner.role} · Soul winner since {winner.since}
           </p>
@@ -69,25 +77,33 @@ function LeaderboardRow({ winner, rank, topScore }) {
 
       <div className="flex flex-1 items-center gap-4 pl-14 sm:gap-6 md:pl-0">
         <div className="w-12 text-center sm:w-14">
-          <p className="font-heading text-lg font-semibold text-foreground/90">{winner.saved}</p>
+          <p className="font-heading text-lg font-semibold text-foreground/90">
+            {winner.saved}
+          </p>
           <p className="text-[10px] font-medium tracking-wide text-muted-foreground uppercase">
             Saved
           </p>
         </div>
         <div className="w-12 text-center sm:w-14">
-          <p className="font-heading text-lg font-semibold text-emerald-600">{winner.active}</p>
+          <p className="font-heading text-lg font-semibold text-emerald-600">
+            {winner.active}
+          </p>
           <p className="text-[10px] font-medium tracking-wide text-muted-foreground uppercase">
             Active
           </p>
         </div>
         <div className="w-12 text-center sm:w-14">
-          <p className="font-heading text-lg font-semibold text-amber-500">{winner.new}</p>
+          <p className="font-heading text-lg font-semibold text-amber-500">
+            {winner.new}
+          </p>
           <p className="text-[10px] font-medium tracking-wide text-muted-foreground uppercase">
             New
           </p>
         </div>
         <div className="w-12 text-center sm:w-14">
-          <p className="font-heading text-lg font-semibold text-red-500">{winner.lost}</p>
+          <p className="font-heading text-lg font-semibold text-red-500">
+            {winner.lost}
+          </p>
           <p className="text-[10px] font-medium tracking-wide text-muted-foreground uppercase">
             Lost
           </p>
@@ -96,11 +112,16 @@ function LeaderboardRow({ winner, rank, topScore }) {
         <div className="flex flex-1 flex-col items-end gap-1">
           <div className="h-1.5 w-full max-w-40 overflow-hidden rounded-full bg-muted">
             <div
-              className={cn("h-full rounded-full", isTop ? "bg-amber-400" : "bg-[#1e2a4a]")}
+              className={cn(
+                "h-full rounded-full",
+                isTop ? "bg-amber-400" : "bg-[#1e2a4a]"
+              )}
               style={{ width: `${percentOfTop}%` }}
             />
           </div>
-          <p className="text-xs text-muted-foreground">{percentOfTop}% of top</p>
+          <p className="text-xs text-muted-foreground">
+            {percentOfTop}% of top
+          </p>
         </div>
       </div>
 
@@ -123,7 +144,12 @@ function Leaderboard({ soulWinners }) {
   return (
     <Card className="overflow-hidden rounded-2xl p-0">
       {ranked.map((winner, index) => (
-        <LeaderboardRow key={winner.name} winner={winner} rank={index + 1} topScore={topScore} />
+        <LeaderboardRow
+          key={winner.name}
+          winner={winner}
+          rank={index + 1}
+          topScore={topScore}
+        />
       ))}
 
       {ranked.length === 0 && (

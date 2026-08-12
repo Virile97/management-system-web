@@ -53,13 +53,20 @@ function PrintSelectedQrModal({ open, onOpenChange, members }) {
         <div className="flex-1 overflow-y-auto bg-muted/50 p-4 sm:p-6">
           <div className="flex flex-col gap-6">
             {pages.map((page, pageIndex) => (
-              <div key={pageIndex} className="rounded-xl bg-white p-4 ring-1 ring-border">
+              <div
+                key={pageIndex}
+                className="rounded-xl bg-white p-4 ring-1 ring-border"
+              >
                 <p className="pb-3 text-center text-xs font-medium tracking-wide text-muted-foreground uppercase">
                   Page {pageIndex + 1} of {pages.length}
                 </p>
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
                   {page.map((member) => (
-                    <MemberQrCard key={member.id} member={member} size="compact" />
+                    <MemberQrCard
+                      key={member.id}
+                      member={member}
+                      size="compact"
+                    />
                   ))}
                 </div>
               </div>
@@ -74,7 +81,9 @@ function PrintSelectedQrModal({ open, onOpenChange, members }) {
         </div>
 
         <div className="flex flex-col-reverse gap-3 border-t border-border px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-          <p className="text-xs text-muted-foreground">Short bond · 12 codes per page</p>
+          <p className="text-xs text-muted-foreground">
+            Short bond · 12 codes per page
+          </p>
           <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center">
             <Button
               type="button"

@@ -146,7 +146,9 @@ function ExportMonthlyOfferingsModal({
         <div className="min-h-0 flex-1 overflow-y-auto bg-muted/50 p-4 sm:p-6">
           {isLoading && <ReportPreviewSkeleton />}
           {error && (
-            <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>
+            <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              {error}
+            </p>
           )}
           {!isLoading && !error && reportProps && (
             <div className="rounded-xl border border-border bg-white p-5 shadow-sm sm:p-6">

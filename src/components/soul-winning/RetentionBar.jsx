@@ -8,7 +8,8 @@ const segments = [
 
 function RetentionBar() {
   const total = segments.reduce((sum, segment) => sum + segment.count, 0)
-  const activeCount = segments.find((segment) => segment.label === "Active")?.count ?? 0
+  const activeCount =
+    segments.find((segment) => segment.label === "Active")?.count ?? 0
   const retentionRate = total > 0 ? Math.round((activeCount / total) * 100) : 0
 
   return (
@@ -36,7 +37,10 @@ function RetentionBar() {
 
       <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2">
         {segments.map((segment) => (
-          <div key={segment.label} className="flex items-center gap-2 text-sm text-foreground/80">
+          <div
+            key={segment.label}
+            className="flex items-center gap-2 text-sm text-foreground/80"
+          >
             <span
               className="h-2 w-2 shrink-0 rounded-full"
               style={{ backgroundColor: segment.color }}

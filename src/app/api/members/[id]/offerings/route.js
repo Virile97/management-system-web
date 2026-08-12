@@ -7,7 +7,10 @@ import { API_ENDPOINTS } from "@/utils/constants"
 export async function GET(request, { params }) {
   const token = getSessionToken()
   if (!token) {
-    return NextResponse.json({ success: false, message: "Not authenticated" }, { status: 401 })
+    return NextResponse.json(
+      { success: false, message: "Not authenticated" },
+      { status: 401 }
+    )
   }
 
   const searchParams = request.nextUrl.searchParams
@@ -39,7 +42,8 @@ export async function GET(request, { params }) {
     return NextResponse.json(data)
   } catch (err) {
     const status = err?.response?.status || 500
-    const message = err?.response?.data?.message || "Unable to fetch member offerings"
+    const message =
+      err?.response?.data?.message || "Unable to fetch member offerings"
 
     return NextResponse.json({ success: false, message }, { status })
   }

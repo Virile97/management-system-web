@@ -26,8 +26,8 @@ function QRSettings({ qr, onChange }) {
 
       <CardContent className="flex flex-col gap-5 px-0 pt-4">
         <p className="text-sm text-muted-foreground">
-          Each slip carries a QR code unique to the member. When scanned at the offering desk
-          it auto-fills their record in the finance scanner.
+          Each slip carries a QR code unique to the member. When scanned at the
+          offering desk it auto-fills their record in the finance scanner.
         </p>
 
         <div className="flex flex-col gap-1.5">
@@ -87,10 +87,16 @@ function QRSettings({ qr, onChange }) {
             <QrCode className="h-7 w-7 text-foreground/80" />
           </div>
           <div>
-            <p className="text-sm font-medium text-foreground/85">Sample QR preview</p>
+            <p className="text-sm font-medium text-foreground/85">
+              Sample QR preview
+            </p>
             <p className="mt-0.5 text-xs text-muted-foreground">
-              Contains <code className="rounded bg-border/60 px-1 py-0.5">MEMBER:0001</code> as a
-              placeholder. Actual slips will embed each member&apos;s unique ID.
+              Contains{" "}
+              <code className="rounded bg-border/60 px-1 py-0.5">
+                MEMBER:0001
+              </code>{" "}
+              as a placeholder. Actual slips will embed each member&apos;s
+              unique ID.
             </p>
           </div>
         </div>

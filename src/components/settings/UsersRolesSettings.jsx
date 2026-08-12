@@ -44,7 +44,15 @@ const ROLES = {
 }
 
 function roleMeta(role) {
-  return ROLES[role] || { label: role, icon: Shield, pill: "border-border bg-muted text-muted-foreground", pillActive: "border-foreground bg-foreground text-white", badge: "bg-muted text-foreground/80" }
+  return (
+    ROLES[role] || {
+      label: role,
+      icon: Shield,
+      pill: "border-border bg-muted text-muted-foreground",
+      pillActive: "border-foreground bg-foreground text-white",
+      badge: "bg-muted text-foreground/80",
+    }
+  )
 }
 
 function UsersRolesSettings() {
@@ -117,9 +125,12 @@ function UsersRolesSettings() {
     <div>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="font-heading text-xl font-normal text-foreground/80">Users & Roles</h2>
+          <h2 className="font-heading text-xl font-normal text-foreground/80">
+            Users & Roles
+          </h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            {users.length} user{users.length === 1 ? "" : "s"} · manage access and permissions
+            {users.length} user{users.length === 1 ? "" : "s"} · manage access
+            and permissions
           </p>
         </div>
 
@@ -133,7 +144,9 @@ function UsersRolesSettings() {
       </div>
 
       {error && (
-        <p className="mt-4 rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>
+        <p className="mt-4 rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          {error}
+        </p>
       )}
 
       {isLoading ? (
@@ -149,7 +162,9 @@ function UsersRolesSettings() {
                 <button
                   key={role}
                   type="button"
-                  onClick={() => setActiveRole((current) => (current === role ? null : role))}
+                  onClick={() =>
+                    setActiveRole((current) => (current === role ? null : role))
+                  }
                   aria-pressed={activeRole === role}
                   className={cn(
                     "flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm font-medium transition-colors",
@@ -157,7 +172,10 @@ function UsersRolesSettings() {
                   )}
                 >
                   <meta.icon className="h-3.5 w-3.5" />
-                  {meta.label} <span className="text-xs font-normal">({roleCounts[role] || 0})</span>
+                  {meta.label}{" "}
+                  <span className="text-xs font-normal">
+                    ({roleCounts[role] || 0})
+                  </span>
                 </button>
               )
             })}
@@ -208,8 +226,12 @@ function UsersRolesSettings() {
                         <td className="px-4 py-3 font-medium text-foreground/80">
                           {user.name || "—"}
                         </td>
-                        <td className="px-4 py-3 text-muted-foreground">{user.email}</td>
-                        <td className="px-4 py-3 text-muted-foreground">{user.contact || "—"}</td>
+                        <td className="px-4 py-3 text-muted-foreground">
+                          {user.email}
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground">
+                          {user.contact || "—"}
+                        </td>
                         <td className="px-4 py-3">
                           <span
                             className={cn(
@@ -241,17 +263,25 @@ function UsersRolesSettings() {
         </>
       )}
 
-      <Dialog open={Boolean(pendingDelete)} onOpenChange={(open) => !open && setPendingDelete(null)}>
+      <Dialog
+        open={Boolean(pendingDelete)}
+        onOpenChange={(open) => !open && setPendingDelete(null)}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Delete user</DialogTitle>
             <DialogDescription>
-              Are you sure you want to remove {pendingDelete?.name || pendingDelete?.email}? This
-              cannot be undone.
+              Are you sure you want to remove{" "}
+              {pendingDelete?.name || pendingDelete?.email}? This cannot be
+              undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setPendingDelete(null)} disabled={isDeleting}>
+            <Button
+              variant="outline"
+              onClick={() => setPendingDelete(null)}
+              disabled={isDeleting}
+            >
               Cancel
             </Button>
             <Button

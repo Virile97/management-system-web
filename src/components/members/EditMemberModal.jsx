@@ -4,7 +4,11 @@ import { useEffect, useState } from "react"
 import { Dialog, DialogContent, DialogFooter } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { MEMBER_FORM_VALIDATORS } from "@/utils/validators"
-import { updateMember, getMemberFormConfig, getMemberById } from "@/services/member.service"
+import {
+  updateMember,
+  getMemberFormConfig,
+  getMemberById,
+} from "@/services/member.service"
 import { useMemberFormStore } from "@/stores/memberForm.store"
 import {
   MemberDialogHeader,
@@ -38,7 +42,8 @@ function memberToForm(member) {
     gender: member.gender || "",
     status: member.statusId || member.status?.id || "",
     level: member.levelId || member.level?.id || "",
-    lighthouseGroup: member.lighthouseGroupId || member.lighthouseGroup?.id || "",
+    lighthouseGroup:
+      member.lighthouseGroupId || member.lighthouseGroup?.id || "",
     groupIds: member.groups?.map((g) => g.id) || [],
   }
 }
@@ -64,7 +69,9 @@ function EditMemberModal({ open, onOpenChange, memberId, onUpdated }) {
       setConfigError("")
       try {
         const [configData, member] = await Promise.all([
-          config ? Promise.resolve(config) : getMemberFormConfig(controller.signal),
+          config
+            ? Promise.resolve(config)
+            : getMemberFormConfig(controller.signal),
           getMemberById(memberId, controller.signal),
         ])
 
@@ -101,7 +108,10 @@ function EditMemberModal({ open, onOpenChange, memberId, onUpdated }) {
   }
 
   function handleBlur(field) {
-    setErrors((prev) => ({ ...prev, [field]: getFieldError(field, form[field]) }))
+    setErrors((prev) => ({
+      ...prev,
+      [field]: getFieldError(field, form[field]),
+    }))
   }
 
   function resetState() {
@@ -113,7 +123,10 @@ function EditMemberModal({ open, onOpenChange, memberId, onUpdated }) {
 
   async function handleSubmit() {
     const nextErrors = Object.fromEntries(
-      Object.keys(MEMBER_FORM_VALIDATORS).map((field) => [field, getFieldError(field, form[field])])
+      Object.keys(MEMBER_FORM_VALIDATORS).map((field) => [
+        field,
+        getFieldError(field, form[field]),
+      ])
     )
     setErrors(nextErrors)
 
@@ -129,7 +142,9 @@ function EditMemberModal({ open, onOpenChange, memberId, onUpdated }) {
       onUpdated?.()
       onOpenChange(false)
     } catch (err) {
-      setSubmitError(err?.message || "Unable to update member. Please try again.")
+      setSubmitError(
+        err?.message || "Unable to update member. Please try again."
+      )
     } finally {
       setIsSubmitting(false)
     }
@@ -152,7 +167,9 @@ function EditMemberModal({ open, onOpenChange, memberId, onUpdated }) {
         <MemberDialogHeader title="Edit Member" />
 
         <div className="flex flex-col gap-5 overflow-y-auto px-4 py-5 sm:px-6">
-          {isConfigLoading && <p className="text-sm text-muted-foreground">Loading member…</p>}
+          {isConfigLoading && (
+            <p className="text-sm text-muted-foreground">Loading member…</p>
+          )}
 
           {configError && <p className="text-sm text-red-500">{configError}</p>}
 

@@ -5,19 +5,33 @@ import { useRouter, usePathname, useSearchParams } from "next/navigation"
 import { useShallow } from "zustand/react/shallow"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { StatCardSkeleton, ListCardSkeleton } from "@/components/dashboard/DashboardSkeletons"
+import {
+  StatCardSkeleton,
+  ListCardSkeleton,
+} from "@/components/dashboard/DashboardSkeletons"
 import { AttendanceStatsCards } from "@/components/attendance/AttendanceStatsCards"
 import { AttendanceGroupTabs } from "@/components/attendance/AttendanceGroupTabs"
 import { AttendanceTable } from "@/components/attendance/AttendanceTable"
-import { listAttendance, upsertAttendance, toAttendanceDateTime } from "@/services/attendance.service"
+import {
+  listAttendance,
+  upsertAttendance,
+  toAttendanceDateTime,
+} from "@/services/attendance.service"
 import { useAttendanceStore } from "@/stores/attendance.store"
 import { ExportAttendanceReportModal } from "@/components/attendance/ExportAttendanceReportModal"
+import { DateRangeButton } from "@/components/common/DateRangeButton"
+import { DateRangeFilterModal } from "@/components/soul-winning/DateRangeFilterModal"
 import { useDebounce } from "@/hooks/use-debounce"
-import { toDateInputValue } from "@/utils/helpers"
+import {
+  formatDateRangeLabel,
+  toDateInputValue,
+  toDatePoint,
+  toDateRangeStrings,
+} from "@/utils/helpers"
 import { register as registerAbortController } from "@/lib/abort-registry"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
-import { Download, Search, X, Calendar } from "lucide-react"
+import { Download, Search, X } from "lucide-react"
 
 const PAGE_SIZE = 20
 const DEFAULT_LEVEL = "All"
@@ -32,7 +46,8 @@ export default function AttendancePage() {
 
 function queriesMatch(a, b) {
   return (
-    a.date === b.date &&
+    a.from === b.from &&
+    a.to === b.to &&
     a.level === b.level &&
     a.search === b.search &&
     a.page === b.page
@@ -45,12 +60,30 @@ function AttendancePageContent() {
   const searchParams = useSearchParams()
 
   const today = toDateInputValue()
-  const date = searchParams.get("date") || today
+  const dateFrom = searchParams.get("from") || today
+  const dateTo = searchParams.get("to") || dateFrom
+  // Check-in edits still target one calendar day — the range end.
+  const activeDate = dateTo || dateFrom || today
   const activeLevel = searchParams.get("level") || DEFAULT_LEVEL
   const page = Math.max(1, parseInt(searchParams.get("page"), 10) || 1)
+  const cacheKey = `${dateFrom}|${dateTo}`
 
   const [search, setSearch] = useState("")
   const debouncedSearch = useDebounce(search, 300)
+  const [isDateRangeOpen, setIsDateRangeOpen] = useState(false)
+
+  const hasCustomRange = Boolean(
+    searchParams.get("from") || searchParams.get("to")
+  )
+  const dateRange = {
+    year: toDatePoint(dateFrom)?.year ?? new Date().getFullYear(),
+    month: toDatePoint(dateFrom)?.month ?? new Date().getMonth(),
+    start: toDatePoint(dateFrom),
+    end: toDatePoint(dateTo),
+    startTime: "12:00 AM",
+    endTime: "11:59 PM",
+    utc: true,
+  }
 
   const {
     items,
@@ -82,23 +115,35 @@ function AttendancePageContent() {
 
   function updateParams(updates) {
     const params = new URLSearchParams(searchParams)
-  
+
     for (const [key, value] of Object.entries(updates)) {
       const isDefault =
         !value ||
         (key === "level" && value === DEFAULT_LEVEL) ||
         (key === "page" && Number(value) <= 1) ||
-        (key === "date" && value === today)
-  
+        ((key === "from" || key === "to") && value === today)
+
       isDefault ? params.delete(key) : params.set(key, String(value))
     }
-  
-    const query = params.toString()
-    router.push(`${pathname}${query ? `?${query}` : ""}`, { scroll: false })
+
+    // Keep from/to paired — if one side is today-defaulted away, drop both so
+    // the page falls back to today's single-day window.
+    if (!params.get("from") && !params.get("to")) {
+      params.delete("from")
+      params.delete("to")
+    }
+
+    const queryString = params.toString()
+    if (queryString === searchParams.toString()) return false
+
+    router.push(`${pathname}${queryString ? `?${queryString}` : ""}`, {
+      scroll: false,
+    })
+    return true
   }
 
   /**
-   * Search fast-path: filter rows already cached for this date (and level).
+   * Search fast-path: filter rows already cached for this range (and level).
    * Returns null when nothing matches so the caller can fall through to the API.
    */
   function searchCache(needle, level) {
@@ -106,9 +151,13 @@ function AttendancePageContent() {
     if (!trimmed) return null
 
     const matches = []
-    for (const item of getCachedItems(date)) {
+    for (const item of getCachedItems(cacheKey)) {
       if (level !== DEFAULT_LEVEL && item.level !== level) continue
-      if (String(item.name || "").toLowerCase().includes(trimmed)) {
+      if (
+        String(item.name || "")
+          .toLowerCase()
+          .includes(trimmed)
+      ) {
         matches.push(item)
       }
     }
@@ -118,32 +167,35 @@ function AttendancePageContent() {
 
   useEffect(() => {
     const currentQuery = {
-      date,
+      from: dateFrom,
+      to: dateTo,
       level: activeLevel,
       search: debouncedSearch,
       page,
     }
-  
+
     if (isFirstRun.current) {
       isFirstRun.current = false
-  
+
       if (query && items.length && queriesMatch(query, currentQuery)) {
         setIsLoading(false)
         setError("")
         return
       }
     }
-  
+
     const controller = new AbortController()
     const unregister = registerAbortController(controller)
-  
+    let active = true
+
     const load = async () => {
-      const search = debouncedSearch.trim()
-  
-      if (search) {
-        const cached = searchCache(search, activeLevel)
-  
+      const searchValue = debouncedSearch.trim()
+
+      if (searchValue) {
+        const cached = searchCache(searchValue, activeLevel)
+
         if (cached) {
+          if (!active) return
           setAttendance(
             cached,
             { page: 1, limit: PAGE_SIZE, total: cached.length, totalPages: 1 },
@@ -154,14 +206,15 @@ function AttendancePageContent() {
           return
         }
       }
-  
+
       setIsLoading(true)
       setError("")
-  
+
       try {
         const response = await listAttendance(
           {
-            date,
+            from: dateFrom,
+            to: dateTo,
             level: activeLevel === DEFAULT_LEVEL ? "" : activeLevel,
             search: debouncedSearch,
             page,
@@ -169,69 +222,92 @@ function AttendancePageContent() {
           },
           controller.signal
         )
-  
-        if (controller.signal.aborted) return
-  
+
+        if (!active) return
+
         if (page > 1 && page > response.meta.totalPages) {
           updateParams({ page: Math.max(1, response.meta.totalPages) })
           return
         }
-  
-        cacheItems(response.items, date)
-  
+
+        cacheItems(response.items, cacheKey)
+
         setAttendance(response.items, response.meta, currentQuery, {
           summary: response.summary,
           levels: response.levels,
         })
       } catch (err) {
-        if (!controller.signal.aborted) {
+        if (!active) return
+        if (err?.name !== "AbortError") {
           setError(err?.message || "Unable to load attendance")
         }
       } finally {
-        if (!controller.signal.aborted) {
-          setIsLoading(false)
-        }
+        if (active) setIsLoading(false)
       }
     }
-  
+
     load()
-  
+
     return () => {
+      active = false
       controller.abort()
       unregister()
     }
-  
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [date, activeLevel, debouncedSearch, page, refreshKey])
+  }, [dateFrom, dateTo, activeLevel, debouncedSearch, page, refreshKey])
 
   function handleLevelChange(level) {
-    updateParams({ level, page: 1 })
+    setIsLoading(true)
+    if (!updateParams({ level, page: 1 })) setIsLoading(false)
   }
 
   function handleSearchChange(value) {
     setSearch(value)
-    if (page > 1) updateParams({ page: 1 })
+    // Show the table skeleton immediately (including the debounce window),
+    // not only after the API request starts.
+    setIsLoading(true)
+    if (page > 1 && !updateParams({ page: 1 })) {
+      // Page already 1 — effect will re-run when debouncedSearch updates.
+    }
   }
 
-  function handleDateChange(value) {
-    updateParams({ date: value || today, page: 1 })
+  function handleApplyDateRange(range) {
+    const { from, to } = toDateRangeStrings(range)
+    setIsLoading(true)
+    if (
+      !updateParams({ from: from || today, to: to || from || today, page: 1 })
+    ) {
+      setIsLoading(false)
+    }
+  }
+
+  function handleClearDateRange() {
+    setIsLoading(true)
+    // Clearing an already-default (today) range doesn't change the URL, so the
+    // load effect wouldn't re-run — bump refreshKey (or drop loading) instead.
+    if (!updateParams({ from: "", to: "", page: 1 })) {
+      setRefreshKey((key) => key + 1)
+    }
   }
 
   async function handleSlotChange(memberId, field, nextDisplayTime) {
     const payload = {
-      date,
-      [field]: nextDisplayTime ? toAttendanceDateTime(date, nextDisplayTime) : null,
+      date: activeDate,
+      [field]: nextDisplayTime
+        ? toAttendanceDateTime(activeDate, nextDisplayTime)
+        : null,
     }
-  
+
     if (!nextDisplayTime) {
       const outField = {
         morningIn: "morningOut",
         afternoonIn: "afternoonOut",
       }[field]
-  
+
       if (outField) payload[outField] = null
     }
-  
+
     try {
       await upsertAttendance(memberId, payload)
       setRefreshKey((key) => key + 1)
@@ -245,6 +321,12 @@ function AttendancePageContent() {
     levels.length > 0
       ? levels
       : [{ name: "All", label: "All Members", count: meta.total ?? 0 }]
+
+  const rangeLabel =
+    formatDateRangeLabel({
+      start: toDatePoint(dateFrom),
+      end: toDatePoint(dateTo),
+    }) || today
 
   return (
     <div className="min-h-screen bg-background p-4 sm:p-6 md:p-8">
@@ -260,15 +342,14 @@ function AttendancePageContent() {
           </div>
 
           <div className="flex items-center gap-3">
-            <label className="relative flex h-10 items-center rounded-lg border border-input bg-white px-3 text-sm">
-              <Calendar className="mr-2 h-3.5 w-3.5 text-muted-foreground" />
-              <input
-                type="date"
-                value={date}
-                onChange={(event) => handleDateChange(event.target.value)}
-                className="bg-transparent text-sm text-foreground outline-none"
-              />
-            </label>
+            <DateRangeButton
+              hasRange
+              label={rangeLabel}
+              clearable={hasCustomRange}
+              onOpen={() => setIsDateRangeOpen(true)}
+              onClear={handleClearDateRange}
+              className="h-10 px-4"
+            />
 
             <Button
               className="h-10 gap-2 rounded-lg bg-[#1e2a4a] px-4 text-white hover:bg-[#1e2a4a]/90"
@@ -321,7 +402,10 @@ function AttendancePageContent() {
                 <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   placeholder="Search member..."
-                  className={cn("h-9 rounded-lg bg-white pl-9", search && "pr-9")}
+                  className={cn(
+                    "h-9 rounded-lg bg-white pl-9",
+                    search && "pr-9"
+                  )}
                   value={search}
                   onChange={(event) => handleSearchChange(event.target.value)}
                 />
@@ -346,7 +430,10 @@ function AttendancePageContent() {
                 totalPages={meta.totalPages || 1}
                 total={meta.total || 0}
                 pageSize={PAGE_SIZE}
-                onPageChange={(nextPage) => updateParams({ page: nextPage })}
+                onPageChange={(nextPage) => {
+                  setIsLoading(true)
+                  updateParams({ page: nextPage })
+                }}
                 onSlotChange={handleSlotChange}
               />
             </div>
@@ -354,10 +441,21 @@ function AttendancePageContent() {
         )}
       </div>
 
+      <DateRangeFilterModal
+        open={isDateRangeOpen}
+        onOpenChange={setIsDateRangeOpen}
+        range={dateRange}
+        hasSelection={Boolean(dateFrom && dateTo)}
+        onApply={handleApplyDateRange}
+        onReset={handleClearDateRange}
+        resetEnabled
+      />
+
       <ExportAttendanceReportModal
         open={isExportOpen}
         onOpenChange={setIsExportOpen}
-        date={date}
+        dateFrom={dateFrom}
+        dateTo={dateTo}
         levelFilter={activeLevel}
         search={debouncedSearch}
       />

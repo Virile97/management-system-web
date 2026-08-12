@@ -41,7 +41,10 @@ function FinanceCards({ stats, isLoading }) {
       label: "Net Balance",
       value: currencyFormatter.format(netBalance),
       icon: PhilippinePeso,
-      iconClassName: netBalance >= 0 ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-500",
+      iconClassName:
+        netBalance >= 0
+          ? "bg-emerald-50 text-emerald-600"
+          : "bg-red-50 text-red-500",
       valueClassName: netBalance >= 0 ? "text-emerald-600" : "text-red-500",
     },
   ]

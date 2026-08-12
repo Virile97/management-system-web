@@ -44,7 +44,9 @@ function MembersDirectoryReport({
             </p>
           </div>
           <div className="rounded-md border border-[#1e2a4a]/15 bg-[#1e2a4a]/5 px-2.5 py-1.5 text-right">
-            <p className="text-[8px] font-medium tracking-wide text-[#1e2a4a]/45 uppercase">Total</p>
+            <p className="text-[8px] font-medium tracking-wide text-[#1e2a4a]/45 uppercase">
+              Total
+            </p>
             <p className="font-heading text-lg font-normal text-[#1e2a4a] tabular-nums">
               {members.length}
             </p>
@@ -57,10 +59,14 @@ function MembersDirectoryReport({
           <dt className="text-[8px] font-medium tracking-wide text-[#1e2a4a]/45 uppercase">
             Generated
           </dt>
-          <dd className="text-[#1e2a4a]/85">{formatGeneratedAt(generatedAt)}</dd>
+          <dd className="text-[#1e2a4a]/85">
+            {formatGeneratedAt(generatedAt)}
+          </dd>
         </div>
         <div>
-          <dt className="text-[8px] font-medium tracking-wide text-[#1e2a4a]/45 uppercase">Scope</dt>
+          <dt className="text-[8px] font-medium tracking-wide text-[#1e2a4a]/45 uppercase">
+            Scope
+          </dt>
           <dd className="text-[#1e2a4a]/85">{scopeLabel}</dd>
         </div>
         <div>
@@ -129,18 +135,31 @@ function MembersDirectoryReport({
           </thead>
           <tbody>
             {members.map((member, index) => (
-              <tr key={member.id} className="border-b border-[#1e2a4a]/10 align-top">
-                <td className="py-1.5 pr-1.5 tabular-nums text-[#1e2a4a]/45">{index + 1}</td>
-                <td className="py-1.5 pr-2 font-medium text-[#1e2a4a]">{member.name || "—"}</td>
+              <tr
+                key={member.id}
+                className="border-b border-[#1e2a4a]/10 align-top"
+              >
+                <td className="py-1.5 pr-1.5 tabular-nums text-[#1e2a4a]/45">
+                  {index + 1}
+                </td>
+                <td className="py-1.5 pr-2 font-medium text-[#1e2a4a]">
+                  {member.name || "—"}
+                </td>
                 <td className="py-1.5 pr-2 text-[#1e2a4a]/80">
                   <div>{member.email || "—"}</div>
                   <div className="text-[9px] text-[#1e2a4a]/55">
                     {member.phone || member.contact || "—"}
                   </div>
                 </td>
-                <td className="py-1.5 pr-2 text-[#1e2a4a]/80">{member.status || "—"}</td>
-                <td className="py-1.5 pr-2 text-[#1e2a4a]/80">{member.group || "—"}</td>
-                <td className="py-1.5 text-[#1e2a4a]/80">{member.baptized || "—"}</td>
+                <td className="py-1.5 pr-2 text-[#1e2a4a]/80">
+                  {member.status || "—"}
+                </td>
+                <td className="py-1.5 pr-2 text-[#1e2a4a]/80">
+                  {member.group || "—"}
+                </td>
+                <td className="py-1.5 text-[#1e2a4a]/80">
+                  {member.baptized || "—"}
+                </td>
               </tr>
             ))}
           </tbody>

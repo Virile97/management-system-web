@@ -1,22 +1,29 @@
 "use client"
 
 import { useEffect, useMemo, useRef, useState } from "react"
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import { Clock } from "lucide-react"
 
-const hours = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, "0"))
+const hours = Array.from({ length: 12 }, (_, i) =>
+  String(i + 1).padStart(2, "0")
+)
 const minutes = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, "0"))
 const periods = ["AM", "PM"]
 
 function parseValue(value) {
   const match = /^(\d{2}):(\d{2}) (AM|PM)$/.exec(value ?? "")
 
-  if (!match) return { 
-    hour: null, 
-    minute: null, 
-    period: null 
-  }
+  if (!match)
+    return {
+      hour: null,
+      minute: null,
+      period: null,
+    }
 
   return { hour: match[1], minute: match[2], period: match[3] }
 }
@@ -64,7 +71,9 @@ function TimePickerColumn({ options, active, currentValue, onSelect }) {
               ? "bg-blue-500 font-medium text-white"
               : "text-foreground/80 hover:bg-muted",
 
-            active !== option && option === currentValue && "bg-blue-50 font-medium text-blue-600"
+            active !== option &&
+              option === currentValue &&
+              "bg-blue-50 font-medium text-blue-600"
           )}
         >
           {option}
@@ -80,7 +89,12 @@ function clearNextSegment(parts) {
   return parts
 }
 
-function TimePickerInput({ value, disabled, onChange, placeholder = "--:-- --" }) {
+function TimePickerInput({
+  value,
+  disabled,
+  onChange,
+  placeholder = "--:-- --",
+}) {
   const [open, setOpen] = useState(false)
   const [draft, setDraft] = useState(() => parseValue(value))
 
@@ -101,7 +115,8 @@ function TimePickerInput({ value, disabled, onChange, placeholder = "--:-- --" }
   }
 
   function fillMissingSegment(parts) {
-    if (!(parts.hour || parts.minute) || (parts.hour && parts.minute)) return parts
+    if (!(parts.hour || parts.minute) || (parts.hour && parts.minute))
+      return parts
 
     return {
       ...parts,
@@ -133,7 +148,13 @@ function TimePickerInput({ value, disabled, onChange, placeholder = "--:-- --" }
   const display = hasAnySegment ? formatDisplay(draft) : null
 
   const { hourOptions, minuteOptions, nowHour, nowMinute } = useMemo(() => {
-    if (!open) return { hourOptions: hours, minuteOptions: minutes, nowHour: null, nowMinute: null }
+    if (!open)
+      return {
+        hourOptions: hours,
+        minuteOptions: minutes,
+        nowHour: null,
+        nowMinute: null,
+      }
 
     const hour = currentHour12()
     const minute = currentMinute()
@@ -166,9 +187,23 @@ function TimePickerInput({ value, disabled, onChange, placeholder = "--:-- --" }
 
       <PopoverContent className="w-auto" onKeyDown={handleKeyDown}>
         <div className="flex divide-x divide-border">
-          <TimePickerColumn options={hourOptions} active={draft.hour} currentValue={nowHour} onSelect={(hour) => commit({ ...draft, hour })} />
-          <TimePickerColumn options={minuteOptions} active={draft.minute} currentValue={nowMinute} onSelect={(minute) => commit({ ...draft, minute })} />
-          <TimePickerColumn options={periods} active={draft.period} onSelect={(period) => commit({ ...draft, period })} />
+          <TimePickerColumn
+            options={hourOptions}
+            active={draft.hour}
+            currentValue={nowHour}
+            onSelect={(hour) => commit({ ...draft, hour })}
+          />
+          <TimePickerColumn
+            options={minuteOptions}
+            active={draft.minute}
+            currentValue={nowMinute}
+            onSelect={(minute) => commit({ ...draft, minute })}
+          />
+          <TimePickerColumn
+            options={periods}
+            active={draft.period}
+            onSelect={(period) => commit({ ...draft, period })}
+          />
         </div>
       </PopoverContent>
     </Popover>

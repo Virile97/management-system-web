@@ -5,22 +5,16 @@ import { Popover as PopoverPrimitive } from "@base-ui/react/popover"
 
 import { cn } from "@/lib/utils"
 
-function Popover({
-  ...props
-}) {
-  return <PopoverPrimitive.Root data-slot="popover" {...props} />;
+function Popover({ ...props }) {
+  return <PopoverPrimitive.Root data-slot="popover" {...props} />
 }
 
-function PopoverTrigger({
-  ...props
-}) {
-  return <PopoverPrimitive.Trigger data-slot="popover-trigger" {...props} />;
+function PopoverTrigger({ ...props }) {
+  return <PopoverPrimitive.Trigger data-slot="popover-trigger" {...props} />
 }
 
-function PopoverPortal({
-  ...props
-}) {
-  return <PopoverPrimitive.Portal data-slot="popover-portal" {...props} />;
+function PopoverPortal({ ...props }) {
+  return <PopoverPrimitive.Portal data-slot="popover-portal" {...props} />
 }
 
 function PopoverContent({
@@ -42,7 +36,7 @@ function PopoverContent({
         />
       </PopoverPrimitive.Positioner>
     </PopoverPortal>
-  );
+  )
 }
 
 export { Popover, PopoverTrigger, PopoverPortal, PopoverContent }

@@ -22,10 +22,12 @@ function useAsyncData(buildTasks, { maxAttempts, deps = [] } = {}) {
       setError("")
 
       const results = await Promise.allSettled(
-        tasks.map(([fetcher]) => withRetry((attempt) => fetcher(controller.signal, attempt), {
-          maxAttempts,
-          signal: controller.signal,
-        }))
+        tasks.map(([fetcher]) =>
+          withRetry((attempt) => fetcher(controller.signal, attempt), {
+            maxAttempts,
+            signal: controller.signal,
+          })
+        )
       )
 
       if (controller.signal.aborted) return
