@@ -29,3 +29,29 @@ export async function GET(request) {
     return NextResponse.json({ success: false, message }, { status })
   }
 }
+
+export async function POST(request) {
+  const token = getSessionToken()
+  if (!token) {
+    return NextResponse.json(
+      { success: false, message: "Not authenticated" },
+      { status: 401 }
+    )
+  }
+
+  const body = await request.json()
+
+  try {
+    const { data } = await api.post(
+      API_ENDPOINTS.USERS,
+      body,
+      withAuthHeader(token)
+    )
+    return NextResponse.json(data)
+  } catch (err) {
+    const status = err?.response?.status || 500
+    const message = err?.response?.data?.message || "Unable to create user"
+
+    return NextResponse.json({ success: false, message }, { status })
+  }
+}

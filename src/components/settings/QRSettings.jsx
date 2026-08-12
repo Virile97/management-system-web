@@ -9,22 +9,40 @@ const positions = ["Top Right", "Bottom Left", "Bottom Right"]
 const sizes = ["Small", "Medium", "Large"]
 
 function QRSettings({ qr, onChange }) {
+  const disabled = Boolean(qr.disabled)
+
   return (
-    <Card className="rounded-2xl p-4 sm:p-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <QrCode className="h-5 w-5 text-foreground/70" />
-          <h2 className="font-heading text-xl font-normal text-foreground/80">
-            QR Code on Slip
-          </h2>
+    <Card
+      className={cn(
+        "rounded-2xl p-4 sm:p-6",
+        disabled && "opacity-60"
+      )}
+    >
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <QrCode className="h-5 w-5 shrink-0 text-foreground/70" />
+          <div className="min-w-0">
+            <h2 className="font-heading text-xl font-normal text-foreground/80">
+              QR Code on Slip
+            </h2>
+            {disabled && (
+              <p className="text-xs text-muted-foreground">Disabled for now</p>
+            )}
+          </div>
         </div>
         <Switch
           checked={qr.enabled}
+          disabled={disabled}
           onCheckedChange={(checked) => onChange("enabled", checked)}
         />
       </div>
 
-      <CardContent className="flex flex-col gap-5 px-0 pt-4">
+      <CardContent
+        className={cn(
+          "flex flex-col gap-5 px-0 pt-4",
+          disabled && "pointer-events-none"
+        )}
+      >
         <p className="text-sm text-muted-foreground">
           Each slip carries a QR code unique to the member. When scanned at the
           offering desk it auto-fills their record in the finance scanner.
@@ -36,6 +54,7 @@ function QRSettings({ qr, onChange }) {
             id="qr-caption"
             value={qr.caption}
             onChange={(event) => onChange("caption", event.target.value)}
+            disabled={disabled}
             className="h-10 rounded-lg"
           />
         </div>
@@ -47,12 +66,14 @@ function QRSettings({ qr, onChange }) {
               <button
                 key={option}
                 type="button"
+                disabled={disabled}
                 onClick={() => onChange("position", option)}
                 className={cn(
                   "h-9 rounded-lg border px-1 text-xs font-medium transition-colors sm:text-sm",
                   qr.position === option
                     ? "border-transparent bg-[#1e2a4a] text-white"
-                    : "border-input bg-transparent text-foreground/80 hover:bg-muted"
+                    : "border-input bg-transparent text-foreground/80 hover:bg-muted",
+                  disabled && "cursor-not-allowed"
                 )}
               >
                 {option}
@@ -68,12 +89,14 @@ function QRSettings({ qr, onChange }) {
               <button
                 key={option}
                 type="button"
+                disabled={disabled}
                 onClick={() => onChange("size", option)}
                 className={cn(
                   "h-9 flex-1 rounded-lg border text-sm font-medium transition-colors",
                   qr.size === option
                     ? "border-transparent bg-[#1e2a4a] text-white"
-                    : "border-input bg-transparent text-foreground/80 hover:bg-muted"
+                    : "border-input bg-transparent text-foreground/80 hover:bg-muted",
+                  disabled && "cursor-not-allowed"
                 )}
               >
                 {option}

@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { User, X } from "lucide-react"
+import { useEffect, useState } from "react"
+import { UserPen, X } from "lucide-react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
@@ -11,7 +11,6 @@ import {
   Dialog,
   DialogClose,
   DialogContent,
-  DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog"
 import {
@@ -21,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { createUser } from "@/services/users.service"
+import { updateUser } from "@/services/users.service"
 
 const ROLE_OPTIONS = [
   {
@@ -41,67 +40,61 @@ const ROLE_OPTIONS = [
   },
 ]
 
-const EMPTY_FORM = {
-  name: "",
-  email: "",
-  contact: "",
-  role: "USER",
-}
-
-function AddUserDialog({ open, onOpenChange, onCreated }) {
-  const [form, setForm] = useState(EMPTY_FORM)
+function EditUserDialog({ open, onOpenChange, user, onUpdated }) {
+  const [name, setName] = useState("")
+  const [email, setEmail] = useState("")
+  const [contact, setContact] = useState("")
+  const [role, setRole] = useState("USER")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState("")
 
-  const selectedRole = ROLE_OPTIONS.find((option) => option.value === form.role)
+  useEffect(() => {
+    if (!open || !user) return
 
-  function handleOpenChange(next) {
-    if (!next) {
-      setForm(EMPTY_FORM)
-      setError("")
-      setIsSubmitting(false)
-    }
-    onOpenChange(next)
-  }
+    setName(user.name || "")
+    setEmail(user.email || "")
+    setContact(user.contact || "")
+    setRole(user.role || "USER")
+    setError("")
+    setIsSubmitting(false)
+  }, [open, user])
 
-  function handleChange(field, value) {
-    setForm((prev) => ({ ...prev, [field]: value }))
-  }
+  const selectedRole = ROLE_OPTIONS.find((option) => option.value === role)
 
   async function handleSubmit(event) {
     event.preventDefault()
-    if (isSubmitting) return
+    if (!user?.id || isSubmitting) return
 
     setError("")
     setIsSubmitting(true)
 
     try {
-      const created = await createUser({
-        name: form.name.trim(),
-        email: form.email.trim(),
-        contact: form.contact.trim(),
-        role: form.role,
+      const updated = await updateUser(user.id, {
+        name: name.trim(),
+        email: email.trim(),
+        contact: contact.trim(),
+        role,
       })
-      toast.success("User created. A set-password email has been sent.")
-      onCreated?.(created)
-      handleOpenChange(false)
+      toast.success("User updated")
+      onUpdated?.(updated)
+      onOpenChange(false)
     } catch (err) {
-      setError(err?.message || "Unable to create user. Please try again.")
+      setError(err?.message || "Unable to update user. Please try again.")
     } finally {
       setIsSubmitting(false)
     }
   }
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className="gap-0 overflow-hidden p-0 sm:max-w-md"
         showCloseButton={false}
       >
         <div className="relative flex items-center gap-2.5 rounded-t-xl bg-[#1e2a4a] px-4 py-4">
-          <User className="h-4 w-4 text-white" />
+          <UserPen className="h-4 w-4 text-white" />
           <span className="font-heading text-base font-medium text-white">
-            Add New User
+            Edit User
           </span>
           <DialogClose className="absolute top-1/2 right-4 -translate-y-1/2 text-white/70 hover:text-white">
             <X className="h-4 w-4" />
@@ -111,51 +104,51 @@ function AddUserDialog({ open, onOpenChange, onCreated }) {
 
         <form className="space-y-4 p-4" onSubmit={handleSubmit}>
           <div className="space-y-1.5">
-            <Label htmlFor="add-user-name">Full Name *</Label>
+            <Label htmlFor="edit-user-name">Full Name *</Label>
             <Input
-              id="add-user-name"
-              value={form.name}
-              onChange={(event) => handleChange("name", event.target.value)}
+              id="edit-user-name"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
               placeholder="e.g. Kwame Asante"
               required
-              disabled={isSubmitting}
+              disabled={isSubmitting || !user}
             />
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="add-user-email">Email Address *</Label>
+            <Label htmlFor="edit-user-email">Email Address *</Label>
             <Input
-              id="add-user-email"
+              id="edit-user-email"
               type="email"
-              value={form.email}
-              onChange={(event) => handleChange("email", event.target.value)}
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
               placeholder="user@church.org"
               required
-              disabled={isSubmitting}
+              disabled={isSubmitting || !user}
             />
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="add-user-contact">Contact Number *</Label>
+            <Label htmlFor="edit-user-contact">Contact Number *</Label>
             <Input
-              id="add-user-contact"
+              id="edit-user-contact"
               type="tel"
-              value={form.contact}
-              onChange={(event) => handleChange("contact", event.target.value)}
+              value={contact}
+              onChange={(event) => setContact(event.target.value)}
               placeholder="+233 24 000 0000"
               required
-              disabled={isSubmitting}
+              disabled={isSubmitting || !user}
             />
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="add-user-role">Role *</Label>
+            <Label htmlFor="edit-user-role">Role *</Label>
             <Select
-              value={form.role}
-              onValueChange={(value) => handleChange("role", value)}
-              disabled={isSubmitting}
+              value={role}
+              onValueChange={setRole}
+              disabled={isSubmitting || !user}
             >
-              <SelectTrigger id="add-user-role" className="w-full">
+              <SelectTrigger id="edit-user-role" className="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -173,28 +166,23 @@ function AddUserDialog({ open, onOpenChange, onCreated }) {
             )}
           </div>
 
-          <DialogDescription className="rounded-lg bg-muted px-3 py-2 text-xs">
-            No password is set here. The new user receives an email with a link
-            to choose their own password.
-          </DialogDescription>
-
           {error && <p className="text-sm text-destructive">{error}</p>}
 
           <DialogFooter className="mx-0 mb-0 px-0 pt-2 sm:justify-end">
             <Button
               type="button"
               variant="outline"
-              onClick={() => handleOpenChange(false)}
+              onClick={() => onOpenChange(false)}
               disabled={isSubmitting}
             >
               Cancel
             </Button>
             <Button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || !user}
               className="bg-[#1e2a4a] text-white hover:bg-[#1e2a4a]/90"
             >
-              {isSubmitting ? "Adding…" : "Add User"}
+              {isSubmitting ? "Saving…" : "Save Changes"}
             </Button>
           </DialogFooter>
         </form>
@@ -203,5 +191,5 @@ function AddUserDialog({ open, onOpenChange, onCreated }) {
   )
 }
 
-export { AddUserDialog }
-export default AddUserDialog
+export { EditUserDialog }
+export default EditUserDialog

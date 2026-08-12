@@ -29,7 +29,8 @@ function SlipFields({ fields, onToggleVisibility }) {
             key={field.key}
             className={cn(
               "flex items-center justify-between gap-2 rounded-lg border border-border px-3 py-2.5 transition-opacity",
-              !field.visible && "opacity-50"
+              (!field.visible || field.disabled) && "opacity-50",
+              field.disabled && "cursor-not-allowed"
             )}
           >
             <div className="flex min-w-0 items-center gap-3">
@@ -38,14 +39,24 @@ function SlipFields({ fields, onToggleVisibility }) {
                 {field.label}
               </span>
               <span className="hidden shrink-0 text-xs text-muted-foreground sm:inline">
-                {field.type} · {field.width}
+                {field.disabled
+                  ? "Disabled for now"
+                  : `${field.type} · ${field.width}`}
               </span>
             </div>
             <div className="flex shrink-0 items-center gap-2 text-muted-foreground">
               <button
                 type="button"
                 onClick={() => onToggleVisibility(field.key)}
-                className="flex h-6 w-6 items-center justify-center rounded hover:bg-muted hover:text-foreground"
+                disabled={field.disabled}
+                aria-label={
+                  field.disabled
+                    ? `${field.label} is disabled`
+                    : field.visible
+                      ? `Hide ${field.label}`
+                      : `Show ${field.label}`
+                }
+                className="flex h-6 w-6 items-center justify-center rounded hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
               >
                 {field.visible ? (
                   <Eye className="h-4 w-4" />

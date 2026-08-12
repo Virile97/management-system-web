@@ -11,6 +11,7 @@ import {
   Settings,
   X,
   LogOut,
+  Loader2,
   ClipboardCheck,
 } from "lucide-react"
 import { getCurrentUser } from "@/lib/auth"
@@ -135,15 +136,30 @@ function Sidebar({ open = false, onClose }) {
 
       onClose?.()
       router.push("/login")
+      // Keep the overlay up until navigation unmounts this page — clearing
+      // isLoggingOut here would flash the UI before /login lands.
     } catch {
       setLogoutError(ERROR_MESSAGES.LOGOUT)
-    } finally {
       setIsLoggingOut(false)
     }
   }
 
   return (
     <>
+      {isLoggingOut && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-[#1e2a4a]/70 backdrop-blur-[2px]"
+          role="status"
+          aria-live="polite"
+          aria-busy="true"
+        >
+          <div className="flex flex-col items-center gap-3 rounded-2xl bg-white px-8 py-6 shadow-lg">
+            <Loader2 className="h-6 w-6 animate-spin text-[#1e2a4a]" />
+            <p className="text-sm font-medium text-foreground/85">Signing out…</p>
+          </div>
+        </div>
+      )}
+
       {open && (
         <div
           className="fixed inset-0 z-40 bg-black/40 md:hidden"
@@ -231,11 +247,15 @@ function Sidebar({ open = false, onClose }) {
               type="button"
               onClick={handleLogout}
               disabled={isLoggingOut}
-              aria-label="Sign out"
-              title="Sign out"
+              aria-label={isLoggingOut ? "Signing out" : "Sign out"}
+              title={isLoggingOut ? "Signing out…" : "Sign out"}
               className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-white/50 hover:bg-white/10 hover:text-white disabled:pointer-events-none disabled:opacity-50"
             >
-              <LogOut className="h-4 w-4" />
+              {isLoggingOut ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <LogOut className="h-4 w-4" />
+              )}
             </button>
           </div>
 

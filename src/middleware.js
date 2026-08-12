@@ -30,9 +30,11 @@ export function middleware(request) {
     request.cookies.get(AUTH_TOKEN_COOKIE_NAME)?.value
   )
   const hasSession = Boolean(tokenSession)
-  const isLoginPage = request.nextUrl.pathname === "/login"
+  const isGuestAuthPage =
+    request.nextUrl.pathname === "/login" ||
+    request.nextUrl.pathname === "/set-password"
 
-  if (isLoginPage) {
+  if (isGuestAuthPage) {
     if (!hasSession) {
       const response = NextResponse.next()
       response.headers.set("Cache-Control", "no-store, must-revalidate")
@@ -170,6 +172,7 @@ export const config = {
     "/soul-winning/:path*",
     "/settings/:path*",
     "/login",
+    "/set-password",
     "/api/dashboard/:path*",
     "/api/members/:path*",
     "/api/finances/:path*",

@@ -6,6 +6,7 @@ export const API_ENDPOINTS = {
   AUTH_LOGOUT: `${API_V1}/auth/logout`,
   AUTH_REFRESH: `${API_V1}/auth/refresh`,
   AUTH_PUBLIC_KEY: `${API_V1}/auth/public-key`,
+  AUTH_SET_PASSWORD: `${API_V1}/auth/set-password`,
 
   // Dashboard
   DASHBOARD_STATS: `${API_V1}/dashboard/stats`,
@@ -47,6 +48,7 @@ export const APP_API_ENDPOINTS = {
   AUTH_LOGOUT: "/api/auth/logout",
   AUTH_REFRESH: "/api/auth/refresh",
   AUTH_PUBLIC_KEY: "/api/auth/public-key",
+  AUTH_SET_PASSWORD: "/api/auth/set-password",
 
   // Dashboard
   DASHBOARD_STATS: "/api/dashboard",

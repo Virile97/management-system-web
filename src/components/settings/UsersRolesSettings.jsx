@@ -1,7 +1,8 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { Plus, Search, Shield, ShieldCheck, Trash2 } from "lucide-react"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { Pencil, Plus, Search, Shield, ShieldCheck, Trash2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -16,6 +17,7 @@ import {
 import { EmptyState } from "@/components/common/EmptyState"
 import { ListCardSkeleton } from "@/components/dashboard/DashboardSkeletons"
 import { AddUserDialog } from "@/components/settings/AddUserDialog"
+import { EditUserDialog } from "@/components/settings/EditUserDialog"
 import { cn } from "@/lib/utils"
 import { listUsers, deleteUser } from "@/services/users.service"
 
@@ -56,6 +58,14 @@ function roleMeta(role) {
 }
 
 function UsersRolesSettings() {
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+
+  // Same ?isEdit=true&userId=… convention as members edit.
+  const isEditParam = searchParams.get("isEdit") === "true"
+  const editUserIdParam = searchParams.get("userId") || ""
+
   const [users, setUsers] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState("")
@@ -64,6 +74,31 @@ function UsersRolesSettings() {
   const [pendingDelete, setPendingDelete] = useState(null)
   const [isDeleting, setIsDeleting] = useState(false)
   const [isAddUserOpen, setIsAddUserOpen] = useState(false)
+
+  function updateParams(updates) {
+    const params = new URLSearchParams(searchParams)
+
+    for (const [key, value] of Object.entries(updates)) {
+      if (!value) params.delete(key)
+      else params.set(key, String(value))
+    }
+
+    const query = params.toString()
+    router.push(`${pathname}${query ? `?${query}` : ""}`, { scroll: false })
+  }
+
+  function openEditUser(user) {
+    updateParams({ isEdit: "true", userId: user.id })
+  }
+
+  function closeEditUser() {
+    updateParams({ isEdit: "", userId: "" })
+  }
+
+  const editingUser =
+    isEditParam && editUserIdParam
+      ? users.find((user) => String(user.id) === String(editUserIdParam)) || null
+      : null
 
   useEffect(() => {
     const controller = new AbortController()
@@ -244,14 +279,24 @@ function UsersRolesSettings() {
                           </span>
                         </td>
                         <td className="px-4 py-3 text-right">
-                          <button
-                            type="button"
-                            onClick={() => setPendingDelete(user)}
-                            aria-label={`Delete ${user.name || user.email}`}
-                            className="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
+                          <div className="flex items-center justify-end gap-1">
+                            <button
+                              type="button"
+                              onClick={() => openEditUser(user)}
+                              aria-label={`Edit ${user.name || user.email}`}
+                              className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setPendingDelete(user)}
+                              aria-label={`Delete ${user.name || user.email}`}
+                              className="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     )
@@ -295,7 +340,31 @@ function UsersRolesSettings() {
         </DialogContent>
       </Dialog>
 
-      <AddUserDialog open={isAddUserOpen} onOpenChange={setIsAddUserOpen} />
+      <AddUserDialog
+        open={isAddUserOpen}
+        onOpenChange={setIsAddUserOpen}
+        onCreated={(created) => {
+          if (!created) return
+          setUsers((prev) => {
+            const exists = prev.some((user) => user.id === created.id)
+            return exists
+              ? prev.map((user) => (user.id === created.id ? created : user))
+              : [created, ...prev]
+          })
+        }}
+      />
+      <EditUserDialog
+        open={isEditParam && Boolean(editUserIdParam)}
+        onOpenChange={(open) => !open && closeEditUser()}
+        user={editingUser}
+        onUpdated={(updated) => {
+          if (!updated) return
+          setUsers((prev) =>
+            prev.map((user) => (user.id === updated.id ? { ...user, ...updated } : user))
+          )
+          closeEditUser()
+        }}
+      />
     </div>
   )
 }

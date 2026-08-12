@@ -37,6 +37,10 @@ function SettingsPageContent() {
     } else {
       params.set("tab", nextTab)
     }
+    // Drop edit-user params when leaving Users & Roles so the modal doesn't
+    // reopen if the user returns to the tab later.
+    params.delete("isEdit")
+    params.delete("userId")
     router.push(
       `${pathname}${params.toString() ? `?${params.toString()}` : ""}`,
       { scroll: false }

@@ -16,7 +16,9 @@ const defaultFields = [
     label: "Offering Type",
     type: "select",
     width: "full",
-    visible: true,
+    // Temporarily disabled in settings — keep hidden and non-togglable.
+    visible: false,
+    disabled: true,
   },
   {
     key: "amount",
@@ -37,6 +39,8 @@ const initialBranding = {
 
 const initialQr = {
   enabled: false,
+  // Temporarily disabled in settings — keep off and non-togglable.
+  disabled: true,
   caption: "Scan to record offering",
   position: "Top Right",
   size: "Medium",
@@ -54,14 +58,18 @@ function SlipConfigProvider({ children }) {
   }
 
   function updateQr(key, value) {
-    setQr((prev) => ({ ...prev, [key]: value }))
+    setQr((prev) => {
+      if (prev.disabled) return prev
+      return { ...prev, [key]: value }
+    })
   }
 
   function toggleFieldVisibility(key) {
     setFields((prev) =>
-      prev.map((field) =>
-        field.key === key ? { ...field, visible: !field.visible } : field
-      )
+      prev.map((field) => {
+        if (field.key !== key || field.disabled) return field
+        return { ...field, visible: !field.visible }
+      })
     )
   }
 
