@@ -12,12 +12,12 @@ function QRSettings({ qr, onChange }) {
   const disabled = Boolean(qr.disabled)
 
   return (
-    <Card className={cn("rounded-2xl p-4 sm:p-6", disabled && "opacity-60")}>
+    <Card className={cn("rounded-2xl p-3 sm:p-6", disabled && "opacity-60")}>
       <div className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2.5">
           <QrCode className="h-5 w-5 shrink-0 text-foreground/70" />
           <div className="min-w-0">
-            <h2 className="font-heading text-xl font-normal text-foreground/80">
+            <h2 className="font-heading text-lg font-normal text-foreground/80 sm:text-xl">
               QR Code on Slip
             </h2>
             {disabled && (
@@ -34,7 +34,7 @@ function QRSettings({ qr, onChange }) {
 
       <CardContent
         className={cn(
-          "flex flex-col gap-5 px-0 pt-4",
+          "flex flex-col gap-4 px-0 pt-4 sm:gap-5",
           disabled && "pointer-events-none"
         )}
       >
@@ -100,15 +100,15 @@ function QRSettings({ qr, onChange }) {
           </div>
         </div>
 
-        <div className="flex items-start gap-3 rounded-xl bg-muted/60 p-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-white ring-1 ring-border">
-            <QrCode className="h-7 w-7 text-foreground/80" />
+        <div className="flex items-start gap-3 rounded-xl bg-muted/60 p-3 sm:p-4">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-white ring-1 ring-border sm:h-12 sm:w-12">
+            <QrCode className="h-6 w-6 text-foreground/80 sm:h-7 sm:w-7" />
           </div>
-          <div>
+          <div className="min-w-0">
             <p className="text-sm font-medium text-foreground/85">
               Sample QR preview
             </p>
-            <p className="mt-0.5 text-xs text-muted-foreground">
+            <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
               Contains{" "}
               <code className="rounded bg-border/60 px-1 py-0.5">
                 MEMBER:0001

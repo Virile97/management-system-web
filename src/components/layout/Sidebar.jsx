@@ -49,7 +49,7 @@ const sidebarItems = [
     label: "Attendance",
     icon: ClipboardCheck,
     section: "top",
-    allowedFor: ALL_ROLES,
+    allowedFor: ["ADMIN", "USER"],
   },
   {
     href: "/finances",
@@ -63,7 +63,7 @@ const sidebarItems = [
     label: "Soul Winning",
     icon: Heart,
     section: "top",
-    allowedFor: ["ADMIN", "FINANCE_ADMIN"],
+    allowedFor: ["ADMIN"],
   },
   {
     href: "/settings",

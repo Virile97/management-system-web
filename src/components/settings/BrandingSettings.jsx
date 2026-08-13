@@ -15,14 +15,14 @@ const accentColors = [
 
 function BrandingSettings({ branding, onChange }) {
   return (
-    <Card className="rounded-2xl p-4 sm:p-6">
+    <Card className="rounded-2xl p-3 sm:p-6">
       <CardHeader className="px-0">
-        <CardTitle className="font-heading text-xl font-normal text-foreground/80">
+        <CardTitle className="font-heading text-lg font-normal text-foreground/80 sm:text-xl">
           Header &amp; Branding
         </CardTitle>
       </CardHeader>
 
-      <CardContent className="flex flex-col gap-5 px-0">
+      <CardContent className="flex flex-col gap-4 px-0 sm:gap-5">
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="church-name">Church Name</Label>
           <Input
@@ -55,14 +55,15 @@ function BrandingSettings({ branding, onChange }) {
 
         <div className="flex flex-col gap-2">
           <Label>Accent Color</Label>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2.5">
             {accentColors.map((color) => (
               <button
                 key={color.name}
                 type="button"
                 onClick={() => onChange("accent", color.name)}
+                aria-label={`${color.name} accent`}
                 className={cn(
-                  "h-7 w-7 shrink-0 rounded-full ring-2 ring-offset-2 ring-offset-card transition-all",
+                  "h-8 w-8 shrink-0 rounded-full ring-2 ring-offset-2 ring-offset-card transition-all sm:h-7 sm:w-7",
                   branding.accent === color.name
                     ? "ring-foreground/60"
                     : "ring-transparent"

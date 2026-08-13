@@ -28,17 +28,17 @@ function RecordFilters({
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
       <div className="flex flex-col gap-3 sm:flex-1 sm:flex-row sm:items-center sm:gap-3">
-        <div className="relative sm:max-w-xs sm:flex-1">
+        <div className="relative w-full sm:max-w-xs sm:flex-1">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search converts or soul winners..."
+            placeholder="Search converts or winners..."
             className="h-10 rounded-lg bg-white pl-9"
             value={search}
             onChange={(event) => onSearchChange(event.target.value)}
           />
         </div>
 
-        <div className="flex flex-col gap-3 sm:flex-row">
+        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-row sm:gap-3">
           <Select value={status} onValueChange={onStatusChange}>
             <SelectTrigger className="h-10 w-full rounded-lg sm:w-44">
               <Filter className="h-4 w-4 text-muted-foreground" />
@@ -56,7 +56,7 @@ function RecordFilters({
             <SelectTrigger className="h-10 w-full rounded-lg sm:w-48">
               <Users className="h-4 w-4 text-muted-foreground" />
               <SelectValue>
-                {(value) => (value === "all" ? "All Soul Winners" : value)}
+                {(value) => (value === "all" ? "All Winners" : value)}
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -71,7 +71,7 @@ function RecordFilters({
         </div>
       </div>
 
-      <p className="shrink-0 text-sm text-muted-foreground">
+      <p className="text-xs text-muted-foreground sm:shrink-0 sm:text-sm">
         {resultCount} results
       </p>
     </div>

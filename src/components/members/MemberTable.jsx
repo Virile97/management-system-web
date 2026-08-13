@@ -1,8 +1,20 @@
+"use client"
+
 import { Checkbox } from "@/components/ui/checkbox"
 import { MemberRow } from "@/components/members/MemberRow"
 import { MemberCard } from "@/components/members/MemberCard"
 import { DataTableShell } from "@/components/common/DataTableShell"
+import { SortableTh } from "@/components/common/SortableTh"
+import { useTableSort } from "@/hooks/use-table-sort"
 import { Users } from "lucide-react"
+
+const SORT_COLUMNS = {
+  name: { get: (row) => row.name, type: "string" },
+  contact: { get: (row) => row.phone || row.contact, type: "string" },
+  group: { get: (row) => row.group, type: "string" },
+  baptizedAt: { get: (row) => row.baptizedAt, type: "date" },
+  status: { get: (row) => row.status, type: "string" },
+}
 
 function MemberTable({
   members: rows,
@@ -19,9 +31,15 @@ function MemberTable({
   pageSize = 10,
   onPageChange,
 }) {
+  const { sortedRows, sortKey, sortDirection, toggleSort } = useTableSort(
+    rows,
+    SORT_COLUMNS,
+    { initialKey: "name", initialDirection: "asc" }
+  )
+
   return (
     <DataTableShell
-      rows={rows}
+      rows={sortedRows}
       isLoading={isLoading}
       emptyIcon={Users}
       emptyTitle="No members found"
@@ -38,21 +56,41 @@ function MemberTable({
               onCheckedChange={selection.onToggleAll}
             />
           </th>
-          <th className="py-3 pr-4 text-left text-xs font-medium tracking-wide text-muted-foreground uppercase">
-            Member
-          </th>
-          <th className="py-3 pr-4 text-left text-xs font-medium tracking-wide text-muted-foreground uppercase">
-            Contact
-          </th>
-          <th className="py-3 pr-4 text-left text-xs font-medium tracking-wide text-muted-foreground uppercase">
-            Group
-          </th>
-          <th className="py-3 pr-4 text-left text-xs font-medium tracking-wide text-muted-foreground uppercase">
-            Baptized At
-          </th>
-          <th className="py-3 pr-4 text-left text-xs font-medium tracking-wide text-muted-foreground uppercase">
-            Status
-          </th>
+          <SortableTh
+            label="Member"
+            sortKey="name"
+            activeKey={sortKey}
+            direction={sortDirection}
+            onSort={toggleSort}
+          />
+          <SortableTh
+            label="Contact"
+            sortKey="contact"
+            activeKey={sortKey}
+            direction={sortDirection}
+            onSort={toggleSort}
+          />
+          <SortableTh
+            label="Group"
+            sortKey="group"
+            activeKey={sortKey}
+            direction={sortDirection}
+            onSort={toggleSort}
+          />
+          <SortableTh
+            label="Baptized At"
+            sortKey="baptizedAt"
+            activeKey={sortKey}
+            direction={sortDirection}
+            onSort={toggleSort}
+          />
+          <SortableTh
+            label="Status"
+            sortKey="status"
+            activeKey={sortKey}
+            direction={sortDirection}
+            onSort={toggleSort}
+          />
           <th className="py-3 pr-4"></th>
         </tr>
       )}

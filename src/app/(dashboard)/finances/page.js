@@ -1,6 +1,6 @@
 "use client"
 
-import { Suspense, useEffect, useState } from "react"
+import { Suspense, useEffect, useRef, useState } from "react"
 import { useRouter, usePathname, useSearchParams } from "next/navigation"
 import { useShallow } from "zustand/react/shallow"
 import { Button } from "@/components/ui/button"
@@ -51,6 +51,20 @@ const PERIOD_VALUES = {
   "This Year": "year",
   "All Time": "all",
   Custom: "custom",
+}
+
+function tableQueriesMatch(a, b) {
+  return (
+    a.page === b.page &&
+    a.type === b.type &&
+    a.search === b.search &&
+    a.from === b.from &&
+    a.to === b.to
+  )
+}
+
+function summaryQueriesMatch(a, b) {
+  return a.period === b.period && a.from === b.from && a.to === b.to
 }
 
 export default function FinancesPage() {
@@ -117,8 +131,10 @@ function FinancesPageContent() {
     trendData,
     isSummaryLoading,
     summaryError,
+    summaryQuery,
     transactions,
     meta,
+    tableQuery,
     search,
     dateFrom,
     dateTo,
@@ -134,8 +150,10 @@ function FinancesPageContent() {
       trendData: state.trendData,
       isSummaryLoading: state.isSummaryLoading,
       summaryError: state.summaryError,
+      summaryQuery: state.summaryQuery,
       transactions: state.transactions,
       meta: state.meta,
+      tableQuery: state.tableQuery,
       search: state.search,
       dateFrom: state.dateFrom,
       dateTo: state.dateTo,
@@ -146,6 +164,9 @@ function FinancesPageContent() {
       configError: state.configError,
     }))
   )
+
+  const isFirstTableRun = useRef(true)
+  const isFirstSummaryRun = useRef(true)
 
   // Period tabs own the table date bounds whenever a non-default period is
   // active. "This Month" is the default, so it leaves the table's own
@@ -258,6 +279,25 @@ function FinancesPageContent() {
   // Stats/offering-type/trend are independent of the transaction table's own
   // filters — they only refetch when the period (or its custom range) changes.
   useEffect(() => {
+    const currentQuery = {
+      period: periodValue,
+      from: periodFrom,
+      to: periodTo,
+    }
+
+    if (isFirstSummaryRun.current) {
+      isFirstSummaryRun.current = false
+
+      if (
+        summaryQuery &&
+        stats &&
+        summaryQueriesMatch(summaryQuery, currentQuery)
+      ) {
+        useFinanceStore.getState().setSummaryLoading(false)
+        return
+      }
+    }
+
     const controller = new AbortController()
     const unregister = registerAbortController(controller)
 
@@ -265,6 +305,7 @@ function FinancesPageContent() {
       setStats,
       setOfferingTypeData,
       setTrendData,
+      setSummary,
       setSummaryLoading,
       setSummaryError,
     } = useFinanceStore.getState()
@@ -292,6 +333,21 @@ function FinancesPageContent() {
         setOfferingTypeData(offeringTypeResult.value)
       if (trendResult.status === "fulfilled") setTrendData(trendResult.value)
 
+      const anyOk = [statsResult, offeringTypeResult, trendResult].some(
+        (result) => result.status === "fulfilled"
+      )
+      if (anyOk) {
+        const state = useFinanceStore.getState()
+        setSummary(
+          state.stats,
+          state.offeringTypeData,
+          state.trendData,
+          currentQuery
+        )
+      } else {
+        setSummaryLoading(false)
+      }
+
       const failed = [statsResult, offeringTypeResult, trendResult].find(
         (r) => r.status === "rejected"
       )
@@ -299,8 +355,6 @@ function FinancesPageContent() {
         setSummaryError(
           failed.reason?.message || "Unable to load finance summary"
         )
-
-      setSummaryLoading(false)
     }
 
     loadSummary()
@@ -308,6 +362,7 @@ function FinancesPageContent() {
       controller.abort()
       unregister()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [periodValue, periodFrom, periodTo])
 
   // Type/category/offering-type options rarely change, so fetch them once
@@ -352,6 +407,28 @@ function FinancesPageContent() {
   }, [])
 
   useEffect(() => {
+    const currentQuery = {
+      page,
+      type: activeFilter,
+      search: debouncedSearch,
+      from: tableDateFrom,
+      to: tableDateTo,
+    }
+
+    // On mount only: reuse the persisted table when the query is unchanged.
+    if (isFirstTableRun.current) {
+      isFirstTableRun.current = false
+
+      if (
+        tableQuery &&
+        transactions.length > 0 &&
+        tableQueriesMatch(tableQuery, currentQuery)
+      ) {
+        useFinanceStore.getState().setTableLoading(false)
+        return
+      }
+    }
+
     const controller = new AbortController()
     const unregister = registerAbortController(controller)
 
@@ -388,7 +465,7 @@ function FinancesPageContent() {
           return
         }
 
-        setTransactions(data, resolvedMeta)
+        setTransactions(data, resolvedMeta, currentQuery)
       } catch (err) {
         if (controller.signal.aborted) return
         setTableError(err?.message || "Unable to load transactions")
@@ -402,6 +479,7 @@ function FinancesPageContent() {
       controller.abort()
       unregister()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     page,
     activeFilter,
@@ -488,10 +566,10 @@ function FinancesPageContent() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-4 sm:p-6 md:p-8">
+    <div className="min-h-screen bg-background px-3 py-4 sm:p-6 md:p-8">
       <div className="mx-auto max-w-6xl">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+          <div className="min-w-0">
             <h1 className="font-heading text-2xl font-normal text-foreground/80 sm:text-3xl">
               Finances
             </h1>
@@ -500,35 +578,38 @@ function FinancesPageContent() {
             </p>
           </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-row sm:items-center sm:gap-3">
             <Button
               type="button"
               variant="outline"
-              className="h-10 gap-2 rounded-lg px-4"
+              className="h-10 gap-2 rounded-lg px-3 sm:px-4"
               onClick={() => setIsExportOpen(true)}
               disabled={meta.total === 0 && selectedIds.size === 0}
             >
               <FileDown className="h-4 w-4" />
-              Export Report
+              <span className="sm:hidden">Export</span>
+              <span className="hidden sm:inline">Export Report</span>
             </Button>
             <Button
-              className="h-10 gap-2 rounded-lg bg-amber-400 px-4 text-[#1e2a4a] hover:bg-amber-400/90"
+              className="h-10 gap-2 rounded-lg bg-amber-400 px-3 text-[#1e2a4a] hover:bg-amber-400/90 sm:px-4"
               onClick={openScanQr}
             >
               <ScanLine className="h-4 w-4" />
-              Scan QR Offering
+              <span className="sm:hidden">Scan QR</span>
+              <span className="hidden sm:inline">Scan QR Offering</span>
             </Button>
             <Button
-              className="h-10 gap-2 rounded-lg bg-[#1e2a4a] px-4 text-white hover:bg-[#1e2a4a]/90"
+              className="col-span-2 h-10 gap-2 rounded-lg bg-[#1e2a4a] px-3 text-white hover:bg-[#1e2a4a]/90 sm:col-span-1 sm:px-4"
               onClick={openRecordTransaction}
             >
               <Plus className="h-4 w-4" />
-              Record Transaction
+              <span className="sm:hidden">Record</span>
+              <span className="hidden sm:inline">Record Transaction</span>
             </Button>
           </div>
         </div>
 
-        <div className="mt-6">
+        <div className="mt-5 sm:mt-6">
           <PeriodTabs
             active={period}
             onChange={updatePeriod}
@@ -545,11 +626,11 @@ function FinancesPageContent() {
           </p>
         )}
 
-        <div className="mt-6">
+        <div className="mt-5 sm:mt-6">
           <FinanceCards stats={stats} isLoading={isSummaryLoading} />
         </div>
 
-        <div className="mt-6 grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-[3fr_2fr]">
+        <div className="mt-4 grid grid-cols-1 gap-3 sm:mt-6 sm:gap-6 lg:grid-cols-[3fr_2fr]">
           <MonthlyTrendChart data={trendData} isLoading={isSummaryLoading} />
           <OfferingTypeChart
             data={offeringTypeData}
@@ -563,7 +644,7 @@ function FinancesPageContent() {
           </p>
         )}
 
-        <div className="mt-6">
+        <div className="mt-4 sm:mt-6">
           <TransactionTable
             transactions={transactions}
             isLoading={isTableLoading}

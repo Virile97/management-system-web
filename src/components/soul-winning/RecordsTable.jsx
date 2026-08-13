@@ -1,4 +1,8 @@
+"use client"
+
 import { Card } from "@/components/ui/card"
+import { SortableTh } from "@/components/common/SortableTh"
+import { useTableSort } from "@/hooks/use-table-sort"
 import { cn } from "@/lib/utils"
 
 const statusStyles = {
@@ -13,6 +17,15 @@ const dotStyles = {
   Inactive: "bg-amber-500",
 }
 
+const SORT_COLUMNS = {
+  date: { get: (row) => row.date, type: "date" },
+  convert: { get: (row) => row.convert, type: "string" },
+  contact: { get: (row) => row.contact, type: "string" },
+  soulWinner: { get: (row) => row.soulWinner, type: "string" },
+  status: { get: (row) => row.status, type: "string" },
+  notes: { get: (row) => row.notes, type: "string" },
+}
+
 function initials(name) {
   return name
     .split(" ")
@@ -23,33 +36,64 @@ function initials(name) {
 }
 
 function RecordsTable({ records }) {
+  const { sortedRows, sortKey, sortDirection, toggleSort } = useTableSort(
+    records,
+    SORT_COLUMNS,
+    { initialKey: "date", initialDirection: "desc" }
+  )
+
   return (
     <Card className="overflow-hidden rounded-2xl p-0">
       <table className="hidden w-full border-collapse md:table">
         <thead>
           <tr className="border-b border-border bg-muted/60">
-            <th className="py-3 pl-4 text-left text-xs font-medium tracking-wide text-muted-foreground uppercase">
-              Date
-            </th>
-            <th className="py-3 pr-4 text-left text-xs font-medium tracking-wide text-muted-foreground uppercase">
-              Convert
-            </th>
-            <th className="py-3 pr-4 text-left text-xs font-medium tracking-wide text-muted-foreground uppercase">
-              Contact
-            </th>
-            <th className="py-3 pr-4 text-left text-xs font-medium tracking-wide text-muted-foreground uppercase">
-              Soul Winner
-            </th>
-            <th className="py-3 pr-4 text-left text-xs font-medium tracking-wide text-muted-foreground uppercase">
-              Status
-            </th>
-            <th className="py-3 pr-4 text-left text-xs font-medium tracking-wide text-muted-foreground uppercase">
-              Notes
-            </th>
+            <SortableTh
+              label="Date"
+              sortKey="date"
+              activeKey={sortKey}
+              direction={sortDirection}
+              onSort={toggleSort}
+              className="pl-4"
+            />
+            <SortableTh
+              label="Convert"
+              sortKey="convert"
+              activeKey={sortKey}
+              direction={sortDirection}
+              onSort={toggleSort}
+            />
+            <SortableTh
+              label="Contact"
+              sortKey="contact"
+              activeKey={sortKey}
+              direction={sortDirection}
+              onSort={toggleSort}
+            />
+            <SortableTh
+              label="Soul Winner"
+              sortKey="soulWinner"
+              activeKey={sortKey}
+              direction={sortDirection}
+              onSort={toggleSort}
+            />
+            <SortableTh
+              label="Status"
+              sortKey="status"
+              activeKey={sortKey}
+              direction={sortDirection}
+              onSort={toggleSort}
+            />
+            <SortableTh
+              label="Notes"
+              sortKey="notes"
+              activeKey={sortKey}
+              direction={sortDirection}
+              onSort={toggleSort}
+            />
           </tr>
         </thead>
         <tbody>
-          {records.map((record) => (
+          {sortedRows.map((record) => (
             <tr
               key={record.id}
               className="border-b border-border last:border-0"
@@ -113,14 +157,14 @@ function RecordsTable({ records }) {
       </table>
 
       <div className="md:hidden">
-        {records.map((record) => (
+        {sortedRows.map((record) => (
           <div
             key={record.id}
-            className="flex flex-col gap-3 border-b border-border p-4 last:border-0"
+            className="flex flex-col gap-2.5 border-b border-border px-3 py-4 last:border-0 sm:px-4"
           >
             <div className="flex items-start justify-between gap-3">
               <div className="flex min-w-0 items-center gap-3">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#1e2a4a] text-xs font-semibold text-white">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#1e2a4a] text-xs font-semibold text-white">
                   {initials(record.convert)}
                 </div>
                 <div className="min-w-0">
@@ -129,6 +173,10 @@ function RecordsTable({ records }) {
                   </p>
                   <p className="truncate text-xs text-muted-foreground">
                     {record.location}
+                  </p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    {record.relativeDate}
+                    {record.date ? ` · ${record.date}` : ""}
                   </p>
                 </div>
               </div>
@@ -148,32 +196,30 @@ function RecordsTable({ records }) {
               </span>
             </div>
 
-            <div className="grid grid-cols-2 gap-x-4 gap-y-2 pl-13 text-sm">
-              <div>
-                <p className="text-xs text-muted-foreground">Date</p>
-                <p className="text-foreground/80">{record.relativeDate}</p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Contact</p>
-                <p className="text-foreground/80">{record.contact}</p>
-              </div>
-              <div className="col-span-2 flex items-center gap-2">
-                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-amber-400 text-[9px] font-semibold text-[#1e2a4a]">
-                  {initials(record.soulWinner)}
-                </div>
-                <span className="text-xs text-muted-foreground">
-                  Soul Winner:
-                </span>
+            <div className="grid grid-cols-1 gap-2 rounded-xl bg-muted/40 px-3 py-2.5 text-sm">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-xs text-muted-foreground">Contact</span>
                 <span className="truncate text-foreground/80">
-                  {record.soulWinner}
+                  {record.contact}
                 </span>
               </div>
-              {record.notes && (
-                <div className="col-span-2">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-xs text-muted-foreground">Soul Winner</span>
+                <span className="flex min-w-0 items-center gap-2">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-amber-400 text-[9px] font-semibold text-[#1e2a4a]">
+                    {initials(record.soulWinner)}
+                  </span>
+                  <span className="truncate text-foreground/80">
+                    {record.soulWinner}
+                  </span>
+                </span>
+              </div>
+              {record.notes ? (
+                <div>
                   <p className="text-xs text-muted-foreground">Notes</p>
-                  <p className="text-foreground/70">{record.notes}</p>
+                  <p className="mt-0.5 text-foreground/70">{record.notes}</p>
                 </div>
-              )}
+              ) : null}
             </div>
           </div>
         ))}

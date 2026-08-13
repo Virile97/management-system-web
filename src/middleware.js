@@ -24,6 +24,9 @@ const RESTRICTED_FOR_USER_ROLE = [
   "/settings",
 ]
 
+// Finance admins manage money only — no attendance or soul-winning surfaces.
+const RESTRICTED_FOR_FINANCE_ADMIN = ["/attendance", "/soul-winning"]
+
 export function middleware(request) {
   const tokenSession = readValidTokenCookie(
     request.cookies.get(AUTH_TOKEN_COOKIE_NAME)?.value
@@ -111,6 +114,23 @@ export function middleware(request) {
     }
   }
 
+  if (user?.role === "FINANCE_ADMIN") {
+    if (
+      RESTRICTED_FOR_FINANCE_ADMIN.some((path) =>
+        request.nextUrl.pathname.startsWith(path)
+      )
+    ) {
+      return NextResponse.redirect(new URL("/finances", request.url))
+    }
+
+    if (request.nextUrl.pathname.startsWith("/api/attendance")) {
+      return NextResponse.json(
+        { success: false, message: "Not allowed" },
+        { status: 403 }
+      )
+    }
+  }
+
   if (
     MUTATING_METHODS.has(request.method) &&
     request.nextUrl.pathname.startsWith("/api/") &&
@@ -172,8 +192,11 @@ export const config = {
     "/settings/:path*",
     "/login",
     "/set-password",
+    "/api/dashboard",
     "/api/dashboard/:path*",
     "/api/members/:path*",
+    "/api/attendance",
+    "/api/attendance/:path*",
     "/api/finances/:path*",
     "/api/settings/:path*",
     "/api/upload/:path*",

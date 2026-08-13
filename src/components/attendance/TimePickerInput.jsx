@@ -94,6 +94,7 @@ function TimePickerInput({
   disabled,
   onChange,
   placeholder = "--:-- --",
+  className,
 }) {
   const [open, setOpen] = useState(false)
   const [draft, setDraft] = useState(() => parseValue(value))
@@ -171,7 +172,10 @@ function TimePickerInput({
       <PopoverTrigger
         disabled={disabled}
         onKeyDown={handleKeyDown}
-        className="relative block w-30 rounded-lg outline-none disabled:opacity-50"
+        className={cn(
+          "relative block w-full rounded-lg outline-none disabled:opacity-50 sm:w-30",
+          className
+        )}
       >
         <span
           className={cn(

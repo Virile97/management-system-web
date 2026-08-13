@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Menu, Building2 } from "lucide-react"
+import { Menu } from "lucide-react"
 import { Sidebar } from "@/components/layout/Sidebar"
 import { SlipConfigProvider } from "@/components/settings/SlipConfigContext"
 import { useAuthGuard } from "@/hooks/use-auth-guard"
@@ -25,11 +25,13 @@ function DashboardLayout({ children }) {
             >
               <Menu className="h-5 w-5" />
             </button>
-            <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-400">
-                <Building2 className="h-4 w-4 text-[#1e2a4a]" strokeWidth={2} />
-              </div>
-              <p className="font-heading text-sm font-semibold leading-tight text-foreground">
+            <div className="flex min-w-0 items-center gap-2">
+              <img
+                src="/images/logo-black.png"
+                alt="Lighthouse BBC"
+                className="h-8 w-8 shrink-0 rounded-lg object-cover"
+              />
+              <p className="truncate font-heading text-sm font-semibold leading-tight text-foreground">
                 Lighthouse BBC Goa
               </p>
             </div>

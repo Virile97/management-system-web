@@ -15,11 +15,20 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { EmptyState } from "@/components/common/EmptyState"
+import { SortableTh } from "@/components/common/SortableTh"
 import { ListCardSkeleton } from "@/components/dashboard/DashboardSkeletons"
 import { AddUserDialog } from "@/components/settings/AddUserDialog"
 import { EditUserDialog } from "@/components/settings/EditUserDialog"
+import { useTableSort } from "@/hooks/use-table-sort"
 import { cn } from "@/lib/utils"
 import { listUsers, deleteUser } from "@/services/users.service"
+
+const SORT_COLUMNS = {
+  name: { get: (row) => row.name, type: "string" },
+  email: { get: (row) => row.email, type: "string" },
+  contact: { get: (row) => row.contact, type: "string" },
+  role: { get: (row) => row.role, type: "string" },
+}
 
 const ROLES = {
   ADMIN: {
@@ -131,7 +140,7 @@ function UsersRolesSettings() {
     return counts
   }, [users])
 
-  const visibleUsers = useMemo(() => {
+  const filteredUsers = useMemo(() => {
     const query = search.trim().toLowerCase()
     return users.filter((user) => {
       if (activeRole && user.role !== activeRole) return false
@@ -142,6 +151,12 @@ function UsersRolesSettings() {
       )
     })
   }, [users, search, activeRole])
+
+  const { sortedRows: visibleUsers, sortKey, sortDirection, toggleSort } =
+    useTableSort(filteredUsers, SORT_COLUMNS, {
+      initialKey: "name",
+      initialDirection: "asc",
+    })
 
   async function handleConfirmDelete() {
     if (!pendingDelete) return
@@ -159,9 +174,9 @@ function UsersRolesSettings() {
 
   return (
     <div>
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h2 className="font-heading text-xl font-normal text-foreground/80">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+        <div className="min-w-0">
+          <h2 className="font-heading text-lg font-normal text-foreground/80 sm:text-xl">
             Users & Roles
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -172,7 +187,7 @@ function UsersRolesSettings() {
 
         <Button
           onClick={() => setIsAddUserOpen(true)}
-          className="h-10 gap-2 rounded-lg bg-[#1e2a4a] px-4 text-white hover:bg-[#1e2a4a]/90"
+          className="h-10 w-full gap-2 rounded-lg bg-[#1e2a4a] px-3 text-white hover:bg-[#1e2a4a]/90 sm:w-auto sm:px-4"
         >
           <Plus className="h-4 w-4" />
           Add User
@@ -186,12 +201,22 @@ function UsersRolesSettings() {
       )}
 
       {isLoading ? (
-        <div className="mt-6">
+        <div className="mt-4 sm:mt-6">
           <ListCardSkeleton rows={4} />
         </div>
       ) : (
         <>
-          <div className="mt-6 flex flex-wrap items-center gap-2">
+          <div className="relative mt-4 w-full sm:mt-6 sm:max-w-sm">
+            <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search by name or email..."
+              className="h-10 rounded-lg bg-white pl-9"
+            />
+          </div>
+
+          <div className="-mx-3 mt-3 flex items-center gap-2 overflow-x-auto px-3 pb-0.5 scrollbar-none sm:mx-0 sm:mt-4 sm:flex-wrap sm:overflow-visible sm:px-0">
             {Object.keys(ROLES).map((role) => {
               const meta = roleMeta(role)
               return (
@@ -203,7 +228,7 @@ function UsersRolesSettings() {
                   }
                   aria-pressed={activeRole === role}
                   className={cn(
-                    "flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm font-medium transition-colors",
+                    "flex h-9 shrink-0 items-center gap-1.5 rounded-full border px-3 text-sm font-medium transition-colors",
                     activeRole === role ? meta.pillActive : meta.pill
                   )}
                 >
@@ -220,72 +245,61 @@ function UsersRolesSettings() {
               <button
                 type="button"
                 onClick={() => setActiveRole(null)}
-                className="text-sm text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+                className="shrink-0 text-sm text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
               >
                 Clear filter
               </button>
             )}
           </div>
 
-          <div className="relative mt-4 max-w-sm">
-            <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by name or email..."
-              className="h-10 rounded-lg bg-white pl-9"
-            />
-          </div>
-
-          <div className="mt-4 overflow-hidden rounded-2xl border border-border bg-card">
+          <div className="mt-3 overflow-hidden rounded-2xl border border-border bg-card sm:mt-4">
             {visibleUsers.length === 0 ? (
               <EmptyState
                 title="No users found"
                 description="Try adjusting your search or role filter."
+                className="py-12 sm:py-16"
               />
             ) : (
-              <table className="w-full text-left text-sm">
-                <thead>
-                  <tr className="border-b border-border text-xs tracking-wide text-muted-foreground uppercase">
-                    <th className="px-4 py-3 font-medium">Name</th>
-                    <th className="px-4 py-3 font-medium">Email</th>
-                    <th className="px-4 py-3 font-medium">Contact</th>
-                    <th className="px-4 py-3 font-medium">Role</th>
-                    <th className="px-4 py-3" />
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
+              <>
+                {/* Mobile cards */}
+                <div className="md:hidden">
                   {visibleUsers.map((user) => {
                     const meta = roleMeta(user.role)
                     return (
-                      <tr key={user.id}>
-                        <td className="px-4 py-3 font-medium text-foreground/80">
-                          {user.name || "—"}
-                        </td>
-                        <td className="px-4 py-3 text-muted-foreground">
-                          {user.email}
-                        </td>
-                        <td className="px-4 py-3 text-muted-foreground">
-                          {user.contact || "—"}
-                        </td>
-                        <td className="px-4 py-3">
+                      <div
+                        key={user.id}
+                        className="flex flex-col gap-2.5 border-b border-border px-3 py-4 last:border-0"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-medium text-foreground/85">
+                              {user.name || "—"}
+                            </p>
+                            <p className="truncate text-xs text-muted-foreground">
+                              {user.email}
+                            </p>
+                          </div>
                           <span
                             className={cn(
-                              "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium",
+                              "inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium",
                               meta.badge
                             )}
                           >
                             <meta.icon className="h-3 w-3" />
                             {meta.label}
                           </span>
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          <div className="flex items-center justify-end gap-1">
+                        </div>
+
+                        <div className="flex items-center justify-between gap-3">
+                          <p className="text-xs text-muted-foreground">
+                            {user.contact || "No contact"}
+                          </p>
+                          <div className="flex items-center gap-1">
                             <button
                               type="button"
                               onClick={() => openEditUser(user)}
                               aria-label={`Edit ${user.name || user.email}`}
-                              className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+                              className="rounded-md p-2 text-muted-foreground hover:bg-muted hover:text-foreground"
                             >
                               <Pencil className="h-4 w-4" />
                             </button>
@@ -293,17 +307,107 @@ function UsersRolesSettings() {
                               type="button"
                               onClick={() => setPendingDelete(user)}
                               aria-label={`Delete ${user.name || user.email}`}
-                              className="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                              className="rounded-md p-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                             >
                               <Trash2 className="h-4 w-4" />
                             </button>
                           </div>
-                        </td>
-                      </tr>
+                        </div>
+                      </div>
                     )
                   })}
-                </tbody>
-              </table>
+                </div>
+
+                {/* Desktop table */}
+                <table className="hidden w-full text-left text-sm md:table">
+                  <thead>
+                    <tr className="border-b border-border bg-muted/40">
+                      <SortableTh
+                        label="Name"
+                        sortKey="name"
+                        activeKey={sortKey}
+                        direction={sortDirection}
+                        onSort={toggleSort}
+                        className="px-4"
+                      />
+                      <SortableTh
+                        label="Email"
+                        sortKey="email"
+                        activeKey={sortKey}
+                        direction={sortDirection}
+                        onSort={toggleSort}
+                        className="px-4"
+                      />
+                      <SortableTh
+                        label="Contact"
+                        sortKey="contact"
+                        activeKey={sortKey}
+                        direction={sortDirection}
+                        onSort={toggleSort}
+                        className="px-4"
+                      />
+                      <SortableTh
+                        label="Role"
+                        sortKey="role"
+                        activeKey={sortKey}
+                        direction={sortDirection}
+                        onSort={toggleSort}
+                        className="px-4"
+                      />
+                      <th className="px-4 py-3" />
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {visibleUsers.map((user) => {
+                      const meta = roleMeta(user.role)
+                      return (
+                        <tr key={user.id}>
+                          <td className="px-4 py-3 font-medium text-foreground/80">
+                            {user.name || "—"}
+                          </td>
+                          <td className="px-4 py-3 text-muted-foreground">
+                            {user.email}
+                          </td>
+                          <td className="px-4 py-3 text-muted-foreground">
+                            {user.contact || "—"}
+                          </td>
+                          <td className="px-4 py-3">
+                            <span
+                              className={cn(
+                                "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium",
+                                meta.badge
+                              )}
+                            >
+                              <meta.icon className="h-3 w-3" />
+                              {meta.label}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            <div className="flex items-center justify-end gap-1">
+                              <button
+                                type="button"
+                                onClick={() => openEditUser(user)}
+                                aria-label={`Edit ${user.name || user.email}`}
+                                className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setPendingDelete(user)}
+                                aria-label={`Delete ${user.name || user.email}`}
+                                className="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </>
             )}
           </div>
         </>

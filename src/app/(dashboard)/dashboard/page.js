@@ -16,13 +16,7 @@ import {
   ListCardSkeleton,
 } from "@/components/dashboard/DashboardSkeletons"
 import { useDashboardStore } from "@/stores/dashboard.store"
-import {
-  getStats,
-  getMemberBreakdown,
-  getFinanceSummary,
-  getAttendanceSummary,
-  getRecentActivity,
-} from "@/services/dashboard.service"
+import { getDashboardOverview } from "@/services/dashboard.service"
 import { useAsyncData } from "@/hooks/use-async-data"
 
 const today = new Date().toLocaleDateString("en-US", {
@@ -50,21 +44,9 @@ export default function DashboardPage() {
   )
 
   const buildTasks = useCallback(() => {
-    const {
-      setStats,
-      setMemberBreakdown,
-      setFinanceSummary,
-      setAttendanceSummary,
-      setRecentActivity,
-    } = useDashboardStore.getState()
+    const { setOverview } = useDashboardStore.getState()
 
-    return [
-      [getStats, setStats],
-      [getMemberBreakdown, setMemberBreakdown],
-      [(signal) => getFinanceSummary("6m", signal), setFinanceSummary],
-      [(signal) => getAttendanceSummary("5w", signal), setAttendanceSummary],
-      [(signal) => getRecentActivity(5, signal), setRecentActivity],
-    ]
+    return [[(signal) => getDashboardOverview({}, signal), setOverview]]
   }, [])
 
   const { isLoading, error, retry } = useAsyncData(buildTasks)

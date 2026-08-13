@@ -12,7 +12,7 @@ const currencyFormatter = new Intl.NumberFormat("en-PH", {
 function FinanceCards({ stats, isLoading }) {
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-6">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-6">
         <StatCardSkeleton />
         <StatCardSkeleton />
         <StatCardSkeleton />
@@ -50,16 +50,16 @@ function FinanceCards({ stats, isLoading }) {
   ]
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-6">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-6">
       {cards.map((card) => (
-        <Card key={card.label} className="rounded-2xl p-4 sm:p-6">
-          <div className="flex items-start justify-between">
-            <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+        <Card key={card.label} className="rounded-2xl p-3 sm:p-6">
+          <div className="flex items-start justify-between gap-3">
+            <span className="text-[10px] font-medium tracking-wide text-muted-foreground uppercase sm:text-xs">
               {card.label}
             </span>
             <div
               className={cn(
-                "flex h-9 w-9 items-center justify-center rounded-lg",
+                "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg sm:h-9 sm:w-9",
                 card.iconClassName
               )}
             >
@@ -69,7 +69,7 @@ function FinanceCards({ stats, isLoading }) {
 
           <div
             className={cn(
-              "mt-4 font-heading text-2xl font-normal",
+              "mt-2 font-heading text-xl font-normal sm:mt-4 sm:text-2xl",
               card.valueClassName
             )}
           >

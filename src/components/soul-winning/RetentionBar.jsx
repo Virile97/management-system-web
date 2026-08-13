@@ -13,17 +13,17 @@ function RetentionBar() {
   const retentionRate = total > 0 ? Math.round((activeCount / total) * 100) : 0
 
   return (
-    <Card className="rounded-2xl p-4 sm:p-6">
+    <Card className="rounded-2xl p-3 sm:p-6">
       <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-        <h2 className="font-heading text-lg font-normal text-foreground/80">
+        <h2 className="font-heading text-base font-normal text-foreground/80 sm:text-lg">
           Souls Won vs. Active Retention
         </h2>
-        <p className="text-sm font-medium text-emerald-600">
+        <p className="text-xs font-medium text-emerald-600 sm:text-sm">
           {retentionRate}% active retention rate
         </p>
       </div>
 
-      <div className="mt-4 flex h-3 w-full overflow-hidden rounded-full">
+      <div className="mt-3 flex h-2.5 w-full overflow-hidden rounded-full sm:mt-4 sm:h-3">
         {segments.map((segment) => (
           <div
             key={segment.label}
@@ -35,11 +35,11 @@ function RetentionBar() {
         ))}
       </div>
 
-      <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2">
+      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 sm:mt-4 sm:gap-x-6">
         {segments.map((segment) => (
           <div
             key={segment.label}
-            className="flex items-center gap-2 text-sm text-foreground/80"
+            className="flex items-center gap-2 text-xs text-foreground/80 sm:text-sm"
           >
             <span
               className="h-2 w-2 shrink-0 rounded-full"

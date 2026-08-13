@@ -1,27 +1,9 @@
 import { fetchJson } from "@/services/api"
 import { APP_API_ENDPOINTS } from "@/utils/constants"
 
-function getStats(signal) {
-  return fetchJson(APP_API_ENDPOINTS.DASHBOARD_STATS, { signal })
-}
-
-function getMemberBreakdown(signal) {
-  return fetchJson(APP_API_ENDPOINTS.DASHBOARD_MEMBER_BREAKDOWN, { signal })
-}
-
-function getFinanceSummary(range = "6m", signal) {
-  return fetchJson(
-    `${APP_API_ENDPOINTS.DASHBOARD_FINANCE_SUMMARY}?range=${range}`,
-    { signal }
-  )
-}
-
-function getRecentActivity(limit = 5, signal) {
-  return fetchJson(
-    `${APP_API_ENDPOINTS.DASHBOARD_RECENT_ACTIVITY}?limit=${limit}`,
-    { signal }
-  )
-}
+const DEFAULT_FINANCE_RANGE = "6m"
+const DEFAULT_ATTENDANCE_RANGE = "5w"
+const DEFAULT_ACTIVITY_LIMIT = 5
 
 /**
  * Weekly attendance rates for the Member Attendance chart.
@@ -34,19 +16,42 @@ function normalizeAttendanceSummary(points = []) {
   }))
 }
 
-function getAttendanceSummary(range = "5w", signal) {
-  return fetchJson(
-    `${APP_API_ENDPOINTS.DASHBOARD_ATTENDANCE_SUMMARY}?range=${range}`,
-    {
-      signal,
-    }
-  ).then(normalizeAttendanceSummary)
+function normalizeDashboardOverview(data = {}) {
+  return {
+    stats: data.stats ?? null,
+    memberBreakdown: data.memberBreakdown ?? null,
+    financeSummary: Array.isArray(data.financeSummary)
+      ? data.financeSummary
+      : [],
+    attendanceSummary: normalizeAttendanceSummary(data.attendanceSummary),
+    recentActivity: Array.isArray(data.recentActivity)
+      ? data.recentActivity
+      : [],
+  }
 }
 
-export {
-  getStats,
-  getMemberBreakdown,
-  getFinanceSummary,
-  getRecentActivity,
-  getAttendanceSummary,
+/**
+ * Single dashboard overview: stats, breakdown, finance/attendance series, activity.
+ */
+function getDashboardOverview(
+  {
+    financeRange = DEFAULT_FINANCE_RANGE,
+    attendanceRange = DEFAULT_ATTENDANCE_RANGE,
+    activityLimit = DEFAULT_ACTIVITY_LIMIT,
+  } = {},
+  signal
+) {
+  const params = new URLSearchParams()
+  if (financeRange) params.set("financeRange", financeRange)
+  if (attendanceRange) params.set("attendanceRange", attendanceRange)
+  if (activityLimit != null) params.set("activityLimit", String(activityLimit))
+
+  const query = params.toString()
+
+  return fetchJson(
+    `${APP_API_ENDPOINTS.DASHBOARD}${query ? `?${query}` : ""}`,
+    { signal }
+  ).then(normalizeDashboardOverview)
 }
+
+export { getDashboardOverview, normalizeDashboardOverview }

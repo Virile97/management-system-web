@@ -6,7 +6,9 @@ import { Button } from "@/components/ui/button"
 import { EmptyState } from "@/components/common/EmptyState"
 import { MultiSelectDropdown } from "@/components/common/MultiSelectDropdown"
 import { Pagination } from "@/components/common/Pagination"
+import { SortableTh } from "@/components/common/SortableTh"
 import { ListCardSkeleton } from "@/components/dashboard/DashboardSkeletons"
+import { useTableSort } from "@/hooks/use-table-sort"
 import { Skeleton } from "@/components/ui/skeleton"
 import { PeriodTabs } from "@/components/soul-winning/PeriodTabs"
 import { DateRangeFilterModal } from "@/components/soul-winning/DateRangeFilterModal"
@@ -21,6 +23,13 @@ import { Receipt, ShieldCheck, Lock, X, FileDown } from "lucide-react"
 // Matches the offerings API default (max 100). Paging is by transaction, so a
 // page can return slightly more line items when a txn has a multi-type split.
 const PAGE_SIZE = 20
+
+const OFFERING_SORT_COLUMNS = {
+  date: { get: (row) => row.date, type: "date" },
+  type: { get: (row) => row.type, type: "string" },
+  amount: { get: (row) => row.amount, type: "number" },
+  note: { get: (row) => row.note, type: "string" },
+}
 
 const typeStyles = {
   Tithe: "bg-purple-50 text-purple-600",
@@ -211,6 +220,11 @@ function MemberFinancePanel({
   // PAGE_SIZE when a transaction splits across offering types.
   const pageFrom = meta.total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1
   const pageTo = Math.min(page * PAGE_SIZE, meta.total)
+  const { sortedRows, sortKey, sortDirection, toggleSort } = useTableSort(
+    records,
+    OFFERING_SORT_COLUMNS,
+    { initialKey: "date", initialDirection: "desc" }
+  )
 
   return (
     <div className="flex flex-col gap-4 sm:gap-6">
@@ -309,22 +323,39 @@ function MemberFinancePanel({
             <table className="hidden w-full border-collapse md:table">
               <thead>
                 <tr className="border-y border-border bg-muted/60">
-                  <th className="py-3 pl-4 text-left text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                    Date
-                  </th>
-                  <th className="py-3 pr-4 text-left text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                    Type
-                  </th>
-                  <th className="py-3 pr-4 text-left text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                    Amount
-                  </th>
-                  <th className="py-3 pr-4 text-left text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                    Note
-                  </th>
+                  <SortableTh
+                    label="Date"
+                    sortKey="date"
+                    activeKey={sortKey}
+                    direction={sortDirection}
+                    onSort={toggleSort}
+                    className="pl-4"
+                  />
+                  <SortableTh
+                    label="Type"
+                    sortKey="type"
+                    activeKey={sortKey}
+                    direction={sortDirection}
+                    onSort={toggleSort}
+                  />
+                  <SortableTh
+                    label="Amount"
+                    sortKey="amount"
+                    activeKey={sortKey}
+                    direction={sortDirection}
+                    onSort={toggleSort}
+                  />
+                  <SortableTh
+                    label="Note"
+                    sortKey="note"
+                    activeKey={sortKey}
+                    direction={sortDirection}
+                    onSort={toggleSort}
+                  />
                 </tr>
               </thead>
               <tbody>
-                {records.map((record) => (
+                {sortedRows.map((record) => (
                   <tr
                     key={record.id}
                     className="border-b border-border last:border-0"
@@ -347,7 +378,7 @@ function MemberFinancePanel({
             </table>
 
             <div className="md:hidden">
-              {records.map((record) => (
+              {sortedRows.map((record) => (
                 <div
                   key={record.id}
                   className="flex flex-col gap-2 border-b border-border p-4 last:border-0"

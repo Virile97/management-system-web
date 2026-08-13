@@ -77,7 +77,7 @@ function DataTableShell({
           icon={emptyIcon}
           title={emptyTitle}
           description={emptyDescription}
-          className="py-16"
+          className="py-12 sm:py-16"
         />
       ) : (
         <>

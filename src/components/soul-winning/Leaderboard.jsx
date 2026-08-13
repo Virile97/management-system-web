@@ -27,8 +27,8 @@ function LeaderboardRow({ winner, rank, topScore }) {
   const percentOfTop = topScore > 0 ? Math.round((score / topScore) * 100) : 0
 
   return (
-    <div className="flex flex-col gap-3 border-b border-border px-4 py-4 last:border-0 sm:px-6 md:flex-row md:items-center md:gap-4">
-      <div className="flex items-center gap-4 md:contents">
+    <div className="flex flex-col gap-3 border-b border-border px-3 py-4 last:border-0 sm:px-6 md:flex-row md:items-center md:gap-4">
+      <div className="flex items-center gap-3 md:contents">
         <div className="flex w-6 shrink-0 items-center justify-center">
           {rank <= 3 ? (
             <div className="relative flex items-center justify-center">
@@ -63,45 +63,45 @@ function LeaderboardRow({ winner, rank, topScore }) {
             {winner.name}
           </p>
           <p className="truncate text-xs text-muted-foreground">
-            {winner.role} · Soul winner since {winner.since}
+            {winner.role} · since {winner.since}
           </p>
         </div>
 
         {isTop && (
-          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-50 px-3 py-1 text-xs font-medium text-amber-600 ring-1 ring-amber-200 md:hidden">
+          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-600 ring-1 ring-amber-200 md:hidden">
             <Flame className="h-3 w-3" />
-            Most Active
+            Top
           </span>
         )}
       </div>
 
-      <div className="flex flex-1 items-center gap-4 pl-14 sm:gap-6 md:pl-0">
-        <div className="w-12 text-center sm:w-14">
-          <p className="font-heading text-lg font-semibold text-foreground/90">
+      <div className="grid grid-cols-4 gap-2 rounded-xl bg-muted/40 px-3 py-2.5 md:flex md:flex-1 md:items-center md:gap-6 md:rounded-none md:bg-transparent md:px-0 md:py-0">
+        <div className="text-center md:w-14">
+          <p className="font-heading text-base font-semibold text-foreground/90 sm:text-lg">
             {winner.saved}
           </p>
           <p className="text-[10px] font-medium tracking-wide text-muted-foreground uppercase">
             Saved
           </p>
         </div>
-        <div className="w-12 text-center sm:w-14">
-          <p className="font-heading text-lg font-semibold text-emerald-600">
+        <div className="text-center md:w-14">
+          <p className="font-heading text-base font-semibold text-emerald-600 sm:text-lg">
             {winner.active}
           </p>
           <p className="text-[10px] font-medium tracking-wide text-muted-foreground uppercase">
             Active
           </p>
         </div>
-        <div className="w-12 text-center sm:w-14">
-          <p className="font-heading text-lg font-semibold text-amber-500">
+        <div className="text-center md:w-14">
+          <p className="font-heading text-base font-semibold text-amber-500 sm:text-lg">
             {winner.new}
           </p>
           <p className="text-[10px] font-medium tracking-wide text-muted-foreground uppercase">
             New
           </p>
         </div>
-        <div className="w-12 text-center sm:w-14">
-          <p className="font-heading text-lg font-semibold text-red-500">
+        <div className="text-center md:w-14">
+          <p className="font-heading text-base font-semibold text-red-500 sm:text-lg">
             {winner.lost}
           </p>
           <p className="text-[10px] font-medium tracking-wide text-muted-foreground uppercase">
@@ -109,8 +109,8 @@ function LeaderboardRow({ winner, rank, topScore }) {
           </p>
         </div>
 
-        <div className="flex flex-1 flex-col items-end gap-1">
-          <div className="h-1.5 w-full max-w-40 overflow-hidden rounded-full bg-muted">
+        <div className="col-span-4 mt-1 flex flex-col gap-1 md:col-span-1 md:mt-0 md:ml-auto md:max-w-40 md:flex-1 md:items-end">
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted md:bg-muted">
             <div
               className={cn(
                 "h-full rounded-full",
@@ -119,9 +119,7 @@ function LeaderboardRow({ winner, rank, topScore }) {
               style={{ width: `${percentOfTop}%` }}
             />
           </div>
-          <p className="text-xs text-muted-foreground">
-            {percentOfTop}% of top
-          </p>
+          <p className="text-xs text-muted-foreground">{percentOfTop}% of top</p>
         </div>
       </div>
 

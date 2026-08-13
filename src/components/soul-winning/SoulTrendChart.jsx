@@ -54,11 +54,11 @@ const maxWinnerValue = Math.max(...winnerTotals.map((winner) => winner.value))
 
 function SoulTrendChart() {
   return (
-    <div className="flex flex-col gap-6">
-      <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2">
-        <Card className="rounded-2xl p-4 sm:p-6">
+    <div className="flex flex-col gap-3 sm:gap-6">
+      <div className="grid grid-cols-1 gap-3 sm:gap-6 lg:grid-cols-2">
+        <Card className="rounded-2xl p-3 sm:p-6">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <CardTitle className="font-heading text-lg font-normal text-foreground/80">
+            <CardTitle className="font-heading text-base font-normal text-foreground/80 sm:text-lg">
               Daily — Last 7 Days
             </CardTitle>
             <p className="flex items-center gap-1 text-sm font-medium text-emerald-600">
@@ -103,9 +103,9 @@ function SoulTrendChart() {
           </CardContent>
         </Card>
 
-        <Card className="rounded-2xl p-4 sm:p-6">
+        <Card className="rounded-2xl p-3 sm:p-6">
           <CardHeader className="px-0">
-            <CardTitle className="font-heading text-lg font-normal text-foreground/80">
+            <CardTitle className="font-heading text-base font-normal text-foreground/80 sm:text-lg">
               Monthly — Last 6 Months
             </CardTitle>
           </CardHeader>
@@ -161,15 +161,15 @@ function SoulTrendChart() {
         </Card>
       </div>
 
-      <Card className="rounded-2xl p-4 sm:p-6">
-        <CardTitle className="font-heading text-lg font-normal text-foreground/80">
+      <Card className="rounded-2xl p-3 sm:p-6">
+        <CardTitle className="font-heading text-base font-normal text-foreground/80 sm:text-lg">
           Souls Won per Soul Winner — This Month
         </CardTitle>
 
-        <div className="mt-6 flex flex-col gap-4">
+        <div className="mt-4 flex flex-col gap-3 sm:mt-6 sm:gap-4">
           {winnerTotals.map((winner) => (
-            <div key={winner.name} className="flex items-center gap-3 sm:gap-4">
-              <p className="w-24 shrink-0 truncate text-sm text-foreground/80 sm:w-40">
+            <div key={winner.name} className="flex items-center gap-2 sm:gap-4">
+              <p className="w-20 shrink-0 truncate text-xs text-foreground/80 sm:w-40 sm:text-sm">
                 {winner.name}
               </p>
               <div className="h-6 flex-1 overflow-hidden rounded-md bg-muted">

@@ -35,16 +35,16 @@ const cards = [
 
 function SoulStatsCards() {
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-4">
+    <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
       {cards.map((card) => (
-        <Card key={card.label} className="rounded-2xl p-4 sm:p-6">
-          <div className="flex items-start justify-between">
-            <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+        <Card key={card.label} className="rounded-2xl p-3 sm:p-6">
+          <div className="flex items-start justify-between gap-2">
+            <span className="text-[10px] font-medium tracking-wide text-muted-foreground uppercase sm:text-xs">
               {card.label}
             </span>
             <div
               className={cn(
-                "flex h-9 w-9 items-center justify-center rounded-lg",
+                "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg sm:h-9 sm:w-9",
                 card.iconClassName
               )}
             >
@@ -52,11 +52,13 @@ function SoulStatsCards() {
             </div>
           </div>
 
-          <div className="mt-4 font-heading text-2xl font-normal text-foreground/85">
+          <div className="mt-2 font-heading text-xl font-normal text-foreground/85 sm:mt-4 sm:text-2xl">
             {card.value}
           </div>
 
-          <p className="mt-2 text-xs text-muted-foreground">{card.caption}</p>
+          <p className="mt-1 text-[11px] text-muted-foreground sm:mt-2 sm:text-xs">
+            {card.caption}
+          </p>
         </Card>
       ))}
     </div>

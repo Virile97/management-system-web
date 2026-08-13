@@ -11,11 +11,15 @@ const initialState = {
 const useDashboardStore = create((set) => ({
   ...initialState,
 
-  setStats: (stats) => set({ stats }),
-  setMemberBreakdown: (memberBreakdown) => set({ memberBreakdown }),
-  setFinanceSummary: (financeSummary) => set({ financeSummary }),
-  setAttendanceSummary: (attendanceSummary) => set({ attendanceSummary }),
-  setRecentActivity: (recentActivity) => set({ recentActivity }),
+  setOverview: (overview) =>
+    set({
+      stats: overview?.stats ?? null,
+      memberBreakdown: overview?.memberBreakdown ?? null,
+      financeSummary: overview?.financeSummary ?? [],
+      attendanceSummary: overview?.attendanceSummary ?? [],
+      recentActivity: overview?.recentActivity ?? [],
+    }),
+
   reset: () => set(initialState),
 }))
 

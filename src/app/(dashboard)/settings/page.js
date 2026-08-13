@@ -59,7 +59,7 @@ function SettingsPageContent() {
   } = useSlipConfig()
 
   return (
-    <div className="min-h-screen bg-background p-4 sm:p-6 md:p-8">
+    <div className="min-h-screen bg-background px-3 py-4 sm:p-6 md:p-8">
       <div className="mx-auto max-w-6xl">
         <h1 className="font-heading text-2xl font-normal text-foreground/80 sm:text-3xl">
           Settings
@@ -68,15 +68,15 @@ function SettingsPageContent() {
           Configure your church management system
         </p>
 
-        <div className="mt-6">
+        <div className="mt-5 sm:mt-6">
           <SettingsTabs active={activeTab} onChange={setActiveTab} />
         </div>
 
         {activeTab === "offering-slip" ? (
           <>
-            <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-              <div>
-                <h2 className="font-heading text-xl font-normal text-foreground/80">
+            <div className="mt-5 flex flex-col gap-3 sm:mt-6 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+              <div className="min-w-0">
+                <h2 className="font-heading text-lg font-normal text-foreground/80 sm:text-xl">
                   Offering Slip
                 </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
@@ -85,10 +85,10 @@ function SettingsPageContent() {
                 </p>
               </div>
 
-              <div className="flex flex-wrap items-center gap-3">
+              <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center sm:gap-3">
                 <Button
                   variant="outline"
-                  className="h-10 gap-2 rounded-lg px-4"
+                  className="h-10 gap-2 rounded-lg px-3 sm:px-4"
                   onClick={reset}
                 >
                   <RotateCcw className="h-4 w-4" />
@@ -96,7 +96,7 @@ function SettingsPageContent() {
                 </Button>
                 <Button
                   variant="outline"
-                  className="h-10 gap-2 rounded-lg px-4"
+                  className="h-10 gap-2 rounded-lg px-3 sm:px-4"
                   onClick={() => setIsPreviewing((previewing) => !previewing)}
                 >
                   {isPreviewing ? (
@@ -107,17 +107,18 @@ function SettingsPageContent() {
                   {isPreviewing ? "Edit" : "Preview"}
                 </Button>
                 <Button
-                  className="h-10 gap-2 rounded-lg bg-[#1e2a4a] px-4 text-white hover:bg-[#1e2a4a]/90"
+                  className="col-span-2 h-10 gap-2 rounded-lg bg-[#1e2a4a] px-3 text-white hover:bg-[#1e2a4a]/90 sm:col-span-1 sm:px-4"
                   onClick={() => window.print()}
                 >
                   <Printer className="h-4 w-4" />
-                  Print Slip
+                  <span className="sm:hidden">Print</span>
+                  <span className="hidden sm:inline">Print Slip</span>
                 </Button>
               </div>
             </div>
 
             {isPreviewing ? (
-              <div className="mt-6">
+              <div className="mt-4 overflow-x-auto sm:mt-6">
                 <SlipPreview
                   size="full"
                   branding={branding}
@@ -126,8 +127,8 @@ function SettingsPageContent() {
                 />
               </div>
             ) : (
-              <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
-                <div className="flex flex-col gap-6">
+              <div className="mt-4 grid grid-cols-1 gap-3 sm:mt-6 sm:gap-6 lg:grid-cols-2">
+                <div className="flex flex-col gap-3 sm:gap-6">
                   <BrandingSettings
                     branding={branding}
                     onChange={updateBranding}
@@ -166,7 +167,7 @@ function SettingsPageContent() {
             </PrintPortal>
           </>
         ) : (
-          <div className="mt-6">
+          <div className="mt-5 sm:mt-6">
             <UsersRolesSettings />
           </div>
         )}

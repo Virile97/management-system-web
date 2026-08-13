@@ -27,14 +27,14 @@ function PeriodTabs({
 
   return (
     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex items-center gap-1 overflow-x-auto">
+      <div className="-mx-3 flex items-center gap-1 overflow-x-auto px-3 pb-0.5 scrollbar-none sm:mx-0 sm:px-0">
         {periods.map((period) => (
           <button
             key={period}
             type="button"
             onClick={() => handleClick(period)}
             className={cn(
-              "shrink-0 rounded-lg px-3 py-1.5 text-sm transition-colors",
+              "h-9 shrink-0 rounded-lg px-3 text-sm transition-colors sm:h-auto sm:py-1.5",
               active === period
                 ? "bg-[#1e2a4a] font-medium text-white"
                 : "font-normal text-muted-foreground hover:text-foreground"
@@ -49,7 +49,7 @@ function PeriodTabs({
             type="button"
             onClick={onClear}
             aria-label="Clear filter"
-            className="ml-1.5 inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            className="ml-1.5 inline-flex h-9 shrink-0 items-center gap-1 rounded-md px-2 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground sm:h-auto sm:py-1.5"
           >
             <X className="h-3 w-3" />
             Clear filter
@@ -58,7 +58,7 @@ function PeriodTabs({
       </div>
 
       {recordCount != null && (
-        <p className="text-sm text-muted-foreground">
+        <p className="text-xs text-muted-foreground sm:text-sm">
           {recordCount} records in period
         </p>
       )}

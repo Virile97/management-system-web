@@ -397,10 +397,10 @@ function AttendancePageContent() {
     }) || today
 
   return (
-    <div className="min-h-screen bg-background p-4 sm:p-6 md:p-8">
+    <div className="min-h-screen bg-background px-3 py-4 sm:p-6 md:p-8">
       <div className="mx-auto max-w-6xl">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+          <div className="min-w-0">
             <h1 className="font-heading text-2xl font-normal text-foreground/80 sm:text-3xl">
               Member Attendance
             </h1>
@@ -409,33 +409,33 @@ function AttendancePageContent() {
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="grid grid-cols-[1fr_auto] gap-2 sm:flex sm:items-center sm:gap-3">
             <DateRangeButton
               hasRange
               label={rangeLabel}
               clearable={hasCustomRange}
               onOpen={() => setIsDateRangeOpen(true)}
               onClear={handleClearDateRange}
-              className="h-10 px-4"
+              className="h-10 w-full justify-start px-3 sm:w-auto sm:px-4"
             />
 
             <Button
-              className="h-10 gap-2 rounded-lg bg-[#1e2a4a] px-4 text-white hover:bg-[#1e2a4a]/90"
+              className="h-10 gap-2 rounded-lg bg-[#1e2a4a] px-3 text-white hover:bg-[#1e2a4a]/90 sm:px-4"
               onClick={() => setIsExportOpen(true)}
             >
               <Download className="h-4 w-4" />
-              Export
+              <span className="sm:inline">Export</span>
             </Button>
           </div>
         </div>
 
         {error && (
-          <div className="mt-4 flex items-center justify-between gap-3 rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          <div className="mt-4 flex flex-col gap-2 rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive sm:flex-row sm:items-center sm:justify-between sm:gap-3">
             <span>{error}</span>
             <button
               type="button"
               onClick={() => reload("filter")}
-              className="shrink-0 font-semibold underline underline-offset-2 hover:no-underline"
+              className="shrink-0 self-start font-semibold underline underline-offset-2 hover:no-underline sm:self-auto"
             >
               Retry
             </button>
@@ -444,34 +444,28 @@ function AttendancePageContent() {
 
         {showListSkeleton && !summary ? (
           <>
-            <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+            <div className="mt-5 grid grid-cols-2 gap-3 sm:mt-6 sm:gap-4 sm:grid-cols-3 lg:grid-cols-5">
               {Array.from({ length: 5 }).map((_, i) => (
                 <StatCardSkeleton key={i} />
               ))}
             </div>
-            <div className="mt-6">
+            <div className="mt-4 sm:mt-6">
               <ListCardSkeleton rows={5} />
             </div>
           </>
         ) : (
           <>
-            <div className="mt-6">
+            <div className="mt-5 sm:mt-6">
               <AttendanceStatsCards stats={summary} />
             </div>
 
-            <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <AttendanceGroupTabs
-                groups={tabs}
-                active={activeLevel}
-                onChange={handleLevelChange}
-              />
-
-              <div className="relative w-full sm:w-64">
+            <div className="mt-4 flex flex-col gap-3 sm:mt-6 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+              <div className="relative order-1 w-full sm:order-2 sm:w-64 lg:w-72">
                 <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   placeholder="Search member..."
                   className={cn(
-                    "h-9 rounded-lg bg-white pl-9",
+                    "h-10 rounded-lg bg-white pl-9 sm:h-9",
                     search && "pr-9"
                   )}
                   value={search}
@@ -488,9 +482,17 @@ function AttendancePageContent() {
                   </button>
                 ) : null}
               </div>
+
+              <div className="order-2 min-w-0 sm:order-1 sm:flex-1">
+                <AttendanceGroupTabs
+                  groups={tabs}
+                  active={activeLevel}
+                  onChange={handleLevelChange}
+                />
+              </div>
             </div>
 
-            <div className="mt-4">
+            <div className="mt-3 sm:mt-4">
               <AttendanceTable
                 members={items}
                 isLoading={showListSkeleton}

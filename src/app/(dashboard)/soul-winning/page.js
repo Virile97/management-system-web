@@ -221,10 +221,10 @@ function SoulWinningPageContent() {
     })
 
   return (
-    <div className="min-h-screen bg-background p-4 sm:p-6 md:p-8">
+    <div className="min-h-screen bg-background px-3 py-4 sm:p-6 md:p-8">
       <div className="mx-auto max-w-6xl">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+          <div className="min-w-0">
             <h1 className="font-heading text-2xl font-normal text-foreground/80 sm:text-3xl">
               Soul Winning
             </h1>
@@ -234,15 +234,16 @@ function SoulWinningPageContent() {
           </div>
 
           <Button
-            className="h-10 gap-2 rounded-lg bg-[#1e2a4a] px-4 text-white hover:bg-[#1e2a4a]/90"
+            className="h-10 w-full gap-2 rounded-lg bg-[#1e2a4a] px-3 text-white hover:bg-[#1e2a4a]/90 sm:w-auto sm:px-4"
             onClick={() => setIsRecordSoulOpen(true)}
           >
             <Plus className="h-4 w-4" />
-            Record Soul Won
+            <span className="sm:hidden">Record Soul</span>
+            <span className="hidden sm:inline">Record Soul Won</span>
           </Button>
         </div>
 
-        <div className="mt-6">
+        <div className="mt-5 sm:mt-6">
           <PeriodTabs
             active={period}
             onChange={setPeriod}
@@ -251,20 +252,20 @@ function SoulWinningPageContent() {
           />
         </div>
 
-        <div className="mt-6">
+        <div className="mt-5 sm:mt-6">
           <SoulStatsCards />
         </div>
 
-        <div className="mt-6">
+        <div className="mt-4 sm:mt-6">
           <RetentionBar />
         </div>
 
-        <div className="mt-6">
+        <div className="mt-4 sm:mt-6">
           <SectionTabs active={activeTab} onChange={setActiveTab} />
         </div>
 
         {activeTab === "records" && (
-          <div className="mt-6 flex flex-col gap-4">
+          <div className="mt-4 flex flex-col gap-3 sm:mt-6 sm:gap-4">
             <RecordFilters
               search={search}
               onSearchChange={setSearch}
@@ -280,13 +281,13 @@ function SoulWinningPageContent() {
         )}
 
         {activeTab === "leaderboard" && (
-          <div className="mt-6">
+          <div className="mt-4 sm:mt-6">
             <Leaderboard soulWinners={soulWinnerStats} />
           </div>
         )}
 
         {activeTab === "trend" && (
-          <div className="mt-6">
+          <div className="mt-4 sm:mt-6">
             <SoulTrendChart />
           </div>
         )}

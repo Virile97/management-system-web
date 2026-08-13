@@ -9,11 +9,7 @@ export const API_ENDPOINTS = {
   AUTH_SET_PASSWORD: `${API_V1}/auth/set-password`,
 
   // Dashboard
-  DASHBOARD_STATS: `${API_V1}/dashboard/stats`,
-  DASHBOARD_FINANCE_SUMMARY: `${API_V1}/dashboard/finance-summary`,
-  DASHBOARD_RECENT_ACTIVITY: `${API_V1}/dashboard/recent-activity`,
-  DASHBOARD_MEMBER_BREAKDOWN: `${API_V1}/dashboard/member-breakdown`,
-  DASHBOARD_ATTENDANCE_SUMMARY: `${API_V1}/dashboard/attendance-summary`,
+  DASHBOARD: `${API_V1}/dashboard`,
 
   // Users
   USERS: `${API_V1}/users`,
@@ -51,11 +47,7 @@ export const APP_API_ENDPOINTS = {
   AUTH_SET_PASSWORD: "/api/auth/set-password",
 
   // Dashboard
-  DASHBOARD_STATS: "/api/dashboard",
-  DASHBOARD_FINANCE_SUMMARY: "/api/dashboard/finance-summary",
-  DASHBOARD_RECENT_ACTIVITY: "/api/dashboard/recent-activity",
-  DASHBOARD_MEMBER_BREAKDOWN: "/api/dashboard/member-breakdown",
-  DASHBOARD_ATTENDANCE_SUMMARY: "/api/dashboard/attendance-summary",
+  DASHBOARD: "/api/dashboard",
 
   // Users
   USERS: "/api/users",

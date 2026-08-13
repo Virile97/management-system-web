@@ -4,9 +4,11 @@ import { useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
 import { DataTableShell } from "@/components/common/DataTableShell"
+import { SortableTh } from "@/components/common/SortableTh"
 import { FilterPills } from "@/components/common/FilterPills"
 import { DateRangeButton } from "@/components/common/DateRangeButton"
 import { DateRangeFilterModal } from "@/components/soul-winning/DateRangeFilterModal"
+import { useTableSort } from "@/hooks/use-table-sort"
 import { cn } from "@/lib/utils"
 import { toDateRangeStrings, toDatePoint } from "@/utils/helpers"
 import { Button } from "@/components/ui/button"
@@ -19,6 +21,15 @@ import {
 } from "lucide-react"
 
 const FILTERS = ["All", "Income", "Expense"]
+
+const SORT_COLUMNS = {
+  date: { get: (row) => row.createdAt, type: "date" },
+  note: { get: (row) => row.description, type: "string" },
+  category: { get: (row) => row.category, type: "string" },
+  recordedBy: { get: (row) => row.recordedBy, type: "string" },
+  type: { get: (row) => row.type, type: "string" },
+  amount: { get: (row) => row.amount, type: "number" },
+}
 
 // dateFrom/dateTo are "YYYY-MM-DD" strings (or ""); this seeds the modal's
 // initial view/selection from whichever bound is set (defaulting to today).
@@ -87,6 +98,11 @@ function TransactionTable({
   onPageChange,
 }) {
   const [isDateRangeOpen, setIsDateRangeOpen] = useState(false)
+  const { sortedRows, sortKey, sortDirection, toggleSort } = useTableSort(
+    transactions,
+    SORT_COLUMNS,
+    { initialKey: "date", initialDirection: "desc" }
+  )
 
   const selectedCount = selected?.size ?? 0
   const hasDateRange = Boolean(dateFrom || dateTo)
@@ -105,32 +121,36 @@ function TransactionTable({
 
   const toolbar = (
     <>
-      <div className="flex flex-col gap-3 p-4 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
-        <FilterPills
-          options={FILTERS}
-          active={activeFilter}
-          onChange={onFilterChange}
-          disabled={filtersDisabled}
-        />
-
-        <DateRangeButton
-          hasRange={hasDateRange}
-          label={hasDateRange ? `${dateFrom || "…"} – ${dateTo || "…"}` : null}
-          disabled={filtersDisabled || dateFilterDisabled}
-          clearable={!dateFilterDisabled}
-          onOpen={() => setIsDateRangeOpen(true)}
-          onClear={onClearDateRange}
-          className="h-8"
-        />
-
-        <div className="relative w-full sm:w-72">
+      <div className="flex flex-col gap-3 p-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4 sm:p-4">
+        <div className="relative order-1 w-full sm:order-3 sm:ml-auto sm:w-72">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search transactions..."
-            className="h-8 rounded-lg bg-white pl-9"
+            className="h-10 rounded-lg bg-white pl-9 sm:h-8"
             value={search}
             disabled={filtersDisabled}
             onChange={(event) => onSearchChange(event.target.value)}
+          />
+        </div>
+
+        <div className="order-2 flex min-w-0 flex-col gap-2 sm:order-1 sm:flex-row sm:items-center sm:gap-3">
+          <FilterPills
+            options={FILTERS}
+            active={activeFilter}
+            onChange={onFilterChange}
+            disabled={filtersDisabled}
+          />
+
+          <DateRangeButton
+            hasRange={hasDateRange}
+            label={
+              hasDateRange ? `${dateFrom || "…"} – ${dateTo || "…"}` : null
+            }
+            disabled={filtersDisabled || dateFilterDisabled}
+            clearable={!dateFilterDisabled}
+            onOpen={() => setIsDateRangeOpen(true)}
+            onClear={onClearDateRange}
+            className="h-10 w-full justify-start sm:h-8 sm:w-auto"
           />
         </div>
 
@@ -138,7 +158,7 @@ function TransactionTable({
           <Button
             type="button"
             variant="outline"
-            className="h-8 gap-1.5 rounded-lg border-destructive/30 px-3 text-sm text-destructive hover:bg-destructive/10 hover:text-destructive sm:ml-auto"
+            className="order-3 h-10 w-full gap-1.5 rounded-lg border-destructive/30 px-3 text-sm text-destructive hover:bg-destructive/10 hover:text-destructive sm:order-4 sm:ml-0 sm:h-8 sm:w-auto"
             onClick={onDeleteSelected}
           >
             <Trash2 className="h-3.5 w-3.5" />
@@ -158,7 +178,7 @@ function TransactionTable({
 
   return (
     <DataTableShell
-      rows={transactions}
+      rows={sortedRows}
       isLoading={isLoading}
       toolbar={toolbar}
       emptyIcon={Receipt}
@@ -176,24 +196,49 @@ function TransactionTable({
               onCheckedChange={selection.onToggleAll}
             />
           </th>
-          <th className="py-3 pr-4 text-left text-xs font-medium tracking-wide text-muted-foreground uppercase">
-            Date
-          </th>
-          <th className="py-3 pr-4 text-left text-xs font-medium tracking-wide text-muted-foreground uppercase">
-            Note
-          </th>
-          <th className="py-3 pr-4 text-left text-xs font-medium tracking-wide text-muted-foreground uppercase">
-            Category
-          </th>
-          <th className="py-3 pr-4 text-left text-xs font-medium tracking-wide text-muted-foreground uppercase">
-            Recorded By
-          </th>
-          <th className="py-3 pr-4 text-left text-xs font-medium tracking-wide text-muted-foreground uppercase">
-            Type
-          </th>
-          <th className="py-3 pr-4 text-right text-xs font-medium tracking-wide text-muted-foreground uppercase">
-            Amount
-          </th>
+          <SortableTh
+            label="Date"
+            sortKey="date"
+            activeKey={sortKey}
+            direction={sortDirection}
+            onSort={toggleSort}
+          />
+          <SortableTh
+            label="Note"
+            sortKey="note"
+            activeKey={sortKey}
+            direction={sortDirection}
+            onSort={toggleSort}
+          />
+          <SortableTh
+            label="Category"
+            sortKey="category"
+            activeKey={sortKey}
+            direction={sortDirection}
+            onSort={toggleSort}
+          />
+          <SortableTh
+            label="Recorded By"
+            sortKey="recordedBy"
+            activeKey={sortKey}
+            direction={sortDirection}
+            onSort={toggleSort}
+          />
+          <SortableTh
+            label="Type"
+            sortKey="type"
+            activeKey={sortKey}
+            direction={sortDirection}
+            onSort={toggleSort}
+          />
+          <SortableTh
+            label="Amount"
+            sortKey="amount"
+            activeKey={sortKey}
+            direction={sortDirection}
+            onSort={toggleSort}
+            align="right"
+          />
           <th className="py-3 pr-4 text-right text-xs font-medium tracking-wide text-muted-foreground uppercase">
             Actions
           </th>
@@ -273,22 +318,30 @@ function TransactionTable({
         rows.map((transaction) => (
           <div
             key={transaction.id}
-            className="flex flex-col gap-2 border-b border-border p-4 last:border-0"
+            className="flex flex-col gap-2.5 border-b border-border px-3 py-4 last:border-0 sm:px-4"
           >
             <div className="flex items-start justify-between gap-3">
-              <div className="flex min-w-0 items-start gap-2">
+              <div className="flex min-w-0 items-start gap-2.5">
                 <Checkbox
                   className="mt-0.5"
                   checked={selection.isSelected(transaction)}
                   onCheckedChange={() => selection.toggle(transaction)}
                 />
-                <p className="text-sm font-medium text-foreground/85">
-                  {transaction.description}
-                </p>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-foreground/85">
+                    {transaction.description}
+                  </p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    {formatDate(transaction.createdAt)}
+                    {transaction.recordedBy
+                      ? ` · ${transaction.recordedBy}`
+                      : ""}
+                  </p>
+                </div>
               </div>
               <span
                 className={cn(
-                  "shrink-0 text-right text-sm font-semibold",
+                  "shrink-0 text-right text-sm font-semibold tabular-nums",
                   transaction.amount > 0 ? "text-emerald-600" : "text-red-500"
                 )}
               >
@@ -297,44 +350,39 @@ function TransactionTable({
               </span>
             </div>
 
-            <div className="flex items-center justify-between gap-3">
-              <span
-                className={cn(
-                  "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium",
-                  categoryStyles[transaction.category] || defaultCategoryStyle
-                )}
-              >
-                <span className="h-1.5 w-1.5 rounded-full bg-current" />
-                {transaction.category}
-              </span>
+            <div className="flex items-center justify-between gap-3 pl-7">
+              <div className="flex min-w-0 flex-wrap items-center gap-2">
+                <span
+                  className={cn(
+                    "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium",
+                    categoryStyles[transaction.category] || defaultCategoryStyle
+                  )}
+                >
+                  <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                  {transaction.category}
+                </span>
 
-              <span
-                className={cn(
-                  "inline-flex items-center gap-1 text-xs font-medium",
-                  transaction.type === "Income"
-                    ? "text-emerald-600"
-                    : "text-red-500"
-                )}
-              >
-                {transaction.type === "Income" ? (
-                  <ArrowUpRight className="h-3.5 w-3.5" />
-                ) : (
-                  <ArrowDownRight className="h-3.5 w-3.5" />
-                )}
-                {transaction.type}
-              </span>
-            </div>
+                <span
+                  className={cn(
+                    "inline-flex items-center gap-1 text-xs font-medium",
+                    transaction.type === "Income"
+                      ? "text-emerald-600"
+                      : "text-red-500"
+                  )}
+                >
+                  {transaction.type === "Income" ? (
+                    <ArrowUpRight className="h-3.5 w-3.5" />
+                  ) : (
+                    <ArrowDownRight className="h-3.5 w-3.5" />
+                  )}
+                  {transaction.type}
+                </span>
+              </div>
 
-            <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
-              <span>{formatDate(transaction.createdAt)}</span>
-              <span>{transaction.recordedBy}</span>
-            </div>
-
-            <div className="flex justify-end">
               <button
                 type="button"
                 onClick={() => onEdit?.(transaction)}
-                className="text-sm font-medium text-foreground/80 hover:text-foreground"
+                className="shrink-0 text-sm font-medium text-foreground/80 hover:text-foreground"
               >
                 Edit
               </button>

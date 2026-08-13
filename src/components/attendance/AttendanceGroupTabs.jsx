@@ -11,7 +11,7 @@ const dotColors = {
 
 function AttendanceGroupTabs({ groups, active, onChange }) {
   return (
-    <div className="flex items-center gap-2 overflow-x-auto">
+    <div className="-mx-3 flex items-center gap-2 overflow-x-auto px-3 pb-0.5 scrollbar-none sm:mx-0 sm:px-0">
       {groups.map((group) => {
         const name = group.name
         const label = group.label || (name === "All" ? "All Members" : name)
@@ -23,19 +23,21 @@ function AttendanceGroupTabs({ groups, active, onChange }) {
             type="button"
             onClick={() => onChange(name)}
             className={cn(
-              "flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors",
+              "flex h-9 shrink-0 items-center gap-1.5 rounded-full border px-3 text-sm transition-colors sm:h-auto sm:py-1.5",
               isActive
                 ? "border-[#1e2a4a] bg-[#1e2a4a] text-white"
-                : "border-border text-muted-foreground hover:text-foreground"
+                : "border-border bg-white text-muted-foreground hover:text-foreground"
             )}
           >
             <span
               className={cn(
                 "h-1.5 w-1.5 rounded-full",
-                dotColors[name] ?? "bg-foreground/50"
+                isActive
+                  ? "bg-white/70"
+                  : (dotColors[name] ?? "bg-foreground/50")
               )}
             />
-            {label}
+            <span className="whitespace-nowrap">{label}</span>
             <span
               className={isActive ? "text-white/70" : "text-muted-foreground"}
             >
