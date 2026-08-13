@@ -1,4 +1,5 @@
 import { Plus_Jakarta_Sans, Inter } from "next/font/google"
+import { ThemeProvider } from "@/components/theme/ThemeProvider"
 import { Toaster } from "@/components/ui/toaster"
 import "../globals.css"
 
@@ -22,10 +23,22 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={`${headingFont.variable} ${inter.variable}`}>
+    <html
+      lang="en"
+      className={`${headingFont.variable} ${inter.variable}`}
+      suppressHydrationWarning
+    >
       <body>
-        {children}
-        <Toaster />
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="light"
+          enableSystem={false}
+          storageKey="lighthouse-theme"
+          disableTransitionOnChange
+        >
+          {children}
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   )

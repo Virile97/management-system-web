@@ -14,6 +14,7 @@ import {
   Loader2,
   ClipboardCheck,
 } from "lucide-react"
+import { ThemeToggle } from "@/components/theme/ThemeToggle"
 import { getCurrentUser } from "@/lib/auth"
 import { abortAll } from "@/lib/abort-registry"
 import { useDashboardStore } from "@/stores/dashboard.store"
@@ -153,8 +154,8 @@ function Sidebar({ open = false, onClose }) {
           aria-live="polite"
           aria-busy="true"
         >
-          <div className="flex flex-col items-center gap-3 rounded-2xl bg-white px-8 py-6 shadow-lg">
-            <Loader2 className="h-6 w-6 animate-spin text-[#1e2a4a]" />
+          <div className="flex flex-col items-center gap-3 rounded-2xl bg-card px-8 py-6 shadow-lg">
+            <Loader2 className="h-6 w-6 animate-spin text-foreground" />
             <p className="text-sm font-medium text-foreground/85">
               Signing out…
             </p>
@@ -221,7 +222,12 @@ function Sidebar({ open = false, onClose }) {
               />
             ))}
 
-          <div className="mt-3 flex items-center gap-3 border-t border-white/10 px-3 pt-4">
+          <div className="mt-2 flex items-center justify-between gap-2 px-3 py-2">
+            <span className="text-xs text-white/50">Theme</span>
+            <ThemeToggle className="text-white/60 hover:bg-white/10 hover:text-white" />
+          </div>
+
+          <div className="mt-1 flex items-center gap-3 border-t border-white/10 px-3 pt-4">
             {userLoaded ? (
               <>
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-400 font-heading text-sm font-semibold text-[#1e2a4a]">
