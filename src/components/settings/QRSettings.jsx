@@ -12,12 +12,7 @@ function QRSettings({ qr, onChange }) {
   const disabled = Boolean(qr.disabled)
 
   return (
-    <Card
-      className={cn(
-        "rounded-2xl p-4 sm:p-6",
-        disabled && "opacity-60"
-      )}
-    >
+    <Card className={cn("rounded-2xl p-4 sm:p-6", disabled && "opacity-60")}>
       <div className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2.5">
           <QrCode className="h-5 w-5 shrink-0 text-foreground/70" />

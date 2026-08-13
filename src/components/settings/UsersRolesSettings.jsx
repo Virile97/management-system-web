@@ -97,7 +97,8 @@ function UsersRolesSettings() {
 
   const editingUser =
     isEditParam && editUserIdParam
-      ? users.find((user) => String(user.id) === String(editUserIdParam)) || null
+      ? users.find((user) => String(user.id) === String(editUserIdParam)) ||
+        null
       : null
 
   useEffect(() => {
@@ -360,7 +361,9 @@ function UsersRolesSettings() {
         onUpdated={(updated) => {
           if (!updated) return
           setUsers((prev) =>
-            prev.map((user) => (user.id === updated.id ? { ...user, ...updated } : user))
+            prev.map((user) =>
+              user.id === updated.id ? { ...user, ...updated } : user
+            )
           )
           closeEditUser()
         }}

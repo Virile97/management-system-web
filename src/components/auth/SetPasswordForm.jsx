@@ -52,8 +52,7 @@ function SetPasswordForm() {
       } catch (err) {
         if (controller.signal.aborted) return
         setValidateError(
-          err?.message ||
-            "This set-password link is invalid or has expired."
+          err?.message || "This set-password link is invalid or has expired."
         )
       } finally {
         if (!controller.signal.aborted) setIsValidating(false)
@@ -119,9 +118,7 @@ function SetPasswordForm() {
       await setPassword({ token, password: encryptedPassword })
       router.push("/dashboard")
     } catch (err) {
-      setError(
-        err?.message || "Unable to set password. Please try again."
-      )
+      setError(err?.message || "Unable to set password. Please try again.")
     } finally {
       setIsSubmitting(false)
     }
@@ -150,7 +147,10 @@ function SetPasswordForm() {
         </div>
         <p className="text-sm text-muted-foreground">
           Ask your administrator to send a new invite, or{" "}
-          <a href="/login" className="font-semibold text-foreground hover:underline">
+          <a
+            href="/login"
+            className="font-semibold text-foreground hover:underline"
+          >
             sign in
           </a>{" "}
           if you already have a password.

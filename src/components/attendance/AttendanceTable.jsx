@@ -34,6 +34,23 @@ function deriveStatus(checkedSlots) {
   }
 }
 
+function slotsFromMember(member) {
+  return {
+    times: {
+      morningIn: member.morningIn,
+      morningOut: member.morningOut,
+      afternoonIn: member.afternoonIn,
+      afternoonOut: member.afternoonOut,
+    },
+    checked: {
+      morningIn: Boolean(member.morningIn),
+      morningOut: Boolean(member.morningOut),
+      afternoonIn: Boolean(member.afternoonIn),
+      afternoonOut: Boolean(member.afternoonOut),
+    },
+  }
+}
+
 const avatarColors = [
   "bg-[#1e2a4a]",
   "bg-emerald-600",
@@ -87,37 +104,20 @@ function TimeCell({ checked, value, disabled, onCheckedChange, onChange }) {
 
 function AttendanceRow({ member, index, onSlotChange }) {
   const color = avatarColors[index % avatarColors.length]
-  const [isSaving, setIsSaving] = useState(false)
   const timeSaveTimer = useRef(null)
+  const seed = slotsFromMember(member)
 
-  const [times, setTimes] = useState({
-    morningIn: member.morningIn,
-    morningOut: member.morningOut,
-    afternoonIn: member.afternoonIn,
-    afternoonOut: member.afternoonOut,
-  })
+  const [times, setTimes] = useState(seed.times)
+  const [checkedSlots, setCheckedSlots] = useState(seed.checked)
 
-  const [checkedSlots, setCheckedSlots] = useState({
-    morningIn: Boolean(member.morningIn),
-    morningOut: Boolean(member.morningOut),
-    afternoonIn: Boolean(member.afternoonIn),
-    afternoonOut: Boolean(member.afternoonOut),
-  })
-
+  // Re-seed only when the row's identity/day changes (filter/page). Slot
+  // writes patch the store without remounting — local state stays authoritative
+  // so checkboxes do not flicker or uncheck while saves complete.
   useEffect(() => {
-    setTimes({
-      morningIn: member.morningIn,
-      morningOut: member.morningOut,
-      afternoonIn: member.afternoonIn,
-      afternoonOut: member.afternoonOut,
-    })
-    setCheckedSlots({
-      morningIn: Boolean(member.morningIn),
-      morningOut: Boolean(member.morningOut),
-      afternoonIn: Boolean(member.afternoonIn),
-      afternoonOut: Boolean(member.afternoonOut),
-    })
-  }, [member])
+    const next = slotsFromMember(member)
+    setTimes(next.times)
+    setCheckedSlots(next.checked)
+  }, [member.id, member.date])
 
   useEffect(() => {
     return () => {
@@ -125,27 +125,35 @@ function AttendanceRow({ member, index, onSlotChange }) {
     }
   }, [])
 
+  function applyCompanionPatch(patch) {
+    if (!patch) return
+
+    setTimes((prev) => {
+      const next = { ...prev }
+      for (const key of ["morningOut", "afternoonOut"]) {
+        if (patch[key] != null && !prev[key]) next[key] = patch[key]
+      }
+      return next
+    })
+    setCheckedSlots((prev) => {
+      const next = { ...prev }
+      for (const key of ["morningOut", "afternoonOut"]) {
+        if (patch[key] != null && !prev[key]) next[key] = true
+      }
+      return next
+    })
+  }
+
   async function persist(field, displayTime) {
     if (!onSlotChange) return
 
-    setIsSaving(true)
     try {
-      await onSlotChange(member.id, field, displayTime)
+      const patch = await onSlotChange(member.id, field, displayTime)
+      applyCompanionPatch(patch)
     } catch {
-      setTimes({
-        morningIn: member.morningIn,
-        morningOut: member.morningOut,
-        afternoonIn: member.afternoonIn,
-        afternoonOut: member.afternoonOut,
-      })
-      setCheckedSlots({
-        morningIn: Boolean(member.morningIn),
-        morningOut: Boolean(member.morningOut),
-        afternoonIn: Boolean(member.afternoonIn),
-        afternoonOut: Boolean(member.afternoonOut),
-      })
-    } finally {
-      setIsSaving(false)
+      const next = slotsFromMember(member)
+      setTimes(next.times)
+      setCheckedSlots(next.checked)
     }
   }
 
@@ -217,14 +225,12 @@ function AttendanceRow({ member, index, onSlotChange }) {
           <TimeCell
             checked={checkedSlots.morningIn}
             value={times.morningIn}
-            disabled={isSaving}
             onCheckedChange={toggleSlot("morningIn")}
             onChange={updateTime("morningIn")}
           />
           <TimeCell
             checked={checkedSlots.morningOut}
             value={times.morningOut}
-            disabled={isSaving}
             onCheckedChange={toggleSlot("morningOut")}
             onChange={updateTime("morningOut")}
           />
@@ -235,14 +241,12 @@ function AttendanceRow({ member, index, onSlotChange }) {
           <TimeCell
             checked={checkedSlots.afternoonIn}
             value={times.afternoonIn}
-            disabled={isSaving}
             onCheckedChange={toggleSlot("afternoonIn")}
             onChange={updateTime("afternoonIn")}
           />
           <TimeCell
             checked={checkedSlots.afternoonOut}
             value={times.afternoonOut}
-            disabled={isSaving}
             onCheckedChange={toggleSlot("afternoonOut")}
             onChange={updateTime("afternoonOut")}
           />

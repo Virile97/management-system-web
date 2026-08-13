@@ -56,12 +56,15 @@ const useAttendanceStore = create(
 
       patchItem: (memberId, patch) =>
         set((state) => {
-          const nextItems = state.items.map((item) =>
-            item.id === memberId ? { ...item, ...patch } : item
-          )
+          const apply = (item) => {
+            if (!item || item.id !== memberId) return item
+            const nextPatch = typeof patch === "function" ? patch(item) : patch
+            return { ...item, ...nextPatch }
+          }
+
+          const nextItems = state.items.map(apply)
           const cache = { ...state.cache }
-          if (cache[memberId])
-            cache[memberId] = { ...cache[memberId], ...patch }
+          if (cache[memberId]) cache[memberId] = apply(cache[memberId])
           return { items: nextItems, cache }
         }),
 

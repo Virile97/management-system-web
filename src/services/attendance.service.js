@@ -278,6 +278,50 @@ function upsertAttendance(memberId, payload, signal) {
   })
 }
 
+function unwrapAttendancePayload(data) {
+  if (!data || typeof data !== "object") return null
+  if (data.attendance && typeof data.attendance === "object")
+    return data.attendance
+  if (Array.isArray(data.attendances) && data.attendances[0])
+    return data.attendances[0]
+  return data
+}
+
+function deriveRowStatus(row = {}) {
+  const morning = Boolean(row.morningIn)
+  const afternoon = Boolean(row.afternoonIn)
+  if (morning && afternoon) return "Full day"
+  if (morning) return "Morning only"
+  if (afternoon) return "Afternoon only"
+  return null
+}
+
+/**
+ * Builds a minimal store patch for one slot write. Only touches the saved
+ * field (plus cleared/default companions) so in-flight edits to other slots
+ * are never overwritten.
+ */
+function buildAttendanceSlotPatch(field, nextDisplayTime, serverData) {
+  const patch = { [field]: nextDisplayTime || null }
+  const attendance = unwrapAttendancePayload(serverData)
+
+  if (!nextDisplayTime) {
+    if (field === "morningIn") patch.morningOut = null
+    if (field === "afternoonIn") patch.afternoonOut = null
+  } else if (field === "morningIn" || field === "afternoonIn") {
+    const outField = field === "morningIn" ? "morningOut" : "afternoonOut"
+    const serverOut = formatAttendanceTime(attendance?.[outField])
+    if (serverOut) patch[outField] = serverOut
+  }
+
+  return patch
+}
+
+function withDerivedRowStatus(row, patch) {
+  const next = { ...row, ...patch }
+  return { ...patch, status: deriveRowStatus(next) }
+}
+
 export {
   listAttendance,
   upsertAttendance,
@@ -285,4 +329,7 @@ export {
   formatAttendanceTime,
   toAttendanceDateTime,
   formatStatusLabel,
+  buildAttendanceSlotPatch,
+  withDerivedRowStatus,
+  deriveRowStatus,
 }

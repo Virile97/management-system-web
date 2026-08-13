@@ -155,7 +155,9 @@ function Sidebar({ open = false, onClose }) {
         >
           <div className="flex flex-col items-center gap-3 rounded-2xl bg-white px-8 py-6 shadow-lg">
             <Loader2 className="h-6 w-6 animate-spin text-[#1e2a4a]" />
-            <p className="text-sm font-medium text-foreground/85">Signing out…</p>
+            <p className="text-sm font-medium text-foreground/85">
+              Signing out…
+            </p>
           </div>
         </div>
       )}

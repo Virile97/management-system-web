@@ -16,6 +16,8 @@ import {
   listAttendance,
   upsertAttendance,
   toAttendanceDateTime,
+  buildAttendanceSlotPatch,
+  withDerivedRowStatus,
 } from "@/services/attendance.service"
 import { useAttendanceStore } from "@/stores/attendance.store"
 import { ExportAttendanceReportModal } from "@/components/attendance/ExportAttendanceReportModal"
@@ -106,8 +108,11 @@ function AttendancePageContent() {
     meta,
     query,
     setAttendance,
+    setSummary,
+    setLevels,
     cacheItems,
     getCachedItems,
+    patchItem,
   } = useAttendanceStore(
     useShallow((state) => ({
       items: state.items,
@@ -116,8 +121,11 @@ function AttendancePageContent() {
       meta: state.meta,
       query: state.query,
       setAttendance: state.setAttendance,
+      setSummary: state.setSummary,
+      setLevels: state.setLevels,
       cacheItems: state.cacheItems,
       getCachedItems: state.getCachedItems,
+      patchItem: state.patchItem,
     }))
   )
 
@@ -128,11 +136,39 @@ function AttendancePageContent() {
   const isFirstRun = useRef(true)
   const lastQueryRef = useRef(null)
   const reloadIntentRef = useRef("filter")
+  const summaryRefreshTimer = useRef(null)
 
   function reload(intent = "auto") {
     reloadIntentRef.current = intent
     setRefreshKey((key) => key + 1)
   }
+
+  function queueSummaryRefresh() {
+    if (summaryRefreshTimer.current) clearTimeout(summaryRefreshTimer.current)
+
+    summaryRefreshTimer.current = setTimeout(async () => {
+      try {
+        const response = await listAttendance({
+          from: dateFrom,
+          to: dateTo,
+          level: activeLevel === DEFAULT_LEVEL ? "" : activeLevel,
+          search: debouncedSearch,
+          page,
+          limit: PAGE_SIZE,
+        })
+        setSummary(response.summary)
+        setLevels(response.levels)
+      } catch {
+        // Row state is already patched; stats can catch up on the next filter load.
+      }
+    }, 400)
+  }
+
+  useEffect(() => {
+    return () => {
+      if (summaryRefreshTimer.current) clearTimeout(summaryRefreshTimer.current)
+    }
+  }, [])
 
   function updateParams(updates) {
     const params = new URLSearchParams(searchParams)
@@ -331,8 +367,14 @@ function AttendancePageContent() {
     }
 
     try {
-      await upsertAttendance(memberId, payload)
-      reload("silent")
+      const data = await upsertAttendance(memberId, payload)
+      const slotPatch = buildAttendanceSlotPatch(field, nextDisplayTime, data)
+
+      // Patch only the written slot(s) so concurrent edits on the same row stay intact.
+      patchItem(memberId, (row) => withDerivedRowStatus(row, slotPatch))
+      queueSummaryRefresh()
+
+      return slotPatch
     } catch (err) {
       toast.error(err?.message || "Unable to update attendance")
       throw err

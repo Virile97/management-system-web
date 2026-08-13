@@ -53,7 +53,8 @@ export async function POST(request) {
   } catch (err) {
     const status = err?.response?.status || 500
     const message =
-      err?.response?.data?.message || "Unable to set password. Please try again."
+      err?.response?.data?.message ||
+      "Unable to set password. Please try again."
 
     return NextResponse.json({ success: false, message }, { status })
   }
