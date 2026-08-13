@@ -23,8 +23,8 @@ function DateRangeButton({
       disabled={disabled}
       onClick={onOpen}
       className={cn(
-        "h-9 shrink-0 gap-1.5 rounded-lg bg-white px-3 text-sm hover:bg-white",
-        hasRange && "border-[#1e2a4a] text-[#1e2a4a]",
+        "h-9 shrink-0 gap-1.5 rounded-lg bg-background px-3 text-sm text-muted-foreground hover:bg-background hover:text-foreground dark:bg-background",
+        hasRange && "border-[#1e2a4a] text-[#1e2a4a] hover:text-[#1e2a4a]",
         className
       )}
     >

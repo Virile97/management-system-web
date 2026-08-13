@@ -405,7 +405,7 @@ function MembersPageContent() {
             <Button
               type="button"
               variant="outline"
-              className="h-10 gap-2 rounded-lg px-4"
+              className="h-10 gap-2 rounded-lg bg-white px-4 text-foreground hover:bg-white dark:bg-white dark:text-neutral-900 dark:hover:bg-white"
               onClick={() => setIsExportOpen(true)}
               disabled={meta.total === 0 && selectedIds.size === 0}
             >

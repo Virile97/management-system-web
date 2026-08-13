@@ -277,7 +277,7 @@ function MemberFinancePanel({
           <Button
             type="button"
             variant="outline"
-            className="h-9 shrink-0 gap-2 rounded-lg"
+            className="h-10 shrink-0 gap-2 rounded-lg bg-white text-foreground hover:bg-white dark:bg-white dark:text-neutral-900 dark:hover:bg-white"
             onClick={() => setIsExportOpen(true)}
             disabled={isLoading}
           >

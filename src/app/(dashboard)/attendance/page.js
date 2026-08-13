@@ -33,7 +33,7 @@ import {
 import { register as registerAbortController } from "@/lib/abort-registry"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
-import { Download, Search, X } from "lucide-react"
+import { FileDown, Search, X } from "lucide-react"
 
 const PAGE_SIZE = 20
 const DEFAULT_LEVEL = "All"
@@ -420,10 +420,12 @@ function AttendancePageContent() {
             />
 
             <Button
-              className="h-10 gap-2 rounded-lg bg-[#1e2a4a] px-3 text-white hover:bg-[#1e2a4a]/90 sm:px-4"
+              type="button"
+              variant="outline"
+              className="h-10 gap-2 rounded-lg bg-white px-3 text-foreground hover:bg-white sm:px-4 dark:bg-white dark:text-neutral-900 dark:hover:bg-white"
               onClick={() => setIsExportOpen(true)}
             >
-              <Download className="h-4 w-4" />
+              <FileDown className="h-4 w-4" />
               <span className="sm:inline">Export</span>
             </Button>
           </div>
