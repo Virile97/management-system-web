@@ -4,6 +4,7 @@ import { useState } from "react"
 import { Menu } from "lucide-react"
 import { Sidebar } from "@/components/layout/Sidebar"
 import { ThemeToggle } from "@/components/theme/ThemeToggle"
+import { ProcessQueuePanel } from "@/components/common/ProcessQueuePanel"
 import { SlipConfigProvider } from "@/components/settings/SlipConfigContext"
 import { useAuthGuard } from "@/hooks/use-auth-guard"
 
@@ -46,6 +47,8 @@ function DashboardLayout({ children }) {
 
           <div className="flex-1 overflow-y-auto">{children}</div>
         </div>
+
+        <ProcessQueuePanel />
       </div>
     </SlipConfigProvider>
   )

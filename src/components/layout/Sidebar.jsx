@@ -22,6 +22,7 @@ import { useMemberFormStore } from "@/stores/memberForm.store"
 import { useMembersStore } from "@/stores/members.store"
 import { useFinanceStore } from "@/stores/finance.store"
 import { useAttendanceStore } from "@/stores/attendance.store"
+import { useProcessQueueStore } from "@/stores/processQueue.store"
 import { APP_API_ENDPOINTS } from "@/utils/constants"
 import { ERROR_MESSAGES } from "@/utils/errors"
 
@@ -112,6 +113,16 @@ function Sidebar({ open = false, onClose }) {
   }
 
   async function handleLogout() {
+    const unfinished = useProcessQueueStore.getState().unfinishedCount()
+    if (unfinished > 0) {
+      const proceed = window.confirm(
+        unfinished === 1
+          ? "You have 1 background process still running or failed. Logging out will cancel it. Continue?"
+          : `You have ${unfinished} background processes still running or failed. Logging out will cancel them. Continue?`
+      )
+      if (!proceed) return
+    }
+
     setLogoutError("")
     setIsLoggingOut(true)
 
@@ -120,6 +131,7 @@ function Sidebar({ open = false, onClose }) {
     // request still in flight when logout clears cookies can otherwise land
     // afterward and resurrect a valid session via its stale renewed cookie.
     abortAll()
+    useProcessQueueStore.getState().reset()
 
     try {
       const res = await fetch(APP_API_ENDPOINTS.AUTH_LOGOUT, {

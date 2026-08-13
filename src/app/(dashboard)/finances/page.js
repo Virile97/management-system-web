@@ -37,6 +37,10 @@ import {
   bulkDeleteTransactions,
 } from "@/services/finance.service"
 import { useFinanceStore } from "@/stores/finance.store"
+import {
+  PROCESS_TYPES,
+  useProcessQueueStore,
+} from "@/stores/processQueue.store"
 import { ScanLine, Plus, FileDown } from "lucide-react"
 
 const PAGE_SIZE = 10
@@ -99,6 +103,20 @@ function FinancesPageContent() {
   const [deleteError, setDeleteError] = useState("")
   const [refreshKey, setRefreshKey] = useState(0)
   const [isExportOpen, setIsExportOpen] = useState(false)
+  const lastCompleted = useProcessQueueStore((state) => state.lastCompleted)
+  const isFirstCompleted = useRef(true)
+
+  // Refresh finance views when a queued create finishes successfully.
+  useEffect(() => {
+    if (isFirstCompleted.current) {
+      isFirstCompleted.current = false
+      return
+    }
+    if (lastCompleted?.type !== PROCESS_TYPES.FINANCE_CREATE_TRANSACTION) {
+      return
+    }
+    setRefreshKey((key) => key + 1)
+  }, [lastCompleted])
 
   const periodValue = PERIOD_VALUES[period] ?? "month"
 

@@ -20,12 +20,12 @@ import {
 } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
 import {
-  createTransaction,
   getTransactionById,
   updateTransaction,
 } from "@/services/finance.service"
 import { getMemberById, normalizeMember } from "@/services/member.service"
 import { useMembersStore } from "@/stores/members.store"
+import { enqueueCreateTransaction } from "@/stores/processQueue.store"
 import { MemberPickerField } from "@/components/finances/MemberPickerField"
 import { sanitizeDecimalInput, toDateInputValue } from "@/utils/helpers"
 import { toast } from "sonner"
@@ -333,30 +333,47 @@ function RecordTransactionModal({
       payload.amount = Number(form.amount)
     }
 
-    setIsSubmitting(true)
     setSubmitError("")
 
+    // Creates go through the background queue so the form clears immediately
+    // and the user can record the next transaction without waiting.
+    if (!isEditing) {
+      const amount = isOfferingBreakdown
+        ? payload.breakdown.reduce(
+            (sum, entry) => sum + (Number(entry.amount) || 0),
+            0
+          )
+        : Number(payload.amount) || 0
+
+      const label =
+        (isOfferingBreakdown && form.memberName) ||
+        form.description.trim() ||
+        selectedCategoryName ||
+        (activeType === "expense" ? "Expense" : "Income")
+
+      enqueueCreateTransaction({
+        payload,
+        type: activeType,
+        label,
+        amount,
+        date: form.date,
+      })
+
+      setForm(emptyForm(type))
+      return
+    }
+
+    setIsSubmitting(true)
+
     try {
-      if (isEditing) {
-        await updateTransaction(transactionId, payload)
-        resetState()
-        onSaved?.()
-        onOpenChange(false)
-        toast.success("Transaction updated successfully")
-      } else {
-        await createTransaction(payload)
-        setForm(emptyForm(type))
-        setSubmitError("")
-        onSaved?.()
-        toast.success("Transaction added successfully")
-      }
+      await updateTransaction(transactionId, payload)
+      resetState()
+      onSaved?.()
+      onOpenChange(false)
+      toast.success("Transaction updated successfully")
     } catch (err) {
       // Keep the filled form so the user can fix and retry.
-      const message =
-        err?.message ||
-        (isEditing
-          ? "Unable to update transaction"
-          : "Unable to create transaction")
+      const message = err?.message || "Unable to update transaction"
       setSubmitError(message)
       toast.error(message)
     } finally {
@@ -610,7 +627,7 @@ function RecordTransactionModal({
               ? "Saving…"
               : isEditing
                 ? "Save Changes"
-                : "Save Transaction"}
+                : "Save & Continue"}
           </Button>
         </DialogFooter>
       </DialogContent>
