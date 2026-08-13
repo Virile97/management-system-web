@@ -19,7 +19,6 @@ const CSRF_EXEMPT_PATHS = new Set(["/api/auth/login", "/api/auth/logout"])
 // Routes the plain USER role cannot view; they're bounced to /members instead.
 const RESTRICTED_FOR_USER_ROLE = [
   "/dashboard",
-  "/attendance",
   "/finances",
   "/soul-winning",
   "/settings",

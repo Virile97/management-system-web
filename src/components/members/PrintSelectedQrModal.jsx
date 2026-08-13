@@ -11,9 +11,8 @@ import { MemberQrCard } from "@/components/members/MemberQrCard"
 import { PrintPortal } from "@/components/common/PrintPortal"
 import { QrCode, X } from "lucide-react"
 
-// 3×4 grid on short bond keeps each sticker large enough to scan while
-// fitting a useful batch per page.
-const QRS_PER_PAGE = 12
+// 3×7 grid on letter packs 21 stickers per page while staying scannable.
+const QRS_PER_PAGE = 21
 
 function chunk(list, size) {
   const chunks = []
@@ -60,7 +59,7 @@ function PrintSelectedQrModal({ open, onOpenChange, members }) {
                 <p className="pb-3 text-center text-xs font-medium tracking-wide text-muted-foreground uppercase">
                   Page {pageIndex + 1} of {pages.length}
                 </p>
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                   {page.map((member) => (
                     <MemberQrCard
                       key={member.id}
@@ -82,7 +81,7 @@ function PrintSelectedQrModal({ open, onOpenChange, members }) {
 
         <div className="flex flex-col-reverse gap-3 border-t border-border px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
           <p className="text-xs text-muted-foreground">
-            Short bond · 12 codes per page
+            Letter · 21 codes per page (3 × 7)
           </p>
           <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center">
             <Button
@@ -109,7 +108,7 @@ function PrintSelectedQrModal({ open, onOpenChange, members }) {
       <PrintPortal>
         {pages.map((page, pageIndex) => (
           <div key={pageIndex} className="print-report-page">
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-3 gap-2">
               {page.map((member) => (
                 <MemberQrCard key={member.id} member={member} size="print" />
               ))}

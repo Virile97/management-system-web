@@ -49,7 +49,7 @@ const sidebarItems = [
     label: "Attendance",
     icon: ClipboardCheck,
     section: "top",
-    allowedFor: ["ADMIN", "FINANCE_ADMIN"],
+    allowedFor: ALL_ROLES,
   },
   {
     href: "/finances",
@@ -148,7 +148,7 @@ function Sidebar({ open = false, onClose }) {
     <>
       {isLoggingOut && (
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-[#1e2a4a]/70 backdrop-blur-[2px]"
+          className="fixed inset-0 z-100 flex items-center justify-center bg-[#1e2a4a]/70 backdrop-blur-[2px]"
           role="status"
           aria-live="polite"
           aria-busy="true"

@@ -54,6 +54,20 @@ function queriesMatch(a, b) {
   )
 }
 
+/**
+ * Skeleton policy for list loads:
+ * - filter: search / date / level / page (or explicit retry)
+ * - silent: same query refresh (e.g. after a time upsert)
+ * - auto: filter when the query changed, silent when it did not
+ */
+function shouldShowSkeleton(intent, previousQuery, nextQuery) {
+  if (intent === "silent") return false
+
+  if (intent === "filter") return true
+
+  return !previousQuery || !queriesMatch(previousQuery, nextQuery)
+}
+
 function AttendancePageContent() {
   const router = useRouter()
   const pathname = usePathname()
@@ -112,6 +126,13 @@ function AttendancePageContent() {
   const [refreshKey, setRefreshKey] = useState(0)
   const [isExportOpen, setIsExportOpen] = useState(false)
   const isFirstRun = useRef(true)
+  const lastQueryRef = useRef(null)
+  const reloadIntentRef = useRef("filter")
+
+  function reload(intent = "auto") {
+    reloadIntentRef.current = intent
+    setRefreshKey((key) => key + 1)
+  }
 
   function updateParams(updates) {
     const params = new URLSearchParams(searchParams)
@@ -178,11 +199,23 @@ function AttendancePageContent() {
       isFirstRun.current = false
 
       if (query && items.length && queriesMatch(query, currentQuery)) {
+        lastQueryRef.current = currentQuery
+        reloadIntentRef.current = "auto"
         setIsLoading(false)
         setError("")
         return
       }
     }
+
+    const intent = reloadIntentRef.current
+    reloadIntentRef.current = "auto"
+    const showSkeleton = shouldShowSkeleton(
+      intent,
+      lastQueryRef.current,
+      currentQuery
+    )
+
+    if (showSkeleton) setIsLoading(true)
 
     const controller = new AbortController()
     const unregister = registerAbortController(controller)
@@ -196,6 +229,7 @@ function AttendancePageContent() {
 
         if (cached) {
           if (!active) return
+          lastQueryRef.current = currentQuery
           setAttendance(
             cached,
             { page: 1, limit: PAGE_SIZE, total: cached.length, totalPages: 1 },
@@ -207,7 +241,6 @@ function AttendancePageContent() {
         }
       }
 
-      setIsLoading(true)
       setError("")
 
       try {
@@ -231,6 +264,7 @@ function AttendancePageContent() {
         }
 
         cacheItems(response.items, cacheKey)
+        lastQueryRef.current = currentQuery
 
         setAttendance(response.items, response.meta, currentQuery, {
           summary: response.summary,
@@ -258,36 +292,24 @@ function AttendancePageContent() {
   }, [dateFrom, dateTo, activeLevel, debouncedSearch, page, refreshKey])
 
   function handleLevelChange(level) {
-    setIsLoading(true)
-    if (!updateParams({ level, page: 1 })) setIsLoading(false)
+    updateParams({ level, page: 1 })
   }
 
   function handleSearchChange(value) {
     setSearch(value)
-    // Show the table skeleton immediately (including the debounce window),
-    // not only after the API request starts.
-    setIsLoading(true)
-    if (page > 1 && !updateParams({ page: 1 })) {
-      // Page already 1 — effect will re-run when debouncedSearch updates.
-    }
+    if (page > 1) updateParams({ page: 1 })
   }
 
   function handleApplyDateRange(range) {
     const { from, to } = toDateRangeStrings(range)
-    setIsLoading(true)
-    if (
-      !updateParams({ from: from || today, to: to || from || today, page: 1 })
-    ) {
-      setIsLoading(false)
-    }
+    updateParams({ from: from || today, to: to || from || today, page: 1 })
   }
 
   function handleClearDateRange() {
-    setIsLoading(true)
     // Clearing an already-default (today) range doesn't change the URL, so the
-    // load effect wouldn't re-run — bump refreshKey (or drop loading) instead.
+    // load effect wouldn't re-run — bump refreshKey instead.
     if (!updateParams({ from: "", to: "", page: 1 })) {
-      setRefreshKey((key) => key + 1)
+      reload("filter")
     }
   }
 
@@ -310,12 +332,16 @@ function AttendancePageContent() {
 
     try {
       await upsertAttendance(memberId, payload)
-      setRefreshKey((key) => key + 1)
+      reload("silent")
     } catch (err) {
       toast.error(err?.message || "Unable to update attendance")
       throw err
     }
   }
+
+  // Cover the debounce window before the effect sees the new search value.
+  const isSearchPending = search !== debouncedSearch
+  const showListSkeleton = isLoading || isSearchPending
 
   const tabs =
     levels.length > 0
@@ -366,7 +392,7 @@ function AttendancePageContent() {
             <span>{error}</span>
             <button
               type="button"
-              onClick={() => setRefreshKey((key) => key + 1)}
+              onClick={() => reload("filter")}
               className="shrink-0 font-semibold underline underline-offset-2 hover:no-underline"
             >
               Retry
@@ -374,7 +400,7 @@ function AttendancePageContent() {
           </div>
         )}
 
-        {isLoading && !summary ? (
+        {showListSkeleton && !summary ? (
           <>
             <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
               {Array.from({ length: 5 }).map((_, i) => (
@@ -425,15 +451,12 @@ function AttendancePageContent() {
             <div className="mt-4">
               <AttendanceTable
                 members={items}
-                isLoading={isLoading}
+                isLoading={showListSkeleton}
                 page={page}
                 totalPages={meta.totalPages || 1}
                 total={meta.total || 0}
                 pageSize={PAGE_SIZE}
-                onPageChange={(nextPage) => {
-                  setIsLoading(true)
-                  updateParams({ page: nextPage })
-                }}
+                onPageChange={(nextPage) => updateParams({ page: nextPage })}
                 onSlotChange={handleSlotChange}
               />
             </div>

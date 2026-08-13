@@ -15,9 +15,9 @@ const sizeStyles = {
     name: "text-xs",
   },
   print: {
-    card: "gap-1.5 p-2",
-    qr: 110,
-    name: "text-[10px]",
+    card: "gap-1 p-1.5",
+    qr: 92,
+    name: "text-[9px]",
   },
 }
 

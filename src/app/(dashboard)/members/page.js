@@ -1,6 +1,6 @@
 "use client"
 
-import { Suspense, useEffect, useRef, useState } from "react"
+import { Suspense, useEffect, useMemo, useRef, useState } from "react"
 import { useRouter, usePathname, useSearchParams } from "next/navigation"
 import { useShallow } from "zustand/react/shallow"
 import { Button } from "@/components/ui/button"
@@ -100,7 +100,17 @@ function MembersPageContent() {
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false)
   const [isExportOpen, setIsExportOpen] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
-  const [selectedIds, setSelectedIds] = useState(new Set())
+  // Map keeps full member objects across pages so Print QR / export can use
+  // selections from pages the user is no longer viewing.
+  const [selectedById, setSelectedById] = useState(() => new Map())
+  const selectedIds = useMemo(
+    () => new Set(selectedById.keys()),
+    [selectedById]
+  )
+  const selectedMembers = useMemo(
+    () => Array.from(selectedById.values()),
+    [selectedById]
+  )
   const [printMember, setPrintMember] = useState(null)
   const [isPrintSelectedOpen, setIsPrintSelectedOpen] = useState(false)
   const [isDeleteSelectedOpen, setIsDeleteSelectedOpen] = useState(false)
@@ -296,8 +306,6 @@ function MembersPageContent() {
     }
   }, [dateFrom, dateTo, refreshKey])
 
-  const selectedMembers = members.filter((member) => selectedIds.has(member.id))
-
   const hasActiveFilters =
     activeFilter !== DEFAULT_STATUS || Boolean(search) || Boolean(dateRange)
   // Nothing to filter — no members exist at all (not just for the current
@@ -308,26 +316,27 @@ function MembersPageContent() {
   const filtersDisabled = meta.total === 0 && !hasActiveFilters
 
   function toggleSelect(member) {
-    setSelectedIds((prev) => {
-      const next = new Set(prev)
+    setSelectedById((prev) => {
+      const next = new Map(prev)
+
       if (next.has(member.id)) {
         next.delete(member.id)
       } else {
-        next.add(member.id)
+        next.set(member.id, member)
       }
       return next
     })
   }
 
   function toggleSelectAll(pageRows) {
-    setSelectedIds((prev) => {
+    setSelectedById((prev) => {
       const allSelected = pageRows.every((member) => prev.has(member.id))
-      const next = new Set(prev)
+      const next = new Map(prev)
       pageRows.forEach((member) => {
         if (allSelected) {
           next.delete(member.id)
         } else {
-          next.add(member.id)
+          next.set(member.id, member)
         }
       })
       return next
@@ -339,7 +348,7 @@ function MembersPageContent() {
     setIsDeleting(true)
     try {
       await bulkDeleteMembers(Array.from(selectedIds))
-      setSelectedIds(new Set())
+      setSelectedById(new Map())
       setIsDeleteSelectedOpen(false)
       setRefreshKey((key) => key + 1)
     } catch (err) {
