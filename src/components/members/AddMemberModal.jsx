@@ -5,9 +5,9 @@ import { Dialog, DialogContent, DialogFooter } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { MEMBER_FORM_VALIDATORS } from "@/utils/validators"
 import { calculateAge } from "@/utils/helpers"
-import { createMember, getMemberFormConfig } from "@/services/member.service"
+import { getMemberFormConfig } from "@/services/member.service"
 import { useMemberFormStore } from "@/stores/memberForm.store"
-import { toast } from "sonner"
+import { enqueueCreateMember } from "@/stores/processQueue.store"
 import {
   MemberDialogHeader,
   buildSelectFields,
@@ -22,7 +22,7 @@ import {
   getFieldError,
 } from "@/components/members/memberFormFields"
 
-function AddMemberModal({ open, onOpenChange, onCreated }) {
+function AddMemberModal({ open, onOpenChange }) {
   const config = useMemberFormStore((state) => state.config)
   const setConfig = useMemberFormStore((state) => state.setConfig)
   const [isConfigLoading, setIsConfigLoading] = useState(false)
@@ -30,7 +30,6 @@ function AddMemberModal({ open, onOpenChange, onCreated }) {
 
   const [errors, setErrors] = useState({})
   const [form, setForm] = useState(null)
-  const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState("")
 
   useEffect(() => {
@@ -111,7 +110,9 @@ function AddMemberModal({ open, onOpenChange, onCreated }) {
     setSubmitError("")
   }
 
-  async function handleSubmit() {
+  function handleSubmit() {
+    if (!form) return
+
     const nextErrors = Object.fromEntries(
       Object.keys(MEMBER_FORM_VALIDATORS).map((field) => [
         field,
@@ -124,20 +125,12 @@ function AddMemberModal({ open, onOpenChange, onCreated }) {
     if (hasErrors) return
 
     setSubmitError("")
-    setIsSubmitting(true)
-    try {
-      await createMember(form)
-      resetForm()
-      onCreated?.()
-      toast.success("Member added successfully")
-    } catch (err) {
-      // Keep the filled form so the user can fix and retry.
-      const message = err?.message || "Unable to add member. Please try again."
-      setSubmitError(message)
-      toast.error(message)
-    } finally {
-      setIsSubmitting(false)
-    }
+
+    // Queue the create so the form clears immediately and another member
+    // can be entered without waiting on the network.
+    const payload = { ...form }
+    enqueueCreateMember({ form: payload })
+    resetForm()
   }
 
   function handleOpenChange(next) {
@@ -232,7 +225,6 @@ function AddMemberModal({ open, onOpenChange, onCreated }) {
             variant="outline"
             className="h-10 rounded-lg px-5"
             onClick={() => handleOpenChange(false)}
-            disabled={isSubmitting}
           >
             Cancel
           </Button>
@@ -240,9 +232,9 @@ function AddMemberModal({ open, onOpenChange, onCreated }) {
             type="button"
             className="h-10 rounded-lg bg-[#1e2a4a] px-5 text-white hover:bg-[#1e2a4a]/90"
             onClick={handleSubmit}
-            disabled={isSubmitting || !isFormReady}
+            disabled={!isFormReady}
           >
-            {isSubmitting ? "Adding..." : "Add Member"}
+            Save & Continue
           </Button>
         </DialogFooter>
       </DialogContent>

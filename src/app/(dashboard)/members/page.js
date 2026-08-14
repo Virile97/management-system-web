@@ -36,6 +36,10 @@ import {
   DEFAULT_PAGE_SIZE,
   resolvePageSize,
 } from "@/utils/constants"
+import {
+  PROCESS_TYPES,
+  useProcessQueueStore,
+} from "@/stores/processQueue.store"
 import { Plus, QrCode, Trash2, FileDown } from "lucide-react"
 
 export default function MembersPage() {
@@ -105,6 +109,19 @@ function MembersPageContent() {
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false)
   const [isExportOpen, setIsExportOpen] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
+  const lastCompleted = useProcessQueueStore((state) => state.lastCompleted)
+  const isFirstCompleted = useRef(true)
+
+  // Refresh the directory when a queued member create finishes.
+  useEffect(() => {
+    if (isFirstCompleted.current) {
+      isFirstCompleted.current = false
+      return
+    }
+    if (lastCompleted?.type !== PROCESS_TYPES.MEMBERS_CREATE_MEMBER) return
+    setRefreshKey((key) => key + 1)
+  }, [lastCompleted])
+
   // Map keeps full member objects across pages so Print QR / export can use
   // selections from pages the user is no longer viewing.
   const [selectedById, setSelectedById] = useState(() => new Map())
@@ -487,7 +504,6 @@ function MembersPageContent() {
       <AddMemberModal
         open={isAddMemberOpen}
         onOpenChange={setIsAddMemberOpen}
-        onCreated={() => setRefreshKey((key) => key + 1)}
       />
       <EditMemberModal
         open={isEditParam && Boolean(editMemberIdParam)}
