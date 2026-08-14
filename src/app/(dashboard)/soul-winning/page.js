@@ -96,12 +96,18 @@ function SoulWinningPageContent() {
 
   const [winners, setWinners] = useState([])
   const [totalSoulsShared, setTotalSoulsShared] = useState(0)
+  const [winnersMeta, setWinnersMeta] = useState({
+    page: 1,
+    limit: DEFAULT_PAGE_SIZE,
+    total: 0,
+    totalPages: 1,
+  })
   const [isWinnersLoading, setIsWinnersLoading] = useState(false)
   const [winnersError, setWinnersError] = useState("")
 
   const [trends, setTrends] = useState({
-    daily: [],
     monthly: [],
+    byEvent: [],
     year: null,
   })
   const [isTrendsLoading, setIsTrendsLoading] = useState(false)
@@ -198,7 +204,7 @@ function SoulWinningPageContent() {
   }
 
   function setActiveTab(nextSection) {
-    updateParams({ section: nextSection })
+    updateParams({ section: nextSection, page: 1 })
   }
 
   function updatePeriod(nextPeriod) {
@@ -377,16 +383,33 @@ function SoulWinningPageContent() {
     setIsWinnersLoading(true)
     setWinnersError("")
 
-    listSoulWinningWinners(periodOptions, controller.signal)
+    listSoulWinningWinners(
+      { ...periodOptions, page, limit: pageSize },
+      controller.signal
+    )
       .then((data) => {
         setWinners(data?.items || [])
         setTotalSoulsShared(Number(data?.totalSoulsShared) || 0)
+        setWinnersMeta(
+          data?.meta || {
+            page,
+            limit: pageSize,
+            total: 0,
+            totalPages: 1,
+          }
+        )
       })
       .catch((err) => {
         if (err?.name === "AbortError") return
         setWinnersError(err?.message || "Unable to load soul winners")
         setWinners([])
         setTotalSoulsShared(0)
+        setWinnersMeta({
+          page: 1,
+          limit: pageSize,
+          total: 0,
+          totalPages: 1,
+        })
       })
       .finally(() => {
         if (!controller.signal.aborted) setIsWinnersLoading(false)
@@ -397,7 +420,7 @@ function SoulWinningPageContent() {
       controller.abort()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, period, periodFrom, periodTo, winnersKey])
+  }, [activeTab, period, periodFrom, periodTo, page, pageSize, winnersKey])
 
   // Trends — only when that tab is open.
   useEffect(() => {
@@ -413,15 +436,15 @@ function SoulWinningPageContent() {
     getSoulWinningTrends(trendsOptions, controller.signal)
       .then((data) => {
         setTrends({
-          daily: data?.daily || [],
           monthly: data?.monthly || [],
+          byEvent: data?.byEvent || [],
           year: data?.year ?? goalYear,
         })
       })
       .catch((err) => {
         if (err?.name === "AbortError") return
         setTrendsError(err?.message || "Unable to load trends")
-        setTrends({ daily: [], monthly: [], year: goalYear })
+        setTrends({ monthly: [], byEvent: [], year: goalYear })
       })
       .finally(() => {
         if (!controller.signal.aborted) setIsTrendsLoading(false)
@@ -577,6 +600,14 @@ function SoulWinningPageContent() {
               soulWinners={winners}
               totalSoulsShared={totalSoulsShared}
               isLoading={isWinnersLoading}
+              page={winnersMeta.page || page}
+              totalPages={winnersMeta.totalPages || 1}
+              total={winnersMeta.total || 0}
+              pageSize={winnersMeta.limit || pageSize}
+              onPageChange={(nextPage) => updateParams({ page: nextPage })}
+              onPageSizeChange={(nextSize) =>
+                updateParams({ limit: nextSize, page: 1 })
+              }
             />
           </div>
         )}
@@ -589,8 +620,8 @@ function SoulWinningPageContent() {
               </p>
             ) : null}
             <SoulTrendChart
-              daily={trends.daily}
               monthly={trends.monthly}
+              byEvent={trends.byEvent}
               year={trends.year ?? goalYear}
               isLoading={isTrendsLoading}
             />

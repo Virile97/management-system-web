@@ -1,4 +1,5 @@
 import { Card } from "@/components/ui/card"
+import { Pagination } from "@/components/common/Pagination"
 import { Heart } from "lucide-react"
 
 function initials(name) {
@@ -10,30 +11,18 @@ function initials(name) {
     .toUpperCase()
 }
 
-function servingYear(servingSince) {
-  if (!servingSince) return ""
-  const year = String(servingSince).slice(0, 4)
-  return /^\d{4}$/.test(year) ? year : servingSince
-}
-
 function SoulWinnerCard({ winner }) {
   const name = winner.name || "—"
-  const ministry = winner.ministry || "Ministry"
-  const since = servingYear(winner.servingSince)
 
   return (
     <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-4 sm:p-5">
       <div className="flex items-center gap-3">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#1e2a4a] text-xs font-semibold text-white">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#1e2a4a] text-[10px] font-semibold text-white">
           {initials(name)}
         </div>
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold text-foreground/90">
             {name}
-          </p>
-          <p className="truncate text-xs text-muted-foreground">
-            {ministry}
-            {since ? ` · serving since ${since}` : ""}
           </p>
         </div>
       </div>
@@ -72,15 +61,17 @@ function Leaderboard({
   soulWinners = [],
   totalSoulsShared = 0,
   isLoading = false,
+  page = 1,
+  totalPages = 1,
+  total = 0,
+  pageSize = 20,
+  onPageChange,
+  onPageSizeChange,
 }) {
-  const people = [...soulWinners].sort((a, b) =>
-    String(a.name || "").localeCompare(String(b.name || ""), undefined, {
-      sensitivity: "base",
-    })
-  )
-  const shared =
-    totalSoulsShared ||
-    people.reduce((sum, person) => sum + (Number(person.soulsShared) || 0), 0)
+  const people = soulWinners
+  const shared = Number(totalSoulsShared) || 0
+  const from = total === 0 ? 0 : (page - 1) * pageSize + 1
+  const to = Math.min(page * pageSize, total)
 
   return (
     <div className="flex flex-col gap-4">
@@ -95,7 +86,7 @@ function Leaderboard({
             </h2>
             <p className="mt-0.5 text-sm text-muted-foreground">
               {shared > 0
-                ? `${shared} soul${shared === 1 ? "" : "s"} won in this period`
+                ? `${shared} soul${shared === 1 ? "" : "s"} won in this period · ${total} winner${total === 1 ? "" : "s"}`
                 : "Members who recorded souls won in this period"}
             </p>
           </div>
@@ -113,11 +104,26 @@ function Leaderboard({
           </p>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
-          {people.map((winner) => (
-            <SoulWinnerCard key={winner.id || winner.name} winner={winner} />
-          ))}
-        </div>
+        <Card className="overflow-hidden rounded-2xl p-0">
+          <div className="grid grid-cols-1 gap-3 p-3 sm:grid-cols-2 sm:gap-4 sm:p-4">
+            {people.map((winner) => (
+              <SoulWinnerCard key={winner.id || winner.name} winner={winner} />
+            ))}
+          </div>
+
+          {total > 0 ? (
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              from={from}
+              to={to}
+              total={total}
+              pageSize={pageSize}
+              onPageChange={onPageChange}
+              onPageSizeChange={onPageSizeChange}
+            />
+          ) : null}
+        </Card>
       )}
     </div>
   )

@@ -8,7 +8,15 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
-import { BarChart, Bar, LineChart, Line, XAxis, CartesianGrid } from "recharts"
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+} from "recharts"
 import { TrendingUp } from "lucide-react"
 
 const trendConfig = {
@@ -16,6 +24,11 @@ const trendConfig = {
   baptism: { label: "Baptism", color: "#2f7d4f" },
   activeRetention: { label: "Active Retention", color: "#2563eb" },
   wentInactive: { label: "Went Inactive", color: "#d97706" },
+}
+
+const eventConfig = {
+  professionsOfFaith: { label: "Professions of Faith", color: "#1e2a4a" },
+  baptism: { label: "Baptism", color: "#2f7d4f" },
 }
 
 const MONTH_LABELS = [
@@ -32,14 +45,6 @@ const MONTH_LABELS = [
   "Nov",
   "Dec",
 ]
-
-function ChartEmpty({ message }) {
-  return (
-    <div className="flex h-44 items-center justify-center rounded-xl bg-muted/40 px-4 text-center text-sm text-muted-foreground">
-      {message}
-    </div>
-  )
-}
 
 function metricCounts(entry = {}) {
   return {
@@ -81,29 +86,31 @@ function toMonthlyRows(monthly, year) {
   })
 }
 
+function toEventRows(byEvent = []) {
+  return (byEvent || []).map((entry) => ({
+    event: entry.event || "Unspecified",
+    ...metricCounts(entry),
+  }))
+}
+
 /**
- * Daily = rolling last 7 days (API fixed window).
- * Monthly = full calendar year filtered by period tabs (API authoritative).
+ * Monthly year series + event performance report (unique: which occasions
+ * produced POF / baptisms in the selected period).
  */
 function SoulTrendChart({
-  daily = [],
   monthly = [],
+  byEvent = [],
   year: yearProp,
   isLoading = false,
 }) {
   const year = Number(yearProp) || new Date().getFullYear()
-
-  const dailyRows = (daily || []).map((entry) => ({
-    label: entry.label,
-    ...metricCounts(entry),
-  }))
   const monthlyRows = toMonthlyRows(monthly, year)
-
-  const dailyTotal = dailyRows.reduce(
+  const eventRows = toEventRows(byEvent)
+  const monthlyTotal = monthlyRows.reduce(
     (sum, row) => sum + row.professionsOfFaith,
     0
   )
-  const monthlyTotal = monthlyRows.reduce(
+  const eventTotal = eventRows.reduce(
     (sum, row) => sum + row.professionsOfFaith,
     0
   )
@@ -117,97 +124,24 @@ function SoulTrendChart({
   }
 
   return (
-    <div className="flex flex-col gap-3 sm:gap-6">
+    <div className="flex flex-col gap-3 sm:gap-4">
       <p className="text-sm text-muted-foreground">
-        Daily uses the last 7 days. Monthly shows Jan–Dec {year}, filtered by
-        the selected period above.
+        Monthly is Jan–Dec {year}. Event report uses the selected period above.
       </p>
 
       <div className="grid grid-cols-1 gap-3 sm:gap-6 lg:grid-cols-2">
-        <Card className="rounded-2xl p-3 sm:p-6">
+        <Card className="rounded-2xl p-3 sm:p-5">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <CardTitle className="font-heading text-base font-normal text-foreground/80 sm:text-lg">
-              Daily — Last 7 Days
-            </CardTitle>
-            <p className="flex items-center gap-1 text-sm font-medium text-emerald-600">
-              <TrendingUp className="h-3.5 w-3.5" />
-              {dailyTotal} professions
-            </p>
-          </div>
-
-          <CardContent className="px-0 pt-6">
-            {dailyRows.length === 0 ? (
-              <ChartEmpty message="No daily data yet." />
-            ) : (
-              <ChartContainer
-                config={trendConfig}
-                className="aspect-auto h-52 w-full"
-              >
-                <BarChart
-                  data={dailyRows}
-                  margin={{ left: 0, right: 0, top: 8, bottom: 0 }}
-                >
-                  <XAxis
-                    dataKey="label"
-                    axisLine={false}
-                    tickLine={false}
-                    tickMargin={12}
-                    fontSize={12}
-                  />
-                  <ChartTooltip
-                    cursor={{ fill: "hsl(var(--muted))", opacity: 0.35 }}
-                    content={
-                      <ChartTooltipContent
-                        indicator="dot"
-                        labelFormatter={(value) => String(value)}
-                      />
-                    }
-                  />
-                  <Bar
-                    dataKey="professionsOfFaith"
-                    fill="var(--color-professionsOfFaith)"
-                    radius={[3, 3, 0, 0]}
-                    isAnimationActive={false}
-                  />
-                  <Bar
-                    dataKey="baptism"
-                    fill="var(--color-baptism)"
-                    radius={[3, 3, 0, 0]}
-                    isAnimationActive={false}
-                  />
-                  <Bar
-                    dataKey="activeRetention"
-                    fill="var(--color-activeRetention)"
-                    radius={[3, 3, 0, 0]}
-                    isAnimationActive={false}
-                  />
-                  <Bar
-                    dataKey="wentInactive"
-                    fill="var(--color-wentInactive)"
-                    radius={[3, 3, 0, 0]}
-                    isAnimationActive={false}
-                  />
-                  <ChartLegend
-                    content={<ChartLegendContent className="justify-start" />}
-                  />
-                </BarChart>
-              </ChartContainer>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="rounded-2xl p-3 sm:p-6">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <CardTitle className="font-heading text-base font-normal text-foreground/80 sm:text-lg">
+            <CardTitle className="font-heading text-base font-normal text-foreground/80">
               Monthly — {year}
             </CardTitle>
-            <p className="flex items-center gap-1 text-sm font-medium text-emerald-600">
+            <p className="flex items-center gap-1 text-xs font-medium text-emerald-600 sm:text-sm">
               <TrendingUp className="h-3.5 w-3.5" />
               {monthlyTotal} professions
             </p>
           </div>
 
-          <CardContent className="px-0 pt-6">
+          <CardContent className="px-0 pt-4">
             <ChartContainer
               config={trendConfig}
               className="aspect-auto h-52 w-full"
@@ -225,8 +159,8 @@ function SoulTrendChart({
                   dataKey="label"
                   axisLine={false}
                   tickLine={false}
-                  tickMargin={12}
-                  fontSize={12}
+                  tickMargin={10}
+                  fontSize={11}
                 />
                 <ChartTooltip
                   cursor={{
@@ -246,9 +180,9 @@ function SoulTrendChart({
                   type="monotone"
                   stroke="var(--color-professionsOfFaith)"
                   strokeWidth={2}
-                  activeDot={{ r: 5 }}
+                  activeDot={{ r: 4 }}
                   dot={{
-                    r: 3,
+                    r: 2.5,
                     fill: "var(--color-professionsOfFaith)",
                     strokeWidth: 0,
                   }}
@@ -259,9 +193,9 @@ function SoulTrendChart({
                   type="monotone"
                   stroke="var(--color-baptism)"
                   strokeWidth={2}
-                  activeDot={{ r: 5 }}
+                  activeDot={{ r: 4 }}
                   dot={{
-                    r: 3,
+                    r: 2.5,
                     fill: "var(--color-baptism)",
                     strokeWidth: 0,
                   }}
@@ -272,9 +206,9 @@ function SoulTrendChart({
                   type="monotone"
                   stroke="var(--color-activeRetention)"
                   strokeWidth={2}
-                  activeDot={{ r: 5 }}
+                  activeDot={{ r: 4 }}
                   dot={{
-                    r: 3,
+                    r: 2.5,
                     fill: "var(--color-activeRetention)",
                     strokeWidth: 0,
                   }}
@@ -285,9 +219,9 @@ function SoulTrendChart({
                   type="monotone"
                   stroke="var(--color-wentInactive)"
                   strokeWidth={2}
-                  activeDot={{ r: 5 }}
+                  activeDot={{ r: 4 }}
                   dot={{
-                    r: 3,
+                    r: 2.5,
                     fill: "var(--color-wentInactive)",
                     strokeWidth: 0,
                   }}
@@ -298,6 +232,81 @@ function SoulTrendChart({
                 />
               </LineChart>
             </ChartContainer>
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-2xl p-3 sm:p-5">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="min-w-0">
+              <CardTitle className="font-heading text-base font-normal text-foreground/80">
+                By Event
+              </CardTitle>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Top occasions in this period
+              </p>
+            </div>
+            <p className="flex items-center gap-1 text-xs font-medium text-emerald-600 sm:text-sm">
+              <TrendingUp className="h-3.5 w-3.5" />
+              {eventTotal} professions
+            </p>
+          </div>
+
+          <CardContent className="px-0 pt-4">
+            {eventRows.length === 0 ? (
+              <div className="flex h-52 items-center justify-center rounded-xl bg-muted/40 px-4 text-center text-sm text-muted-foreground">
+                No event data for this period.
+              </div>
+            ) : (
+              <ChartContainer
+                config={eventConfig}
+                className="aspect-auto h-52 w-full"
+              >
+                <BarChart
+                  layout="vertical"
+                  data={eventRows.slice(0, 6)}
+                  margin={{ left: 4, right: 8, top: 4, bottom: 0 }}
+                >
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    horizontal={false}
+                    className="stroke-border/60"
+                  />
+                  <XAxis type="number" allowDecimals={false} fontSize={11} />
+                  <YAxis
+                    type="category"
+                    dataKey="event"
+                    width={88}
+                    tickLine={false}
+                    axisLine={false}
+                    fontSize={11}
+                  />
+                  <ChartTooltip
+                    cursor={{ fill: "hsl(var(--muted))", opacity: 0.35 }}
+                    content={
+                      <ChartTooltipContent
+                        indicator="dot"
+                        labelFormatter={(value) => String(value)}
+                      />
+                    }
+                  />
+                  <Bar
+                    dataKey="professionsOfFaith"
+                    fill="var(--color-professionsOfFaith)"
+                    radius={[0, 3, 3, 0]}
+                    isAnimationActive={false}
+                  />
+                  <Bar
+                    dataKey="baptism"
+                    fill="var(--color-baptism)"
+                    radius={[0, 3, 3, 0]}
+                    isAnimationActive={false}
+                  />
+                  <ChartLegend
+                    content={<ChartLegendContent className="justify-start" />}
+                  />
+                </BarChart>
+              </ChartContainer>
+            )}
           </CardContent>
         </Card>
       </div>

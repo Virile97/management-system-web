@@ -200,11 +200,24 @@ function baptizeSoulWinningRecord(id, payload = {}, signal) {
   })
 }
 
-function listSoulWinningWinners(options, signal) {
-  return fetchJson(
-    `${APP_API_ENDPOINTS.SOUL_WINNING_WINNERS}?${toPeriodParams(options)}`,
+function listSoulWinningWinners(
+  { period = "This Month", from = "", to = "", page = 1, limit = 20, search = "" } = {},
+  signal
+) {
+  const params = toPeriodParams({ period, from, to })
+  params.set("page", String(page))
+  params.set("limit", String(limit))
+  if (search) params.set("search", search)
+
+  return fetchWithMeta(
+    `${APP_API_ENDPOINTS.SOUL_WINNING_WINNERS}?${params}`,
     { signal }
-  )
+  ).then(({ data, meta }) => ({
+    items: data?.items || [],
+    totalSoulsShared: Number(data?.totalSoulsShared) || 0,
+    period: data?.period || null,
+    meta: meta || { page, limit, total: 0, totalPages: 1 },
+  }))
 }
 
 const MONTH_SHORT = [
