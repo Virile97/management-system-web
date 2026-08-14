@@ -212,7 +212,7 @@ function UsersRolesSettings() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search by name or email..."
-              className="h-10 rounded-lg bg-white pl-9"
+              className="h-10 rounded-lg bg-card pl-9"
             />
           </div>
 

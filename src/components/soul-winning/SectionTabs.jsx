@@ -23,7 +23,7 @@ function SectionTabs({ active, onChange }) {
           className={cn(
             "flex h-10 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-lg px-2 text-sm font-medium transition-colors sm:h-auto sm:flex-none sm:gap-2 sm:px-4 sm:py-2",
             active === tab.key
-              ? "bg-white text-foreground/85 shadow-sm"
+              ? "bg-card text-foreground/85 shadow-sm"
               : "text-muted-foreground hover:text-foreground"
           )}
         >

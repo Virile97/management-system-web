@@ -9,9 +9,12 @@ import { cn } from "@/lib/utils"
 import { Droplets } from "lucide-react"
 
 const statusStyles = {
-  "New Convert": "bg-[#1e2a4a]/10 text-[#1e2a4a]",
-  "Active Member": "bg-emerald-50 text-emerald-600",
-  Inactive: "bg-amber-50 text-amber-600",
+  "New Convert":
+    "bg-[#1e2a4a]/10 text-[#1e2a4a] dark:bg-slate-700/60 dark:text-slate-200",
+  "Active Member":
+    "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400",
+  Inactive:
+    "bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400",
 }
 
 const dotStyles = {

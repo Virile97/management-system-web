@@ -69,19 +69,24 @@ const avatarColors = [
 ]
 
 const levelBadgeStyles = {
-  Career: "bg-amber-50 text-amber-600",
-  Ladies: "bg-rose-50 text-rose-600",
-  Men: "bg-blue-50 text-blue-600",
-  "Young People": "bg-emerald-50 text-emerald-600",
-  "Young Ladies": "bg-pink-50 text-pink-600",
+  Career: "bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400",
+  Ladies: "bg-rose-50 text-rose-600 dark:bg-rose-500/15 dark:text-rose-300",
+  Men: "bg-blue-50 text-blue-600 dark:bg-blue-500/15 dark:text-blue-300",
+  "Young People":
+    "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400",
+  "Young Ladies":
+    "bg-pink-50 text-pink-600 dark:bg-pink-500/15 dark:text-pink-300",
 }
 
 const statusStyles = {
-  "Full day": "bg-emerald-50 text-emerald-600",
-  "Morning only": "bg-amber-50 text-amber-600",
-  "Afternoon only": "bg-blue-50 text-blue-600",
-  Partial: "bg-amber-50 text-amber-600",
-  Absent: "bg-red-50 text-red-500",
+  "Full day":
+    "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400",
+  "Morning only":
+    "bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400",
+  "Afternoon only":
+    "bg-blue-50 text-blue-600 dark:bg-blue-500/15 dark:text-blue-300",
+  Partial: "bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400",
+  Absent: "bg-red-50 text-red-500 dark:bg-red-500/15 dark:text-red-400",
 }
 
 function initials(name) {

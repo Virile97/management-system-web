@@ -26,7 +26,7 @@ function AttendanceGroupTabs({ groups, active, onChange }) {
               "flex h-9 shrink-0 items-center gap-1.5 rounded-full border px-3 text-sm transition-colors sm:h-auto sm:py-1.5",
               isActive
                 ? "border-[#1e2a4a] bg-[#1e2a4a] text-white"
-                : "border-border bg-white text-muted-foreground hover:text-foreground"
+                : "border-border bg-card text-muted-foreground hover:text-foreground"
             )}
           >
             <span

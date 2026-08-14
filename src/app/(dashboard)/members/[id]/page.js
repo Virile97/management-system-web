@@ -308,7 +308,7 @@ function MemberDetailPageContent() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="border-b border-border bg-white px-4 py-3 sm:px-6 md:px-8">
+      <div className="border-b border-border bg-card px-4 py-3 sm:px-6 md:px-8">
         <Breadcrumb
           items={breadcrumbItems}
           className="mx-auto max-w-6xl text-sm"

@@ -10,7 +10,7 @@ import { DateRangeButton } from "@/components/common/DateRangeButton"
 import { DateRangeFilterModal } from "@/components/soul-winning/DateRangeFilterModal"
 import { useTableSort } from "@/hooks/use-table-sort"
 import { cn } from "@/lib/utils"
-import { toDateRangeStrings, toDatePoint } from "@/utils/helpers"
+import { toDateRangeStrings, toDatePoint, formatDateRangeLabel } from "@/utils/helpers"
 import { Button } from "@/components/ui/button"
 import {
   Search,
@@ -50,12 +50,17 @@ function toModalRange(dateFrom, dateTo) {
 }
 
 const categoryStyles = {
-  Tithe: "bg-[#1e2a4a]/10 text-[#1e2a4a]",
-  Offering: "bg-[#1e2a4a]/10 text-[#1e2a4a]",
-  Utilities: "bg-amber-50 text-amber-600",
-  Maintenance: "bg-amber-50 text-amber-700",
-  Salaries: "bg-red-50 text-red-600",
-  Donation: "bg-amber-50 text-amber-600",
+  Tithe:
+    "bg-[#1e2a4a]/10 text-[#1e2a4a] dark:bg-slate-700/60 dark:text-slate-200",
+  Offering:
+    "bg-[#1e2a4a]/10 text-[#1e2a4a] dark:bg-slate-700/60 dark:text-slate-200",
+  Utilities:
+    "bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400",
+  Maintenance:
+    "bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400",
+  Salaries: "bg-red-50 text-red-600 dark:bg-red-500/15 dark:text-red-400",
+  Donation:
+    "bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400",
 }
 const defaultCategoryStyle = "bg-muted text-muted-foreground"
 
@@ -129,7 +134,7 @@ function TransactionTable({
           <Input
             placeholder="Search transactions..."
             className={cn(
-              "h-10 rounded-lg bg-white pl-9 sm:h-8",
+              "h-10 rounded-lg bg-card pl-9 sm:h-8",
               search && "pr-9"
             )}
             value={search}
@@ -160,13 +165,18 @@ function TransactionTable({
           <DateRangeButton
             hasRange={hasDateRange}
             label={
-              hasDateRange ? `${dateFrom || "…"} – ${dateTo || "…"}` : null
+              hasDateRange
+                ? formatDateRangeLabel({
+                    start: toDatePoint(dateFrom),
+                    end: toDatePoint(dateTo),
+                  })
+                : null
             }
             disabled={filtersDisabled || dateFilterDisabled}
             clearable={!dateFilterDisabled}
             onOpen={() => setIsDateRangeOpen(true)}
             onClear={onClearDateRange}
-            className="h-10 w-full justify-start sm:h-8 sm:w-auto"
+            className="w-full justify-start sm:w-auto"
           />
         </div>
 
@@ -174,7 +184,7 @@ function TransactionTable({
           <Button
             type="button"
             variant="outline"
-            className="order-3 h-10 w-full gap-1.5 rounded-lg border-destructive/30 px-3 text-sm text-destructive hover:bg-destructive/10 hover:text-destructive sm:order-4 sm:ml-0 sm:h-8 sm:w-auto"
+            className="order-3 h-10 w-full gap-1.5 rounded-lg border-destructive/30 px-3 text-sm text-destructive hover:bg-destructive/10 hover:text-destructive sm:order-4 sm:ml-0 sm:w-auto"
             onClick={onDeleteSelected}
           >
             <Trash2 className="h-3.5 w-3.5" />
@@ -187,6 +197,7 @@ function TransactionTable({
         open={isDateRangeOpen}
         onOpenChange={setIsDateRangeOpen}
         range={toModalRange(dateFrom, dateTo)}
+        hasSelection={hasDateRange}
         onApply={handleApplyDateRange}
       />
     </>

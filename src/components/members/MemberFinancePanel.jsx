@@ -32,11 +32,13 @@ const OFFERING_SORT_COLUMNS = {
 }
 
 const typeStyles = {
-  Tithe: "bg-purple-50 text-purple-600",
-  "First Fruit": "bg-emerald-50 text-emerald-600",
-  Sacrificial: "bg-sky-50 text-sky-600",
-  Thanksgiving: "bg-amber-50 text-amber-600",
-  Love: "bg-rose-50 text-rose-600",
+  Tithe: "bg-purple-50 text-purple-600 dark:bg-purple-500/15 dark:text-purple-300",
+  "First Fruit":
+    "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400",
+  Sacrificial: "bg-sky-50 text-sky-600 dark:bg-sky-500/15 dark:text-sky-300",
+  Thanksgiving:
+    "bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400",
+  Love: "bg-rose-50 text-rose-600 dark:bg-rose-500/15 dark:text-rose-300",
 }
 const defaultTypeStyle = "bg-muted text-muted-foreground"
 
@@ -230,7 +232,7 @@ function MemberFinancePanel({
 
   return (
     <div className="flex flex-col gap-4 sm:gap-6">
-      <div className="flex items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50/70 px-4 py-3">
+      <div className="flex items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50/70 px-4 py-3 dark:border-emerald-500/30 dark:bg-emerald-500/10">
         <p className="flex items-center gap-2 text-sm text-emerald-700">
           <ShieldCheck className="h-4 w-4 shrink-0" />
           Financial breakdown unlocked for this session
@@ -279,7 +281,7 @@ function MemberFinancePanel({
           <Button
             type="button"
             variant="outline"
-            className="h-10 shrink-0 gap-2 rounded-lg bg-white text-foreground hover:bg-white dark:bg-white dark:text-neutral-900 dark:hover:bg-white"
+            className="h-10 shrink-0 gap-2 rounded-lg bg-card text-foreground hover:bg-card"
             onClick={() => setIsExportOpen(true)}
             disabled={isLoading}
           >

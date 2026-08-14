@@ -82,7 +82,7 @@ function ProcessQueuePanel() {
           onClick={() => setExpanded(!isExpanded)}
           className="flex w-full items-center gap-2 px-3.5 py-3 text-left"
         >
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#1e2a4a]/10 text-[#1e2a4a]">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#1e2a4a]/10 text-[#1e2a4a] dark:bg-amber-400/15 dark:text-amber-300">
             {activeCount > 0 ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : failedCount > 0 ? (
@@ -170,7 +170,7 @@ function ProcessQueuePanel() {
                           <button
                             type="button"
                             onClick={() => retry(item.id)}
-                            className="inline-flex h-7 items-center gap-1 rounded-md px-2 text-[11px] font-medium text-[#1e2a4a] hover:bg-[#1e2a4a]/10"
+                            className="inline-flex h-7 items-center gap-1 rounded-md px-2 text-[11px] font-medium text-[#1e2a4a] hover:bg-[#1e2a4a]/10 dark:text-amber-300 dark:hover:bg-amber-400/10"
                           >
                             <RotateCcw className="h-3 w-3" />
                             Retry

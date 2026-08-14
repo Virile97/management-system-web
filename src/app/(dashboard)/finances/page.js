@@ -625,7 +625,7 @@ function FinancesPageContent() {
             <Button
               type="button"
               variant="outline"
-              className="h-10 gap-2 rounded-lg bg-white px-3 text-foreground hover:bg-white sm:px-4 dark:bg-white dark:text-neutral-900 dark:hover:bg-white"
+              className="h-10 gap-2 rounded-lg bg-card px-3 text-foreground hover:bg-card sm:px-4"
               onClick={() => setIsExportOpen(true)}
               disabled={meta.total === 0 && selectedIds.size === 0}
             >
@@ -752,6 +752,7 @@ function FinancesPageContent() {
         open={isDateRangeOpen}
         onOpenChange={setIsDateRangeOpen}
         range={customRange}
+        hasSelection={Boolean(periodFromParam && periodToParam)}
         onApply={(range) => {
           const { from, to } = toDateRangeStrings(range)
           useFinanceStore.getState().clearDateRange()

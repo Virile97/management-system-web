@@ -25,56 +25,76 @@ import { useAttendanceStore } from "@/stores/attendance.store"
 import { useProcessQueueStore } from "@/stores/processQueue.store"
 import { APP_API_ENDPOINTS } from "@/utils/constants"
 import { ERROR_MESSAGES } from "@/utils/errors"
+import { cn } from "@/lib/utils"
 
 const ALL_ROLES = ["ADMIN", "FINANCE_ADMIN", "USER"]
 
-// Every sidebar link in one place. `section` decides where it renders
-// (top nav list vs. bottom block); `allowedFor` is an explicit role
-// allow-list so a new role defaults to hidden unless granted access.
-const sidebarItems = [
+const NAV_GROUPS = [
   {
-    href: "/dashboard",
-    label: "Dashboard",
-    icon: LayoutGrid,
-    section: "top",
-    allowedFor: ["ADMIN", "FINANCE_ADMIN"],
+    id: "overview",
+    label: "Overview",
+    items: [
+      {
+        href: "/dashboard",
+        label: "Dashboard",
+        icon: LayoutGrid,
+        allowedFor: ["ADMIN", "FINANCE_ADMIN"],
+      },
+    ],
   },
   {
-    href: "/members",
-    label: "Members",
-    icon: Users,
-    section: "top",
-    allowedFor: ALL_ROLES,
+    id: "people",
+    label: "People",
+    items: [
+      {
+        href: "/members",
+        label: "Members",
+        icon: Users,
+        allowedFor: ALL_ROLES,
+      },
+      {
+        href: "/attendance",
+        label: "Attendance",
+        icon: ClipboardCheck,
+        allowedFor: ["ADMIN", "USER"],
+      },
+      {
+        href: "/soul-winning",
+        label: "Soul Winning",
+        icon: Heart,
+        allowedFor: ["ADMIN"],
+      },
+    ],
   },
   {
-    href: "/attendance",
-    label: "Attendance",
-    icon: ClipboardCheck,
-    section: "top",
-    allowedFor: ["ADMIN", "USER"],
+    id: "operations",
+    label: "Operations",
+    items: [
+      {
+        href: "/finances",
+        label: "Finances",
+        icon: PhilippinePeso,
+        allowedFor: ["ADMIN", "FINANCE_ADMIN"],
+      },
+    ],
   },
-  {
-    href: "/finances",
-    label: "Finances",
-    icon: PhilippinePeso,
-    section: "top",
-    allowedFor: ["ADMIN", "FINANCE_ADMIN"],
-  },
-  {
-    href: "/soul-winning",
-    label: "Soul Winning",
-    icon: Heart,
-    section: "top",
-    allowedFor: ["ADMIN"],
-  },
+]
+
+const SYSTEM_ITEMS = [
   {
     href: "/settings",
     label: "Settings",
     icon: Settings,
-    section: "bottom",
     allowedFor: ["ADMIN", "FINANCE_ADMIN"],
   },
 ]
+
+function roleLabel(role) {
+  if (role === "ADMIN") return "Administrator"
+  if (role === "FINANCE_ADMIN") return "Finance Admin"
+  if (role === "USER") return "User"
+  return "Account"
+}
 
 function Sidebar({ open = false, onClose }) {
   const pathname = usePathname()
@@ -101,11 +121,14 @@ function Sidebar({ open = false, onClose }) {
     .map((part) => part[0].toUpperCase())
     .join("")
 
-  const visibleItems = sidebarItems.filter((item) =>
+  const visibleGroups = NAV_GROUPS.map((group) => ({
+    ...group,
+    items: group.items.filter((item) => item.allowedFor.includes(role)),
+  })).filter((group) => group.items.length > 0)
+
+  const systemItems = SYSTEM_ITEMS.filter((item) =>
     item.allowedFor.includes(role)
   )
-  const topItems = visibleItems.filter((item) => item.section === "top")
-  const bottomItems = visibleItems.filter((item) => item.section === "bottom")
 
   function goTo(href) {
     router.push(href)
@@ -184,104 +207,133 @@ function Sidebar({ open = false, onClose }) {
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex h-screen w-72 shrink-0 flex-col overflow-y-auto bg-[#1e2a4a] px-4 py-6 transition-transform duration-200 ease-out md:translate-x-0 ${
+        className={cn(
+          "fixed inset-y-0 left-0 z-50 flex h-screen w-72 shrink-0 flex-col overflow-hidden transition-transform duration-200 ease-out md:translate-x-0",
+          // Softer than flat brand navy: cooler slate depth + subtle vertical wash
+          "bg-[linear-gradient(180deg,#1a2236_0%,#151c2e_55%,#121826_100%)]",
           open ? "translate-x-0" : "-translate-x-full"
-        }`}
+        )}
       >
-        <div className="flex items-center gap-3 px-2 pb-6">
+        {/* Brand */}
+        <div className="flex shrink-0 items-start gap-3 border-b border-white/10 px-5 pt-6 pb-5">
           <img
             src="/images/logo.png"
             alt="Lighthouse BBC"
-            className="size-[3em] shrink-0 rounded-xl object-cover"
+            className="size-11 shrink-0 rounded-xl object-cover ring-1 ring-white/15"
           />
-          <div className="min-w-0 flex-1">
-            <p className="font-heading text-sm font-semibold leading-tight text-white">
-              LIGHTHOUSE BBC GOA
+          <div className="min-w-0 flex-1 pt-0.5">
+            <p className="font-heading text-[15px] leading-snug font-semibold tracking-wide text-white">
+              Lighthouse BBC
             </p>
-            <p className="text-xs text-white/50">Data Management System</p>
+            <p className="mt-0.5 text-[11px] tracking-wide text-white/45 uppercase">
+              Goa · Management
+            </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-white/70 hover:bg-white/10 hover:text-white md:hidden"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white/60 hover:bg-white/10 hover:text-white md:hidden"
+            aria-label="Close menu"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
 
-        <nav className="flex flex-col gap-1">
-          {role &&
-            topItems.map((item) => (
-              <SidebarItem
-                key={item.href}
-                label={item.label}
-                icon={item.icon}
-                active={pathname.startsWith(item.href)}
-                onClick={() => goTo(item.href)}
-              />
-            ))}
+        {/* Navigation */}
+        <nav className="flex-1 overflow-y-auto px-3 py-4 scrollbar-none">
+          <div className="flex flex-col gap-5">
+            {role
+              ? visibleGroups.map((group) => (
+                  <div key={group.id} className="flex flex-col gap-1">
+                    <p className="px-3 pb-1 text-[10px] font-medium tracking-[0.14em] text-white/35 uppercase">
+                      {group.label}
+                    </p>
+                    {group.items.map((item) => (
+                      <SidebarItem
+                        key={item.href}
+                        label={item.label}
+                        icon={item.icon}
+                        active={pathname.startsWith(item.href)}
+                        onClick={() => goTo(item.href)}
+                      />
+                    ))}
+                  </div>
+                ))
+              : null}
+          </div>
         </nav>
 
-        <div className="mt-auto flex flex-col gap-1">
-          {role &&
-            bottomItems.map((item) => (
-              <SidebarItem
-                key={item.href}
-                label={item.label}
-                icon={item.icon}
-                active={pathname.startsWith(item.href)}
-                onClick={() => goTo(item.href)}
-              />
-            ))}
+        {/* System + account */}
+        <div className="shrink-0 border-t border-white/10 px-3 pt-3 pb-4">
+          {role && systemItems.length > 0 ? (
+            <div className="mb-2 flex flex-col gap-1">
+              <p className="px-3 pb-1 text-[10px] font-medium tracking-[0.14em] text-white/35 uppercase">
+                System
+              </p>
+              {systemItems.map((item) => (
+                <SidebarItem
+                  key={item.href}
+                  label={item.label}
+                  icon={item.icon}
+                  active={pathname.startsWith(item.href)}
+                  onClick={() => goTo(item.href)}
+                />
+              ))}
+            </div>
+          ) : null}
 
-          <div className="mt-2 flex items-center justify-between gap-2 px-3 py-2">
-            <span className="text-xs text-white/50">Theme</span>
-            <ThemeToggle className="text-white/60 hover:bg-white/10 hover:text-white" />
+          <div className="mb-3 flex items-center justify-between rounded-xl bg-white/4 px-3 py-2">
+            <span className="text-xs text-white/45">Appearance</span>
+            <ThemeToggle className="text-white/55 hover:bg-white/10 hover:text-white" />
           </div>
 
-          <div className="mt-1 flex items-center gap-3 border-t border-white/10 px-3 pt-4">
-            {userLoaded ? (
-              <>
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-400 font-heading text-sm font-semibold text-[#1e2a4a]">
-                  {initials || "U"}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold text-white">
-                    {displayName}
-                  </p>
-                  <p className="text-xs text-white/50">
-                    {user?.email && user?.name ? user.email : "Administrator"}
-                  </p>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="h-10 w-10 shrink-0 animate-pulse rounded-full bg-white/10" />
-                <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-                  <div className="h-3.5 w-24 animate-pulse rounded bg-white/10" />
-                  <div className="h-3 w-16 animate-pulse rounded bg-white/10" />
-                </div>
-              </>
-            )}
-            <button
-              type="button"
-              onClick={handleLogout}
-              disabled={isLoggingOut}
-              aria-label={isLoggingOut ? "Signing out" : "Sign out"}
-              title={isLoggingOut ? "Signing out…" : "Sign out"}
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-white/50 hover:bg-white/10 hover:text-white disabled:pointer-events-none disabled:opacity-50"
-            >
-              {isLoggingOut ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+          <div className="rounded-xl bg-white/6 p-2.5 ring-1 ring-white/10">
+            <div className="flex items-center gap-2.5">
+              {userLoaded ? (
+                <>
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-400 font-heading text-xs font-semibold text-[#1e2a4a]">
+                    {initials || "U"}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-white">
+                      {displayName}
+                    </p>
+                    <p className="truncate text-[11px] text-white/40">
+                      {roleLabel(role)}
+                      {user?.email && user?.name ? ` · ${user.email}` : ""}
+                    </p>
+                  </div>
+                </>
               ) : (
-                <LogOut className="h-4 w-4" />
+                <>
+                  <div className="h-9 w-9 shrink-0 animate-pulse rounded-full bg-white/10" />
+                  <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+                    <div className="h-3.5 w-24 animate-pulse rounded bg-white/10" />
+                    <div className="h-3 w-16 animate-pulse rounded bg-white/10" />
+                  </div>
+                </>
               )}
-            </button>
+
+              <button
+                type="button"
+                onClick={handleLogout}
+                disabled={isLoggingOut}
+                aria-label={isLoggingOut ? "Signing out" : "Sign out"}
+                title={isLoggingOut ? "Signing out…" : "Sign out"}
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white/45 transition-colors hover:bg-white/10 hover:text-white disabled:pointer-events-none disabled:opacity-50"
+              >
+                {isLoggingOut ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <LogOut className="h-4 w-4" />
+                )}
+              </button>
+            </div>
           </div>
 
-          {logoutError && (
-            <p className="px-3 pt-2 text-xs text-red-300">{logoutError}</p>
-          )}
+          {logoutError ? (
+            <p className="px-1 pt-2 text-xs text-red-300">{logoutError}</p>
+          ) : null}
         </div>
       </aside>
     </>

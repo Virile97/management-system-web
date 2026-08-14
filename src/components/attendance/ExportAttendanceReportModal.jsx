@@ -18,7 +18,7 @@ const EXPORT_PAGE_SIZE = 100
 
 function ReportPreviewSkeleton() {
   return (
-    <div className="rounded-xl border border-border bg-white p-5 shadow-sm sm:p-6">
+    <div className="rounded-xl border border-border bg-card p-5 shadow-sm sm:p-6">
       <div className="flex items-start justify-between gap-4 border-b border-border pb-4">
         <div className="space-y-2">
           <Skeleton className="h-3 w-28" />
@@ -247,7 +247,7 @@ function ExportAttendanceReportModal({
             </p>
           )}
           {!isLoading && !error && (
-            <div className="rounded-xl border border-border bg-white p-5 shadow-sm sm:p-6">
+            <div className="rounded-xl border border-border bg-card p-5 shadow-sm sm:p-6">
               <AttendanceReport {...reportProps} />
             </div>
           )}

@@ -101,7 +101,7 @@ function QRSettings({ qr, onChange }) {
         </div>
 
         <div className="flex items-start gap-3 rounded-xl bg-muted/60 p-3 sm:p-4">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-white ring-1 ring-border sm:h-12 sm:w-12">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-card ring-1 ring-border sm:h-12 sm:w-12">
             <QrCode className="h-6 w-6 text-foreground/80 sm:h-7 sm:w-7" />
           </div>
           <div className="min-w-0">

@@ -17,12 +17,16 @@ function formatDate(value) {
 }
 
 const statusStyles = {
-  "Full day": "bg-emerald-50 text-emerald-600",
-  Present: "bg-emerald-50 text-emerald-600",
-  "Morning only": "bg-amber-50 text-amber-600",
-  "Afternoon only": "bg-blue-50 text-blue-600",
-  Partial: "bg-amber-50 text-amber-600",
-  Absent: "bg-red-50 text-red-500",
+  "Full day":
+    "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400",
+  Present:
+    "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400",
+  "Morning only":
+    "bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400",
+  "Afternoon only":
+    "bg-blue-50 text-blue-600 dark:bg-blue-500/15 dark:text-blue-300",
+  Partial: "bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400",
+  Absent: "bg-red-50 text-red-500 dark:bg-red-500/15 dark:text-red-400",
 }
 
 function TimeReadout({ label, value }) {

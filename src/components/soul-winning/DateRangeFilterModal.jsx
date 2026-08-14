@@ -242,7 +242,7 @@ function DateRangeFilterModal({
                 value={String(viewMonth)}
                 onValueChange={(value) => setViewMonth(Number(value))}
               >
-                <SelectTrigger className="h-8 w-34 rounded-lg">
+                <SelectTrigger className="w-34 rounded-lg bg-card data-[size=default]:h-9">
                   <SelectValue>
                     {(value) => monthNames[Number(value)]}
                   </SelectValue>
@@ -260,7 +260,7 @@ function DateRangeFilterModal({
                 value={String(viewYear)}
                 onValueChange={(value) => setViewYear(Number(value))}
               >
-                <SelectTrigger className="h-8 w-22 rounded-lg">
+                <SelectTrigger className="w-22 rounded-lg bg-card data-[size=default]:h-9">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

@@ -572,6 +572,7 @@ function SoulWinningPageContent() {
         open={isDateRangeOpen}
         onOpenChange={setIsDateRangeOpen}
         range={customRange}
+        hasSelection={Boolean(periodFromParam && periodToParam)}
         onApply={(range) => {
           const { from, to } = toDateRangeStrings(range)
           updateParams({

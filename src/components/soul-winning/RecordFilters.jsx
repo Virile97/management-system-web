@@ -36,7 +36,7 @@ function RecordFilters({
           <Input
             placeholder="Search converts or winners..."
             className={cn(
-              "h-10 rounded-lg bg-white pl-9",
+              "h-10 rounded-lg bg-card pl-9",
               search && "pr-9"
             )}
             value={search}
@@ -56,7 +56,7 @@ function RecordFilters({
 
         <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-row sm:items-center sm:gap-3">
           <Select value={status} onValueChange={onStatusChange}>
-            <SelectTrigger className="w-full rounded-lg bg-white data-[size=default]:h-10 sm:w-44">
+            <SelectTrigger className="w-full rounded-lg bg-card data-[size=default]:h-10 sm:w-44">
               <Filter className="h-4 w-4 text-muted-foreground" />
               <SelectValue>
                 {() =>
@@ -79,7 +79,7 @@ function RecordFilters({
               member={winner}
               onChange={onWinnerChange}
               placeholder="Filter by soul winner..."
-              className="bg-white hover:bg-white"
+              className="bg-card hover:bg-card"
             />
           </div>
         </div>

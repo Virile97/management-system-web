@@ -229,7 +229,7 @@ function MemberPickerField({
       {member ? (
         <div
           className={cn(
-            "flex h-10 items-center justify-between gap-2 rounded-lg border border-input bg-background px-3",
+            "flex h-10 items-center justify-between gap-2 rounded-lg border border-input bg-card px-3",
             className
           )}
         >
@@ -259,7 +259,7 @@ function MemberPickerField({
           onClick={() => setIsSearchOpen(true)}
           disabled={disabled}
           className={cn(
-            "relative flex h-10 w-full items-center rounded-lg border border-input bg-background px-3 text-left text-sm text-muted-foreground hover:bg-muted/40 disabled:cursor-not-allowed disabled:opacity-50",
+            "relative flex h-10 w-full items-center rounded-lg border border-input bg-card px-3 text-left text-sm text-muted-foreground hover:bg-muted/40 disabled:cursor-not-allowed disabled:opacity-50",
             className
           )}
         >

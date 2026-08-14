@@ -38,9 +38,10 @@ function MultiSelectDropdown({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger
         className={cn(
-          "flex h-8 shrink-0 items-center gap-1.5 rounded-lg border border-input bg-white px-3 text-sm transition-colors outline-none",
+          "flex h-8 shrink-0 items-center gap-1.5 rounded-lg border border-input bg-card px-3 text-sm transition-colors outline-none",
           "data-popup-open:border-ring data-popup-open:ring-3 data-popup-open:ring-ring/50",
-          hasSelection && "border-[#1e2a4a] text-[#1e2a4a]",
+          hasSelection &&
+            "border-[#1e2a4a] text-[#1e2a4a] dark:border-amber-400/70 dark:text-amber-300",
           className
         )}
       >

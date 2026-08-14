@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils"
 
 function FilterPills({ options, active, onChange, disabled = false }) {
   return (
-    <div className="flex h-10 w-full items-center gap-1 overflow-x-auto rounded-lg bg-white p-1 ring-1 ring-border scrollbar-none sm:h-8 sm:w-auto">
+    <div className="flex h-10 w-full items-center gap-1 overflow-x-auto rounded-lg bg-card p-1 ring-1 ring-border scrollbar-none sm:h-8 sm:w-auto">
       {options.map((option) => (
         <button
           key={option}

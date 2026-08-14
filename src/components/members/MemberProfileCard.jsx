@@ -95,7 +95,7 @@ function MemberProfileCard({ member, onEdit }) {
         </div>
       </div>
 
-      <div className="bg-white">
+      <div className="bg-card">
         <DetailRow icon={Mail} label="Email" value={member.email} />
         <DetailRow icon={Phone} label="Phone" value={member.phone} />
         <DetailRow

@@ -423,18 +423,18 @@ function AttendancePageContent() {
 
           <div className="grid grid-cols-[1fr_auto] gap-2 sm:flex sm:items-center sm:gap-3">
             <DateRangeButton
-              hasRange
+              hasRange={hasCustomRange}
               label={rangeLabel}
               clearable={hasCustomRange}
               onOpen={() => setIsDateRangeOpen(true)}
               onClear={handleClearDateRange}
-              className="h-10 w-full justify-start px-3 sm:w-auto sm:px-4"
+              className="w-full justify-start sm:w-auto"
             />
 
             <Button
               type="button"
               variant="outline"
-              className="h-10 gap-2 rounded-lg bg-white px-3 text-foreground hover:bg-white sm:px-4 dark:bg-white dark:text-neutral-900 dark:hover:bg-white"
+              className="h-10 gap-2 rounded-lg bg-card px-3 text-foreground hover:bg-card sm:px-4 dark:hover:bg-card"
               onClick={() => setIsExportOpen(true)}
             >
               <FileDown className="h-4 w-4" />
@@ -479,7 +479,7 @@ function AttendancePageContent() {
                 <Input
                   placeholder="Search member..."
                   className={cn(
-                    "h-10 rounded-lg bg-white pl-9 sm:h-9",
+                    "h-10 rounded-lg bg-card pl-9 sm:h-9",
                     search && "pr-9"
                   )}
                   value={search}

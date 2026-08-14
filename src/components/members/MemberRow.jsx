@@ -4,9 +4,9 @@ import { cn } from "@/lib/utils"
 import { QrCode } from "lucide-react"
 
 const statusStyles = {
-  Active: "bg-emerald-50 text-emerald-600",
-  Inactive: "bg-amber-50 text-amber-600",
-  Deceased: "bg-red-50 text-red-500",
+  Active: "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400",
+  Inactive: "bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400",
+  Deceased: "bg-red-50 text-red-500 dark:bg-red-500/15 dark:text-red-400",
 }
 
 const dotStyles = {

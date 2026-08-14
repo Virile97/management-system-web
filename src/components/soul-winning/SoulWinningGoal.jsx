@@ -206,7 +206,7 @@ function SoulWinningGoal({
           <button
             type="button"
             onClick={() => setIsSetGoalOpen(true)}
-            className="inline-flex h-9 w-fit items-center gap-1.5 rounded-lg border border-amber-400/80 px-3 text-sm font-medium text-amber-600 transition-colors hover:bg-amber-50 hover:text-amber-700"
+            className="inline-flex h-9 w-fit items-center gap-1.5 rounded-lg border border-amber-400/80 px-3 text-sm font-medium text-amber-600 transition-colors hover:bg-amber-50 hover:text-amber-700 dark:border-amber-400/60 dark:text-amber-300 dark:hover:bg-amber-400/10 dark:hover:text-amber-200"
           >
             <Pencil className="h-3.5 w-3.5" />
             {hasGoal ? "Edit Goal" : "Set Goal"}
@@ -216,8 +216,8 @@ function SoulWinningGoal({
         <div className="mt-5 flex flex-wrap items-baseline gap-x-2 gap-y-1">
           {hasGoal ? (
             <>
-              <p className="font-heading text-3xl font-normal tabular-nums tracking-tight text-[#1e2a4a] sm:text-4xl">
-                <span className="text-foreground/90">{currentCount}</span>
+              <p className="font-heading text-3xl font-normal tabular-nums tracking-tight text-foreground sm:text-4xl">
+                <span className="text-foreground">{currentCount}</span>
                 <span className="text-muted-foreground"> / {targetCount}</span>
               </p>
               <p className="text-sm text-muted-foreground">
@@ -226,7 +226,7 @@ function SoulWinningGoal({
             </>
           ) : (
             <>
-              <p className="font-heading text-3xl font-normal tabular-nums tracking-tight text-[#1e2a4a] sm:text-4xl">
+              <p className="font-heading text-3xl font-normal tabular-nums tracking-tight text-foreground sm:text-4xl">
                 —
               </p>
               <p className="text-sm text-muted-foreground">

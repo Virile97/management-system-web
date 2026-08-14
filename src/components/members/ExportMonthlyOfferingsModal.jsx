@@ -16,7 +16,7 @@ import { FileDown, X } from "lucide-react"
 
 function ReportPreviewSkeleton() {
   return (
-    <div className="rounded-xl border border-border bg-white p-5 shadow-sm sm:p-6">
+    <div className="rounded-xl border border-border bg-card p-5 shadow-sm sm:p-6">
       <div className="flex flex-col gap-3 border-b border-border pb-4">
         <Skeleton className="h-5 w-48" />
         <Skeleton className="h-3.5 w-64" />
@@ -151,7 +151,7 @@ function ExportMonthlyOfferingsModal({
             </p>
           )}
           {!isLoading && !error && reportProps && (
-            <div className="rounded-xl border border-border bg-white p-5 shadow-sm sm:p-6">
+            <div className="rounded-xl border border-border bg-card p-5 shadow-sm sm:p-6">
               <MemberMonthlyOfferingsReport {...reportProps} />
             </div>
           )}
