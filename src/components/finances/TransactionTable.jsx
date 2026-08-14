@@ -14,6 +14,7 @@ import { toDateRangeStrings, toDatePoint } from "@/utils/helpers"
 import { Button } from "@/components/ui/button"
 import {
   Search,
+  X,
   ArrowUpRight,
   ArrowDownRight,
   Receipt,
@@ -127,11 +128,25 @@ function TransactionTable({
           <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search transactions..."
-            className="h-10 rounded-lg bg-white pl-9 sm:h-8"
+            className={cn(
+              "h-10 rounded-lg bg-white pl-9 sm:h-8",
+              search && "pr-9"
+            )}
             value={search}
             disabled={filtersDisabled}
             onChange={(event) => onSearchChange(event.target.value)}
           />
+          {search ? (
+            <button
+              type="button"
+              onClick={() => onSearchChange("")}
+              disabled={filtersDisabled}
+              aria-label="Clear search"
+              className="absolute top-1/2 right-2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted-foreground/15 hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          ) : null}
         </div>
 
         <div className="order-2 flex min-w-0 flex-col gap-2 sm:order-1 sm:flex-row sm:items-center sm:gap-3">
