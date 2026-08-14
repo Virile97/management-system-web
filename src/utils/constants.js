@@ -10,6 +10,7 @@ export const API_ENDPOINTS = {
 
   // Dashboard
   DASHBOARD: `${API_V1}/dashboard`,
+  DASHBOARD_ACTIVITY: `${API_V1}/dashboard/activity`,
 
   // Users
   USERS: `${API_V1}/users`,
@@ -57,6 +58,7 @@ export const APP_API_ENDPOINTS = {
 
   // Dashboard
   DASHBOARD: "/api/dashboard",
+  DASHBOARD_ACTIVITY: "/api/dashboard/activity",
 
   // Users
   USERS: "/api/users",

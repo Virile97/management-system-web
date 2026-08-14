@@ -17,6 +17,7 @@ import {
 } from "@/components/dashboard/DashboardSkeletons"
 import { useDashboardStore } from "@/stores/dashboard.store"
 import { getDashboardOverview } from "@/services/dashboard.service"
+import { getSoulWinningTrends } from "@/services/soulWinning.service"
 import { useAsyncData } from "@/hooks/use-async-data"
 
 const today = new Date().toLocaleDateString("en-US", {
@@ -33,6 +34,8 @@ export default function DashboardPage() {
     financeSummary,
     attendanceSummary,
     recentActivity,
+    soulWinningMonthly,
+    soulWinningYear,
   } = useDashboardStore(
     useShallow((state) => ({
       stats: state.stats,
@@ -40,13 +43,22 @@ export default function DashboardPage() {
       financeSummary: state.financeSummary,
       attendanceSummary: state.attendanceSummary,
       recentActivity: state.recentActivity,
+      soulWinningMonthly: state.soulWinningMonthly,
+      soulWinningYear: state.soulWinningYear,
     }))
   )
 
   const buildTasks = useCallback(() => {
-    const { setOverview } = useDashboardStore.getState()
+    const { setOverview, setSoulWinningTrends } = useDashboardStore.getState()
+    const year = new Date().getFullYear()
 
-    return [[(signal) => getDashboardOverview({}, signal), setOverview]]
+    return [
+      [(signal) => getDashboardOverview({}, signal), setOverview],
+      [
+        (signal) => getSoulWinningTrends({ period: "This Year", year }, signal),
+        setSoulWinningTrends,
+      ],
+    ]
   }, [])
 
   const { isLoading, error, retry } = useAsyncData(buildTasks)
@@ -141,7 +153,7 @@ export default function DashboardPage() {
             breakdown={memberBreakdown?.breakdown ?? []}
           />
 
-          <SoulWinningChart />
+          <SoulWinningChart data={soulWinningMonthly} year={soulWinningYear} />
 
           <FinanceChart data={financeSummary} />
 

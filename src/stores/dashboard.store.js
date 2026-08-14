@@ -6,6 +6,8 @@ const initialState = {
   financeSummary: [],
   attendanceSummary: [],
   recentActivity: [],
+  soulWinningMonthly: [],
+  soulWinningYear: new Date().getFullYear(),
 }
 
 const useDashboardStore = create((set) => ({
@@ -18,6 +20,12 @@ const useDashboardStore = create((set) => ({
       financeSummary: overview?.financeSummary ?? [],
       attendanceSummary: overview?.attendanceSummary ?? [],
       recentActivity: overview?.recentActivity ?? [],
+    }),
+
+  setSoulWinningTrends: (trends) =>
+    set({
+      soulWinningMonthly: trends?.monthly ?? [],
+      soulWinningYear: Number(trends?.year) || new Date().getFullYear(),
     }),
 
   reset: () => set(initialState),
