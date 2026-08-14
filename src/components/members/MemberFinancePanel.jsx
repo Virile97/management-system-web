@@ -17,12 +17,12 @@ import { getMemberOfferings, PERIODS } from "@/services/memberFinance.service"
 import { getTransactionsConfig } from "@/services/finance.service"
 import { useFinanceStore } from "@/stores/finance.store"
 import { toDateRangeStrings, toDatePoint } from "@/utils/helpers"
+import { DEFAULT_PAGE_SIZE } from "@/utils/constants"
 import { cn } from "@/lib/utils"
 import { Receipt, ShieldCheck, Lock, X, FileDown } from "lucide-react"
 
 // Matches the offerings API default (max 100). Paging is by transaction, so a
 // page can return slightly more line items when a txn has a multi-type split.
-const PAGE_SIZE = 20
 
 const OFFERING_SORT_COLUMNS = {
   date: { get: (row) => row.date, type: "date" },
@@ -93,10 +93,12 @@ function MemberFinancePanel({
   dateTo,
   offeringTypeIds,
   page,
+  pageSize = DEFAULT_PAGE_SIZE,
   onPeriodChange,
   onApplyDateRange,
   onOfferingTypesChange,
   onPageChange,
+  onPageSizeChange,
   onLock,
 }) {
   const [isDateRangeOpen, setIsDateRangeOpen] = useState(false)
@@ -165,7 +167,7 @@ function MemberFinancePanel({
             to: dateTo,
             offeringTypeIds,
             page,
-            limit: PAGE_SIZE,
+            limit: pageSize,
           },
           controller.signal
         )
@@ -195,7 +197,7 @@ function MemberFinancePanel({
 
     loadOfferings()
     return () => controller.abort()
-  }, [memberId, period, dateFrom, dateTo, offeringTypeKey, page])
+  }, [memberId, period, dateFrom, dateTo, offeringTypeKey, page, pageSize])
 
   function handleApplyDateRange(range) {
     onApplyDateRange(toDateRangeStrings(range))
@@ -217,9 +219,9 @@ function MemberFinancePanel({
 
   // Footer range is keyed off transaction paging (meta.total), not the
   // flattened line-item count — a page can hold slightly more items than
-  // PAGE_SIZE when a transaction splits across offering types.
-  const pageFrom = meta.total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1
-  const pageTo = Math.min(page * PAGE_SIZE, meta.total)
+  // pageSize when a transaction splits across offering types.
+  const pageFrom = meta.total === 0 ? 0 : (page - 1) * pageSize + 1
+  const pageTo = Math.min(page * pageSize, meta.total)
   const { sortedRows, sortKey, sortDirection, toggleSort } = useTableSort(
     records,
     OFFERING_SORT_COLUMNS,
@@ -403,7 +405,9 @@ function MemberFinancePanel({
               from={pageFrom}
               to={pageTo}
               total={meta.total}
+              pageSize={pageSize}
               onPageChange={onPageChange}
+              onPageSizeChange={onPageSizeChange}
             />
           </>
         )}

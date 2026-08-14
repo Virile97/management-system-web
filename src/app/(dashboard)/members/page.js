@@ -32,6 +32,10 @@ import {
   bulkDeleteMembers,
 } from "@/services/member.service"
 import { useMembersStore } from "@/stores/members.store"
+import {
+  DEFAULT_PAGE_SIZE,
+  resolvePageSize,
+} from "@/utils/constants"
 import { Plus, QrCode, Trash2, FileDown } from "lucide-react"
 
 export default function MembersPage() {
@@ -43,11 +47,11 @@ export default function MembersPage() {
 }
 
 const DEFAULT_STATUS = "All"
-const PAGE_SIZE = 10
 
 function queriesMatch(a, b) {
   return (
     a.page === b.page &&
+    a.limit === b.limit &&
     a.status === b.status &&
     a.search === b.search &&
     a.from === b.from &&
@@ -60,6 +64,7 @@ function MembersPageContent() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const page = Math.max(1, parseInt(searchParams.get("page"), 10) || 1)
+  const pageSize = resolvePageSize(searchParams.get("limit"))
   const activeFilter = searchParams.get("status") || DEFAULT_STATUS
   const isEditParam = searchParams.get("isEdit") === "true"
   const editMemberIdParam = searchParams.get("memberId")
@@ -138,9 +143,11 @@ function MembersPageContent() {
     const params = new URLSearchParams(searchParams)
     for (const [key, value] of Object.entries(updates)) {
       if (
-        !value ||
+        value === "" ||
+        value == null ||
         value === DEFAULT_STATUS ||
-        (key === "page" && value <= 1)
+        (key === "page" && value <= 1) ||
+        (key === "limit" && Number(value) === DEFAULT_PAGE_SIZE)
       ) {
         params.delete(key)
       } else {
@@ -155,6 +162,10 @@ function MembersPageContent() {
 
   function goToPage(nextPage) {
     updateParams({ page: nextPage })
+  }
+
+  function updatePageSize(nextSize) {
+    updateParams({ limit: nextSize, page: 1 })
   }
 
   function updateFilter(nextFilter) {
@@ -183,6 +194,7 @@ function MembersPageContent() {
   useEffect(() => {
     const currentQuery = {
       page,
+      limit: pageSize,
       status: activeFilter,
       search: debouncedSearch,
       from: dateFrom,
@@ -231,7 +243,7 @@ function MembersPageContent() {
         const { data, meta: responseMeta } = await listMembers(
           {
             page,
-            limit: PAGE_SIZE,
+            limit: pageSize,
             search: debouncedSearch,
             status: activeFilter === DEFAULT_STATUS ? "" : activeFilter,
             from: dateFrom,
@@ -271,7 +283,7 @@ function MembersPageContent() {
       controller.abort()
       unregister()
     }
-  }, [page, activeFilter, debouncedSearch, dateFrom, dateTo, refreshKey])
+  }, [page, pageSize, activeFilter, debouncedSearch, dateFrom, dateTo, refreshKey])
 
   const [breakdown, setBreakdown] = useState({ total: 0, breakdown: [] })
   const [isBreakdownLoading, setIsBreakdownLoading] = useState(true)
@@ -465,8 +477,9 @@ function MembersPageContent() {
             page={page}
             totalPages={meta.totalPages}
             total={meta.total}
-            pageSize={PAGE_SIZE}
+            pageSize={pageSize}
             onPageChange={goToPage}
+            onPageSizeChange={updatePageSize}
           />
         </div>
       </div>

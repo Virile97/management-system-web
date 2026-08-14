@@ -33,9 +33,12 @@ import {
 import { register as registerAbortController } from "@/lib/abort-registry"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
+import {
+  DEFAULT_PAGE_SIZE,
+  resolvePageSize,
+} from "@/utils/constants"
 import { FileDown, Search, X } from "lucide-react"
 
-const PAGE_SIZE = 20
 const DEFAULT_LEVEL = "All"
 
 export default function AttendancePage() {
@@ -52,7 +55,8 @@ function queriesMatch(a, b) {
     a.to === b.to &&
     a.level === b.level &&
     a.search === b.search &&
-    a.page === b.page
+    a.page === b.page &&
+    a.limit === b.limit
   )
 }
 
@@ -82,6 +86,7 @@ function AttendancePageContent() {
   const activeDate = dateTo || dateFrom || today
   const activeLevel = searchParams.get("level") || DEFAULT_LEVEL
   const page = Math.max(1, parseInt(searchParams.get("page"), 10) || 1)
+  const pageSize = resolvePageSize(searchParams.get("limit"))
   const cacheKey = `${dateFrom}|${dateTo}`
 
   const [search, setSearch] = useState("")
@@ -154,7 +159,7 @@ function AttendancePageContent() {
           level: activeLevel === DEFAULT_LEVEL ? "" : activeLevel,
           search: debouncedSearch,
           page,
-          limit: PAGE_SIZE,
+          limit: pageSize,
         })
         setSummary(response.summary)
         setLevels(response.levels)
@@ -175,9 +180,11 @@ function AttendancePageContent() {
 
     for (const [key, value] of Object.entries(updates)) {
       const isDefault =
-        !value ||
+        value === "" ||
+        value == null ||
         (key === "level" && value === DEFAULT_LEVEL) ||
         (key === "page" && Number(value) <= 1) ||
+        (key === "limit" && Number(value) === DEFAULT_PAGE_SIZE) ||
         ((key === "from" || key === "to") && value === today)
 
       isDefault ? params.delete(key) : params.set(key, String(value))
@@ -197,6 +204,10 @@ function AttendancePageContent() {
       scroll: false,
     })
     return true
+  }
+
+  function updatePageSize(nextSize) {
+    updateParams({ limit: nextSize, page: 1 })
   }
 
   /**
@@ -229,6 +240,7 @@ function AttendancePageContent() {
       level: activeLevel,
       search: debouncedSearch,
       page,
+      limit: pageSize,
     }
 
     if (isFirstRun.current) {
@@ -268,7 +280,7 @@ function AttendancePageContent() {
           lastQueryRef.current = currentQuery
           setAttendance(
             cached,
-            { page: 1, limit: PAGE_SIZE, total: cached.length, totalPages: 1 },
+            { page: 1, limit: pageSize, total: cached.length, totalPages: 1 },
             currentQuery
           )
           setIsLoading(false)
@@ -287,7 +299,7 @@ function AttendancePageContent() {
             level: activeLevel === DEFAULT_LEVEL ? "" : activeLevel,
             search: debouncedSearch,
             page,
-            limit: PAGE_SIZE,
+            limit: pageSize,
           },
           controller.signal
         )
@@ -325,7 +337,7 @@ function AttendancePageContent() {
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dateFrom, dateTo, activeLevel, debouncedSearch, page, refreshKey])
+  }, [dateFrom, dateTo, activeLevel, debouncedSearch, page, pageSize, refreshKey])
 
   function handleLevelChange(level) {
     updateParams({ level, page: 1 })
@@ -501,8 +513,9 @@ function AttendancePageContent() {
                 page={page}
                 totalPages={meta.totalPages || 1}
                 total={meta.total || 0}
-                pageSize={PAGE_SIZE}
+                pageSize={pageSize}
                 onPageChange={(nextPage) => updateParams({ page: nextPage })}
+                onPageSizeChange={updatePageSize}
                 onSlotChange={handleSlotChange}
               />
             </div>

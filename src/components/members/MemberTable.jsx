@@ -28,8 +28,9 @@ function MemberTable({
   page = 1,
   totalPages = 1,
   total = 0,
-  pageSize = 10,
+  pageSize = 20,
   onPageChange,
+  onPageSizeChange,
 }) {
   const { sortedRows, sortKey, sortDirection, toggleSort } = useTableSort(
     rows,
@@ -125,6 +126,7 @@ function MemberTable({
       total={total}
       pageSize={pageSize}
       onPageChange={onPageChange}
+      onPageSizeChange={onPageSizeChange}
     />
   )
 }

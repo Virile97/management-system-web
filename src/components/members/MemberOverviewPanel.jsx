@@ -121,6 +121,7 @@ function MemberOverviewPanel({
   total = 0,
   pageSize = 20,
   onPageChange,
+  onPageSizeChange,
 }) {
   const groups = member.groups ?? []
   const from = total === 0 ? 0 : (page - 1) * pageSize + 1
@@ -200,7 +201,9 @@ function MemberOverviewPanel({
                 from={from}
                 to={to}
                 total={total}
+                pageSize={pageSize}
                 onPageChange={onPageChange}
+                onPageSizeChange={onPageSizeChange}
               />
             )}
           </>

@@ -1,6 +1,6 @@
 "use client"
 
-import { Suspense, useEffect, useRef, useState } from "react"
+import { Suspense, useEffect, useMemo, useRef, useState } from "react"
 import { useRouter, usePathname, useSearchParams } from "next/navigation"
 import { useShallow } from "zustand/react/shallow"
 import { Button } from "@/components/ui/button"
@@ -41,9 +41,12 @@ import {
   PROCESS_TYPES,
   useProcessQueueStore,
 } from "@/stores/processQueue.store"
+import {
+  DEFAULT_PAGE_SIZE,
+  resolvePageSize,
+} from "@/utils/constants"
 import { ScanLine, Plus, FileDown } from "lucide-react"
 
-const PAGE_SIZE = 10
 const DEFAULT_FILTER = "All"
 const DEFAULT_RECORD_TYPE = "income"
 const DEFAULT_PERIOD = "This Month"
@@ -60,6 +63,7 @@ const PERIOD_VALUES = {
 function tableQueriesMatch(a, b) {
   return (
     a.page === b.page &&
+    a.limit === b.limit &&
     a.type === b.type &&
     a.search === b.search &&
     a.from === b.from &&
@@ -84,6 +88,7 @@ function FinancesPageContent() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const page = Math.max(1, parseInt(searchParams.get("page"), 10) || 1)
+  const pageSize = resolvePageSize(searchParams.get("limit"))
   const activeFilter = searchParams.get("type") || DEFAULT_FILTER
   const period = searchParams.get("period") || DEFAULT_PERIOD
   const periodFromParam = searchParams.get("periodFrom") || ""
@@ -97,7 +102,15 @@ function FinancesPageContent() {
   const editTransactionIdParam = searchParams.get("transactionId") || ""
   const isScanParam = searchParams.get("scan") === "true"
 
-  const [selectedIds, setSelectedIds] = useState(new Set())
+  const [selectedById, setSelectedById] = useState(() => new Map())
+  const selectedIds = useMemo(
+    () => new Set(selectedById.keys()),
+    [selectedById]
+  )
+  const selectedTransactions = useMemo(
+    () => Array.from(selectedById.values()),
+    [selectedById]
+  )
   const [isDeleteSelectedOpen, setIsDeleteSelectedOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState("")
@@ -207,7 +220,13 @@ function FinancesPageContent() {
 
     for (const [key, value] of Object.entries(updates)) {
       const isDefault = value === DEFAULT_FILTER || value === DEFAULT_PERIOD
-      if (!value || isDefault || (key === "page" && value <= 1)) {
+      if (
+        value === "" ||
+        value == null ||
+        isDefault ||
+        (key === "page" && value <= 1) ||
+        (key === "limit" && Number(value) === DEFAULT_PAGE_SIZE)
+      ) {
         params.delete(key)
       } else {
         params.set(key, String(value))
@@ -222,6 +241,10 @@ function FinancesPageContent() {
 
   function goToPage(nextPage) {
     updateParams({ page: nextPage })
+  }
+
+  function updatePageSize(nextSize) {
+    updateParams({ limit: nextSize, page: 1 })
   }
 
   function openScanQr() {
@@ -427,6 +450,7 @@ function FinancesPageContent() {
   useEffect(() => {
     const currentQuery = {
       page,
+      limit: pageSize,
       type: activeFilter,
       search: debouncedSearch,
       from: tableDateFrom,
@@ -460,7 +484,7 @@ function FinancesPageContent() {
         const { data, meta: responseMeta } = await listTransactions(
           {
             page,
-            limit: PAGE_SIZE,
+            limit: pageSize,
             type: activeFilter === "All" ? "" : activeFilter,
             search: debouncedSearch,
             from: tableDateFrom,
@@ -500,6 +524,7 @@ function FinancesPageContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     page,
+    pageSize,
     activeFilter,
     debouncedSearch,
     tableDateFrom,
@@ -535,13 +560,13 @@ function FinancesPageContent() {
   }
 
   function toggleSelect(transaction) {
-    setSelectedIds((prev) => {
-      const next = new Set(prev)
+    setSelectedById((prev) => {
+      const next = new Map(prev)
 
       if (next.has(transaction.id)) {
         next.delete(transaction.id)
       } else {
-        next.add(transaction.id)
+        next.set(transaction.id, transaction)
       }
 
       return next
@@ -549,17 +574,17 @@ function FinancesPageContent() {
   }
 
   function toggleSelectAll(pageRows) {
-    setSelectedIds((prev) => {
+    setSelectedById((prev) => {
       const allSelected = pageRows.every((transaction) =>
         prev.has(transaction.id)
       )
-      const next = new Set(prev)
+      const next = new Map(prev)
 
       pageRows.forEach((transaction) => {
         if (allSelected) {
           next.delete(transaction.id)
         } else {
-          next.add(transaction.id)
+          next.set(transaction.id, transaction)
         }
       })
 
@@ -573,7 +598,7 @@ function FinancesPageContent() {
 
     try {
       await bulkDeleteTransactions(Array.from(selectedIds))
-      setSelectedIds(new Set())
+      setSelectedById(new Map())
       setIsDeleteSelectedOpen(false)
       setRefreshKey((key) => key + 1)
     } catch (err) {
@@ -684,8 +709,9 @@ function FinancesPageContent() {
             page={page}
             totalPages={meta.totalPages}
             total={meta.total}
-            pageSize={PAGE_SIZE}
+            pageSize={pageSize}
             onPageChange={goToPage}
+            onPageSizeChange={updatePageSize}
           />
         </div>
       </div>
@@ -702,9 +728,7 @@ function FinancesPageContent() {
         dateFrom={tableDateFrom}
         dateTo={tableDateTo}
         dateRangeLabel={tableDateRangeLabel}
-        selectedTransactions={transactions.filter((transaction) =>
-          selectedIds.has(transaction.id)
-        )}
+        selectedTransactions={selectedTransactions}
       />
       <RecordTransactionModal
         open={

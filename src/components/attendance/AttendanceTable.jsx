@@ -446,6 +446,7 @@ function AttendanceTable({
   total = members.length,
   pageSize = members.length,
   onPageChange,
+  onPageSizeChange,
   onSlotChange,
 }) {
   const isDesktop = useDesktopLayout()
@@ -564,7 +565,9 @@ function AttendanceTable({
         from={from}
         to={to}
         total={total}
+        pageSize={pageSize}
         onPageChange={onPageChange}
+        onPageSizeChange={onPageSizeChange}
       />
     </div>
   )

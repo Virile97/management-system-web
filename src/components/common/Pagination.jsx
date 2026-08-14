@@ -9,11 +9,14 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
+import {
+  DEFAULT_PAGE_SIZE,
+  PAGE_SIZE_OPTIONS,
+} from "@/utils/constants"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 
 // Exactly this many page-number buttons — never more. Ellipsis is decorative
-// only and does not count toward the limit. Jumping to any page is handled
-// by the "Page X of N" select.
+// only and does not count toward the limit.
 const PAGE_WINDOW = 5
 
 function getVisiblePages(page, totalPages) {
@@ -82,6 +85,9 @@ function Pagination({
   to = 10,
   total = 12,
   onPageChange,
+  pageSize = DEFAULT_PAGE_SIZE,
+  pageSizeOptions = PAGE_SIZE_OPTIONS,
+  onPageSizeChange,
 }) {
   const safeTotalPages = Math.max(1, totalPages)
   const visiblePages = getVisiblePages(page, safeTotalPages)
@@ -89,10 +95,7 @@ function Pagination({
   const lastVisible = visiblePages[visiblePages.length - 1] ?? 1
   const showLeadingEllipsis = firstVisible > 1
   const showTrailingEllipsis = lastVisible < safeTotalPages
-  const pageOptions = Array.from(
-    { length: safeTotalPages },
-    (_, index) => index + 1
-  )
+  const showPageSize = typeof onPageSizeChange === "function"
 
   return (
     <div className="flex flex-col gap-3 border-t border-border px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
@@ -146,36 +149,33 @@ function Pagination({
           </Button>
         </div>
 
-        {safeTotalPages > 1 && (
+        {showPageSize && (
           <div className="flex h-9 items-center gap-2 rounded-lg border border-border bg-muted/40 px-2.5">
             <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-              Page
+              Show
             </span>
             <Select
-              value={String(page)}
-              onValueChange={(value) => onPageChange?.(Number(value))}
+              value={String(pageSize)}
+              onValueChange={(value) => onPageSizeChange?.(Number(value))}
             >
               <SelectTrigger
                 size="sm"
-                className="h-7 min-w-14 border-0 bg-background px-2 shadow-none ring-0 focus-visible:ring-2"
+                className="h-7 min-w-16 border-0 bg-background px-2 shadow-none ring-0 focus-visible:ring-2"
               >
-                <SelectValue>{() => String(page)}</SelectValue>
+                <SelectValue>{() => String(pageSize)}</SelectValue>
               </SelectTrigger>
-              <SelectContent align="end" className="max-h-60 min-w-20">
-                {pageOptions.map((number) => (
+              <SelectContent align="end" className="min-w-28">
+                {pageSizeOptions.map((size) => (
                   <SelectItem
-                    key={number}
-                    value={String(number)}
+                    key={size}
+                    value={String(size)}
                     className="tabular-nums"
                   >
-                    {number}
+                    {size} items
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            <span className="text-xs text-muted-foreground tabular-nums">
-              of {safeTotalPages}
-            </span>
           </div>
         )}
       </div>

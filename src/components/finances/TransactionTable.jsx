@@ -96,6 +96,7 @@ function TransactionTable({
   total,
   pageSize,
   onPageChange,
+  onPageSizeChange,
 }) {
   const [isDateRangeOpen, setIsDateRangeOpen] = useState(false)
   const { sortedRows, sortKey, sortDirection, toggleSort } = useTableSort(
@@ -395,6 +396,7 @@ function TransactionTable({
       total={total}
       pageSize={pageSize}
       onPageChange={onPageChange}
+      onPageSizeChange={onPageSizeChange}
     />
   )
 }

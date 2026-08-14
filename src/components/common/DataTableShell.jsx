@@ -34,13 +34,16 @@ function DataTableShell({
   page = 1,
   totalPages = 1,
   total = 0,
-  pageSize = 10,
+  pageSize = 20,
   onPageChange,
+  onPageSizeChange,
 }) {
+  const skeletonRows = Math.min(pageSize, 10)
+
   if (isLoading && !toolbar) {
     return (
       <ListCardSkeleton
-        rows={pageSize}
+        rows={skeletonRows}
         className="overflow-hidden rounded-2xl p-4 sm:p-6"
       />
     )
@@ -69,7 +72,7 @@ function DataTableShell({
 
       {isLoading ? (
         <ListCardSkeleton
-          rows={pageSize}
+          rows={skeletonRows}
           className="border-0 p-4 shadow-none sm:p-6"
         />
       ) : rows.length === 0 ? (
@@ -109,7 +112,9 @@ function DataTableShell({
           from={from}
           to={to}
           total={total}
+          pageSize={pageSize}
           onPageChange={onPageChange}
+          onPageSizeChange={onPageSizeChange}
         />
       )}
     </Card>

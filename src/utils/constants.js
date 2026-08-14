@@ -111,3 +111,15 @@ export const OTHER_OFFERING_CATEGORIES = [
   "Mercy",
   "Love Gift – Pastor",
 ]
+
+/** Shared table page-size choices across list/table views. */
+export const PAGE_SIZE_OPTIONS = [20, 50, 100]
+export const DEFAULT_PAGE_SIZE = 20
+
+export function resolvePageSize(
+  value,
+  { options = PAGE_SIZE_OPTIONS, fallback = DEFAULT_PAGE_SIZE } = {}
+) {
+  const size = Number(value)
+  return options.includes(size) ? size : fallback
+}

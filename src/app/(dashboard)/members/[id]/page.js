@@ -20,9 +20,12 @@ import { getMemberDetail, normalizeMember } from "@/services/member.service"
 import { getCurrentUser } from "@/lib/auth"
 import { register as registerAbortController } from "@/lib/abort-registry"
 import { useMembersStore } from "@/stores/members.store"
+import {
+  DEFAULT_PAGE_SIZE,
+  resolvePageSize,
+} from "@/utils/constants"
 
 const DEFAULT_PERIOD = "This Year"
-const ATTENDANCE_PAGE_SIZE = 20
 const FINANCE_IDLE_MS = 60_000
 const FINANCE_ROLES = ["ADMIN", "FINANCE_ADMIN"]
 
@@ -78,6 +81,7 @@ function MemberDetailPageContent() {
     .filter(Boolean)
 
   const page = Math.max(1, parseInt(searchParams.get("page"), 10) || 1)
+  const pageSize = resolvePageSize(searchParams.get("limit"))
   const attendancePage = isFinanceView ? 1 : page
 
   const cachedMember = useMembersStore((state) => state.cache[memberId]) ?? null
@@ -89,7 +93,7 @@ function MemberDetailPageContent() {
   const [attendance, setAttendance] = useState([])
   const [attendanceMeta, setAttendanceMeta] = useState({
     page: 1,
-    limit: ATTENDANCE_PAGE_SIZE,
+    limit: DEFAULT_PAGE_SIZE,
     total: 0,
     totalPages: 1,
   })
@@ -116,7 +120,7 @@ function MemberDetailPageContent() {
       try {
         const { data, meta } = await getMemberDetail(
           memberId,
-          { page: attendancePage, limit: ATTENDANCE_PAGE_SIZE },
+          { page: attendancePage, limit: pageSize },
           controller.signal
         )
 
@@ -124,7 +128,7 @@ function MemberDetailPageContent() {
 
         const resolvedMeta = meta || {
           page: attendancePage,
-          limit: ATTENDANCE_PAGE_SIZE,
+          limit: pageSize,
           total: data?.attendances?.length ?? 0,
           totalPages: 1,
         }
@@ -162,20 +166,28 @@ function MemberDetailPageContent() {
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [memberId, refreshKey, attendancePage])
+  }, [memberId, refreshKey, attendancePage, pageSize])
 
   function updateParams(updates) {
     const params = new URLSearchParams(searchParams)
 
     for (const [key, value] of Object.entries(updates)) {
       const remove =
-        !value || value === DEFAULT_PERIOD || (key === "page" && value <= 1)
+        value === "" ||
+        value == null ||
+        value === DEFAULT_PERIOD ||
+        (key === "page" && value <= 1) ||
+        (key === "limit" && Number(value) === DEFAULT_PAGE_SIZE)
 
       remove ? params.delete(key) : params.set(key, String(value))
     }
 
     const query = params.toString()
     router.push(`${pathname}${query ? `?${query}` : ""}`, { scroll: false })
+  }
+
+  function updatePageSize(nextSize) {
+    updateParams({ limit: nextSize, page: 1 })
   }
 
   function setFinanceView(enabled) {
@@ -326,10 +338,12 @@ function MemberDetailPageContent() {
                 dateTo={periodTo}
                 offeringTypeIds={offeringTypeIds}
                 page={page}
+                pageSize={pageSize}
                 onPeriodChange={updatePeriod}
                 onApplyDateRange={applyPeriodRange}
                 onOfferingTypesChange={updateOfferingTypes}
                 onPageChange={(nextPage) => updateParams({ page: nextPage })}
+                onPageSizeChange={updatePageSize}
                 onLock={handleLock}
               />
             ) : (
@@ -341,8 +355,9 @@ function MemberDetailPageContent() {
                 page={attendanceMeta.page || attendancePage}
                 totalPages={attendanceMeta.totalPages || 1}
                 total={attendanceMeta.total || 0}
-                pageSize={attendanceMeta.limit || ATTENDANCE_PAGE_SIZE}
+                pageSize={attendanceMeta.limit || pageSize}
                 onPageChange={(nextPage) => updateParams({ page: nextPage })}
+                onPageSizeChange={updatePageSize}
               />
             )}
           </div>

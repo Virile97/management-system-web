@@ -6,7 +6,8 @@ import { TrendingUp, TrendingDown, PhilippinePeso } from "lucide-react"
 const currencyFormatter = new Intl.NumberFormat("en-PH", {
   style: "currency",
   currency: "PHP",
-  maximumFractionDigits: 0,
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
 })
 
 function FinanceCards({ stats, isLoading }) {
