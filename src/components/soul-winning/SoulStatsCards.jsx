@@ -2,25 +2,31 @@ import { Card } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 import { Heart, Star, UserPlus, UserX } from "lucide-react"
 
-function SoulStatsCards({ stats = null, isLoading = false }) {
+function SoulStatsCards({
+  stats = null,
+  isLoading = false,
+  periodLabel = "selected period",
+}) {
   const total = Number(stats?.totalSoulsWon) || 0
+  const baptized = Number(stats?.baptized) || 0
+  const wentInactive = Number(stats?.wentInactive) || 0
   const cards = [
     {
-      label: "Total Souls Won",
+      label: "Total POF",
       value: String(total),
-      caption: "in selected period",
+      caption: `in ${periodLabel}`,
       icon: Heart,
       iconClassName: "bg-muted text-muted-foreground",
     },
     {
-      label: "New Converts",
+      label: "Recent POF",
       value: String(Number(stats?.newConverts) || 0),
       caption: `${Number(stats?.newConvertsPercent) || 0}% of total`,
       icon: Star,
       iconClassName: "bg-amber-50 text-amber-500",
     },
     {
-      label: "Now Active Members",
+      label: "Became Members",
       value: String(Number(stats?.nowActiveMembers) || 0),
       caption: `${Number(stats?.activeRetentionPercent) || 0}% retention`,
       icon: UserPlus,
@@ -28,11 +34,11 @@ function SoulStatsCards({ stats = null, isLoading = false }) {
     },
     {
       label: "Went Inactive",
-      value: String(Number(stats?.wentInactive) || 0),
+      value: String(wentInactive),
       caption:
-        total > 0
-          ? `${Math.round(((Number(stats?.wentInactive) || 0) / total) * 100)}% of total`
-          : "0% of total",
+        baptized > 0
+          ? `${Math.round((wentInactive / baptized) * 100)}% of baptized`
+          : "0% of baptized",
       icon: UserX,
       iconClassName: "bg-red-50 text-red-500",
     },

@@ -20,7 +20,7 @@ import { EditMemberModal } from "@/components/members/EditMemberModal"
 import { PrintQrModal } from "@/components/members/PrintQrModal"
 import { PrintSelectedQrModal } from "@/components/members/PrintSelectedQrModal"
 import { ExportMembersReportModal } from "@/components/members/ExportMembersReportModal"
-import { MemberBreakdownChart } from "@/components/dashboard/MemberBreakdownChart"
+import { MemberStatusSummary } from "@/components/members/MemberStatusSummary"
 import { DateRangeButton } from "@/components/common/DateRangeButton"
 import { DateRangeFilterModal } from "@/components/soul-winning/DateRangeFilterModal"
 import { useDebounce } from "@/hooks/use-debounce"
@@ -388,40 +388,19 @@ function MembersPageContent() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-4 sm:p-6 md:p-8">
-      <div className="mx-auto max-w-6xl">
+    <div className="min-h-screen bg-background px-3 py-4 sm:p-6 md:p-8">
+      <div className="mx-auto max-w-6xl space-y-5 sm:space-y-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h1 className="font-heading text-2xl font-normal text-foreground/80 sm:text-3xl">
-              Church Members
+              Members
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              {meta.total} total members registered
+              Manage church member records and profiles
             </p>
           </div>
 
-          <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
-            {selectedIds.size > 0 && (
-              <>
-                <Button
-                  variant="outline"
-                  className="h-10 gap-2 rounded-lg px-4"
-                  onClick={() => setIsPrintSelectedOpen(true)}
-                >
-                  <QrCode className="h-4 w-4" />
-                  Print QR ({selectedIds.size})
-                </Button>
-                <Button
-                  variant="outline"
-                  className="h-10 gap-2 rounded-lg border-destructive/30 px-4 text-destructive hover:bg-destructive/10 hover:text-destructive"
-                  onClick={() => setIsDeleteSelectedOpen(true)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                  Delete Selected ({selectedIds.size})
-                </Button>
-              </>
-            )}
-
+          <div className="flex flex-wrap items-center gap-2 sm:justify-end">
             <DateRangeButton
               hasRange={Boolean(dateRange)}
               label={dateRange && formatDateRangeLabel(dateRange)}
@@ -451,36 +430,69 @@ function MembersPageContent() {
           </div>
         </div>
 
-        <div className="mt-6">
-          <MemberBreakdownChart
-            total={breakdown.total}
-            breakdown={breakdown.breakdown}
-            isLoading={isBreakdownLoading}
-          />
-        </div>
+        {selectedIds.size > 0 && (
+          <div className="flex flex-col gap-3 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm font-medium text-foreground">
+              {selectedIds.size} member{selectedIds.size === 1 ? "" : "s"}{" "}
+              selected
+            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 gap-1.5 rounded-lg bg-card"
+                onClick={() => setIsPrintSelectedOpen(true)}
+              >
+                <QrCode className="h-3.5 w-3.5" />
+                Print QR
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 gap-1.5 rounded-lg bg-card text-destructive hover:bg-destructive/10 hover:text-destructive"
+                onClick={() => setIsDeleteSelectedOpen(true)}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                Delete
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-9 rounded-lg"
+                onClick={() => setSelectedById(new Map())}
+              >
+                Clear
+              </Button>
+            </div>
+          </div>
+        )}
 
-        <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-wrap items-center gap-3">
+        <MemberStatusSummary
+          total={breakdown.total}
+          breakdown={breakdown.breakdown}
+          isLoading={isBreakdownLoading}
+        />
+
+        <section className="space-y-3">
+          <div className="flex flex-col gap-3 rounded-xl border border-border bg-card/60 p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
             <MemberFilters
               active={activeFilter}
               onChange={updateFilter}
               disabled={filtersDisabled}
             />
+            <MemberSearch
+              value={search}
+              onChange={updateSearch}
+              disabled={filtersDisabled}
+            />
           </div>
-          <MemberSearch
-            value={search}
-            onChange={updateSearch}
-            disabled={filtersDisabled}
-          />
-        </div>
 
-        {error && (
-          <p className="mt-4 rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
-            {error}
-          </p>
-        )}
+          {error && (
+            <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              {error}
+            </p>
+          )}
 
-        <div className="mt-6">
           <MemberTable
             members={members}
             isLoading={isLoading}
@@ -497,7 +509,7 @@ function MembersPageContent() {
             onPageChange={goToPage}
             onPageSizeChange={updatePageSize}
           />
-        </div>
+        </section>
       </div>
 
       <AddMemberModal

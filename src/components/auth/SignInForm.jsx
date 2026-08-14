@@ -69,17 +69,13 @@ function SignInForm() {
       })
       const body = await res.json()
       if (!res.ok || !body.success) {
-        throw new Error(
-          body?.message ||
-            "Unable to sign in. Please check your credentials and try again."
-        )
+        throw new Error("LOGIN_FAILED")
       }
 
       router.push("/dashboard")
-    } catch (err) {
+    } catch {
       setError(
-        err?.message ||
-          "Unable to sign in. Please check your credentials and try again."
+        "Unable to sign in. Please check your credentials and try again."
       )
     } finally {
       setIsSubmitting(false)

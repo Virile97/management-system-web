@@ -4,11 +4,11 @@ import { Search, X } from "lucide-react"
 
 function MemberSearch({ value, onChange, disabled = false }) {
   return (
-    <div className="relative w-full sm:w-72">
-      <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+    <div className="relative w-full sm:w-80">
+      <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
       <Input
         placeholder="Search members..."
-        className={cn("h-9 rounded-lg bg-card pl-9", value && "pr-9")}
+        className={cn("h-10 rounded-lg bg-card pl-9", value && "pr-9")}
         value={value}
         onChange={(event) => onChange(event.target.value)}
         disabled={disabled}

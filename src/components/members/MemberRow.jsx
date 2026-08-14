@@ -38,7 +38,8 @@ function MemberRow({
   return (
     <tr
       className={cn(
-        "border-b border-border last:border-0",
+        "border-b border-border transition-colors last:border-0",
+        checked && "bg-primary/3",
         onOpen && "cursor-pointer hover:bg-muted/40"
       )}
       onClick={() => onOpen?.(member)}
@@ -58,10 +59,10 @@ function MemberRow({
       </td>
       <td className="py-4 pr-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#1e2a4a] text-xs font-semibold text-white">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#1e2a4a] text-xs font-semibold text-white ring-2 ring-background">
             {initials(member.name)}
           </div>
-          <p className="text-sm font-medium text-foreground/85">
+          <p className="text-sm font-medium text-foreground">
             {member.name}
           </p>
         </div>
@@ -111,7 +112,7 @@ function MemberRow({
           <button
             type="button"
             onClick={() => onEdit?.(member)}
-            className="text-sm font-medium text-foreground/80 hover:text-foreground"
+            className="rounded-md px-2 py-1 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
             Edit
           </button>
@@ -119,7 +120,7 @@ function MemberRow({
             type="button"
             onClick={() => onPrint?.(member)}
             aria-label={`Print QR code for ${member.name}`}
-            className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-muted/40 text-muted-foreground hover:bg-muted"
+            className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
             <QrCode className="h-4 w-4" />
           </button>

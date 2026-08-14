@@ -43,19 +43,19 @@ function SoulWinnerCard({ winner }) {
           <p className="font-heading text-lg font-normal text-foreground/85">
             {Number(winner.soulsShared) || 0}
           </p>
-          <p className="text-[11px] text-muted-foreground">Souls shared</p>
+          <p className="text-[11px] text-muted-foreground">Souls won</p>
         </div>
         <div className="rounded-xl bg-emerald-50/80 px-3 py-2.5">
           <p className="font-heading text-lg font-normal text-emerald-700">
             {Number(winner.nowActive) || 0}
           </p>
-          <p className="text-[11px] text-muted-foreground">Now active</p>
+          <p className="text-[11px] text-muted-foreground">Became member</p>
         </div>
         <div className="rounded-xl bg-sky-50/80 px-3 py-2.5">
           <p className="font-heading text-lg font-normal text-sky-800">
             {Number(winner.newConverts) || 0}
           </p>
-          <p className="text-[11px] text-muted-foreground">New converts</p>
+          <p className="text-[11px] text-muted-foreground">Recent POF</p>
         </div>
         <div className="rounded-xl bg-muted/50 px-3 py-2.5">
           <p className="font-heading text-lg font-normal text-foreground/70">
@@ -94,11 +94,9 @@ function Leaderboard({
               Soul Winners
             </h2>
             <p className="mt-0.5 text-sm text-muted-foreground">
-              Celebrating everyone who helped share the Gospel
               {shared > 0
-                ? ` — ${shared} soul${shared === 1 ? "" : "s"} shared together`
-                : ""}
-              .
+                ? `${shared} soul${shared === 1 ? "" : "s"} won in this period`
+                : "Members who recorded souls won in this period"}
             </p>
           </div>
         </div>

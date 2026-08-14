@@ -1,6 +1,6 @@
 "use client"
 
-import { Suspense, useEffect, useState } from "react"
+import { Suspense, useEffect, useMemo, useRef, useState } from "react"
 import { useRouter, usePathname, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { PeriodTabs } from "@/components/soul-winning/PeriodTabs"
@@ -21,16 +21,20 @@ import {
   getSoulWinningOverview,
   setSoulWinningGoal,
   listSoulWinningRecords,
-  createSoulWinningRecord,
   baptizeSoulWinningRecord,
   listSoulWinningWinners,
   getSoulWinningTrends,
+  resolveGoalYear,
 } from "@/services/soulWinning.service"
 import { toDatePoint, toDateRangeStrings } from "@/utils/helpers"
 import {
   DEFAULT_PAGE_SIZE,
   resolvePageSize,
 } from "@/utils/constants"
+import {
+  PROCESS_TYPES,
+  useProcessQueueStore,
+} from "@/stores/processQueue.store"
 import { Plus } from "lucide-react"
 import { toast } from "sonner"
 
@@ -79,7 +83,6 @@ function SoulWinningPageContent() {
   const [isOverviewLoading, setIsOverviewLoading] = useState(true)
   const [overviewError, setOverviewError] = useState("")
   const [isSavingGoal, setIsSavingGoal] = useState(false)
-  const [goalYear, setGoalYear] = useState(() => new Date().getFullYear())
 
   const [records, setRecords] = useState([])
   const [recordsMeta, setRecordsMeta] = useState({
@@ -99,7 +102,7 @@ function SoulWinningPageContent() {
   const [trends, setTrends] = useState({
     daily: [],
     monthly: [],
-    leaderboard: [],
+    year: null,
   })
   const [isTrendsLoading, setIsTrendsLoading] = useState(false)
   const [trendsError, setTrendsError] = useState("")
@@ -113,6 +116,23 @@ function SoulWinningPageContent() {
   const [isRecordSoulOpen, setIsRecordSoulOpen] = useState(false)
   const [baptizeRecord, setBaptizeRecord] = useState(null)
   const [isDateRangeOpen, setIsDateRangeOpen] = useState(false)
+  const lastCompleted = useProcessQueueStore((state) => state.lastCompleted)
+  const isFirstCompleted = useRef(true)
+
+  // Refresh overview/records when a queued soul-won create finishes.
+  useEffect(() => {
+    if (isFirstCompleted.current) {
+      isFirstCompleted.current = false
+      return
+    }
+    if (lastCompleted?.type !== PROCESS_TYPES.SOUL_WINNING_CREATE_RECORD) {
+      return
+    }
+    setOverviewKey((key) => key + 1)
+    setRecordsKey((key) => key + 1)
+    if (activeTab === "leaderboard") setWinnersKey((key) => key + 1)
+    if (activeTab === "trend") setTrendsKey((key) => key + 1)
+  }, [lastCompleted, activeTab])
 
   const winnerFilter = winnerMemberId
     ? {
@@ -136,7 +156,16 @@ function SoulWinningPageContent() {
     from: periodFrom,
     to: periodTo,
   }
+  // Annual goal year follows the period tabs (Custom range year, else current).
+  const goalYear = useMemo(
+    () => resolveGoalYear({ period, from: periodFrom, to: periodTo }),
+    [period, periodFrom, periodTo]
+  )
   const overviewOptions = {
+    ...periodOptions,
+    year: goalYear,
+  }
+  const trendsOptions = {
     ...periodOptions,
     year: goalYear,
   }
@@ -202,10 +231,32 @@ function SoulWinningPageContent() {
     })
   }
 
-  function refreshAfterRecordMutation() {
-    setOverviewKey((key) => key + 1)
+  function applyOverviewSnapshot(snapshot) {
+    if (!snapshot || typeof snapshot !== "object") return false
+
+    const hasRetention = snapshot.retention != null
+    const hasStats = snapshot.stats != null
+    const snapshotGoal = snapshot.goal
+    const snapshotGoalYear =
+      snapshotGoal?.year != null ? Number(snapshotGoal.year) : null
+    const hasGoalForView =
+      snapshotGoal != null &&
+      (snapshotGoalYear == null || snapshotGoalYear === goalYear)
+    if (!hasRetention && !hasStats && !hasGoalForView) return false
+
+    setOverview((prev) => ({
+      ...(prev || {}),
+      ...(hasGoalForView ? { goal: snapshotGoal } : {}),
+      ...(hasStats ? { stats: snapshot.stats } : {}),
+      ...(hasRetention ? { retention: snapshot.retention } : {}),
+    }))
+    return true
+  }
+
+  function refreshAfterMutationWithSnapshot(snapshot) {
+    const applied = applyOverviewSnapshot(snapshot)
     setRecordsKey((key) => key + 1)
-    // Leaderboard / trends stay stale until that tab is opened or period changes.
+    if (!applied) setOverviewKey((key) => key + 1)
     if (activeTab === "leaderboard") setWinnersKey((key) => key + 1)
     if (activeTab === "trend") setTrendsKey((key) => key + 1)
   }
@@ -238,10 +289,6 @@ function SoulWinningPageContent() {
     getSoulWinningOverview(overviewOptions, controller.signal)
       .then((data) => {
         setOverview(data || null)
-        const nextYear = data?.goal?.year
-        if (nextYear != null && Number(nextYear) !== goalYear) {
-          setGoalYear(Number(nextYear))
-        }
       })
       .catch((err) => {
         if (err?.name === "AbortError") return
@@ -363,18 +410,18 @@ function SoulWinningPageContent() {
     setIsTrendsLoading(true)
     setTrendsError("")
 
-    getSoulWinningTrends(periodOptions, controller.signal)
+    getSoulWinningTrends(trendsOptions, controller.signal)
       .then((data) => {
         setTrends({
           daily: data?.daily || [],
           monthly: data?.monthly || [],
-          leaderboard: data?.leaderboard || [],
+          year: data?.year ?? goalYear,
         })
       })
       .catch((err) => {
         if (err?.name === "AbortError") return
         setTrendsError(err?.message || "Unable to load trends")
-        setTrends({ daily: [], monthly: [], leaderboard: [] })
+        setTrends({ daily: [], monthly: [], year: goalYear })
       })
       .finally(() => {
         if (!controller.signal.aborted) setIsTrendsLoading(false)
@@ -385,35 +432,26 @@ function SoulWinningPageContent() {
       controller.abort()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, period, periodFrom, periodTo, trendsKey])
+  }, [activeTab, period, periodFrom, periodTo, goalYear, trendsKey])
 
   async function handleSaveGoal({ year, targetCount }) {
     setIsSavingGoal(true)
     try {
-      const nextYear = Number(year)
+      const nextYear = Number(year) || goalYear
       await setSoulWinningGoal({ year: nextYear, targetCount })
-      toast.success("Goal updated")
-      if (nextYear === goalYear) {
-        setOverviewKey((key) => key + 1)
-      } else {
-        setGoalYear(nextYear)
-      }
+      toast.success(nextYear === goalYear && overview?.goal ? "Goal updated" : "Goal saved")
+      setOverviewKey((key) => key + 1)
     } finally {
       setIsSavingGoal(false)
     }
   }
 
-  async function handleCreateRecord(payload) {
-    await createSoulWinningRecord(payload)
-    refreshAfterRecordMutation()
-  }
-
   async function handleBaptizeConfirm(payload) {
     if (!baptizeRecord?.id) return
-    await baptizeSoulWinningRecord(baptizeRecord.id, payload)
+    const data = await baptizeSoulWinningRecord(baptizeRecord.id, payload)
     toast.success("Convert marked as baptized — now Active Member")
     setBaptizeRecord(null)
-    refreshAfterRecordMutation()
+    refreshAfterMutationWithSnapshot(data?.snapshot)
   }
 
   const goal = overview?.goal || null
@@ -434,7 +472,7 @@ function SoulWinningPageContent() {
               Soul Winning
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Track and celebrate every soul brought into the Kingdom
+              Track soul winning activities
             </p>
           </div>
 
@@ -476,11 +514,18 @@ function SoulWinningPageContent() {
         </div>
 
         <div className="mt-4 sm:mt-6">
-          <SoulStatsCards stats={stats} isLoading={isOverviewLoading} />
+          <SoulStatsCards
+            stats={stats}
+            isLoading={isOverviewLoading}
+            periodLabel={period === "Custom" ? "custom range" : period.toLowerCase()}
+          />
         </div>
 
         <div className="mt-4 sm:mt-6">
-          <RetentionBar retention={retention} />
+          <RetentionBar
+            retention={retention}
+            isLoading={isOverviewLoading}
+          />
         </div>
 
         <div className="mt-4 sm:mt-6">
@@ -546,7 +591,7 @@ function SoulWinningPageContent() {
             <SoulTrendChart
               daily={trends.daily}
               monthly={trends.monthly}
-              leaderboard={trends.leaderboard}
+              year={trends.year ?? goalYear}
               isLoading={isTrendsLoading}
             />
           </div>
@@ -556,7 +601,6 @@ function SoulWinningPageContent() {
       <RecordSoulWonModal
         open={isRecordSoulOpen}
         onOpenChange={setIsRecordSoulOpen}
-        onSaved={handleCreateRecord}
       />
 
       <BaptizeModal

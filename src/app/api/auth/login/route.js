@@ -30,12 +30,16 @@ export async function POST(request) {
     forwardBackendSetCookie(res, backendRes)
 
     return res
-  } catch (err) {
-    const status = err?.response?.status || 500
-    const message =
-      err?.response?.data?.message ||
-      "Unable to sign in. Please check your credentials and try again."
-
-    return NextResponse.json({ success: false, message }, { status })
+  } catch {
+    // Never forward backend auth error text or status (e.g. decrypt
+    // failures) — those leak implementation details to attackers.
+    return NextResponse.json(
+      {
+        success: false,
+        message:
+          "Unable to sign in. Please check your credentials and try again.",
+      },
+      { status: 401 }
+    )
   }
 }

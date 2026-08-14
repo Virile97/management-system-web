@@ -134,6 +134,20 @@ export const OTHER_OFFERING_CATEGORIES = [
 export const PAGE_SIZE_OPTIONS = [20, 50, 100]
 export const DEFAULT_PAGE_SIZE = 20
 
+/** Preset event labels for Record Soul Won (creatable beyond this list). */
+export const SOUL_WINNING_EVENT_OPTIONS = [
+  "Personal Soul Winning",
+  "Pre-Anniversary",
+  "New Life",
+  "Men's Fellowship",
+  "Feeding program",
+  "Summer Youth Camp",
+  "Birthday",
+  "Mothers' Sunday",
+  "Father's Sunday",
+  "Funeral Service",
+]
+
 export function resolvePageSize(
   value,
   { options = PAGE_SIZE_OPTIONS, fallback = DEFAULT_PAGE_SIZE } = {}

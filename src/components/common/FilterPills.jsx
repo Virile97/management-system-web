@@ -12,8 +12,8 @@ function FilterPills({ options, active, onChange, disabled = false }) {
           className={cn(
             "flex h-full min-w-0 flex-1 items-center justify-center rounded-md px-3 text-sm transition-colors sm:flex-none",
             active === option
-              ? "bg-[#1e2a4a] font-medium text-white"
-              : "font-normal text-muted-foreground hover:text-foreground",
+              ? "bg-[#1e2a4a] font-medium text-white dark:bg-amber-500/20 dark:text-amber-200"
+              : "font-normal text-muted-foreground hover:bg-muted/60 hover:text-foreground",
             disabled &&
               "cursor-not-allowed opacity-50 hover:text-muted-foreground"
           )}

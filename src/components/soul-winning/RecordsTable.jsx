@@ -27,7 +27,13 @@ const SORT_COLUMNS = {
   date: { get: (row) => row.date, type: "date" },
   convert: { get: (row) => row.convertName, type: "string" },
   contact: { get: (row) => row.contact, type: "string" },
-  soulWinner: { get: (row) => row.soulWinnerName, type: "string" },
+  soulWinner: {
+    get: (row) =>
+      (row.soulWinnerNames && row.soulWinnerNames.length > 0
+        ? row.soulWinnerNames.join(", ")
+        : row.soulWinnerName) || "",
+    type: "string",
+  },
   status: { get: (row) => row.status, type: "string" },
   notes: { get: (row) => row.notes, type: "string" },
 }
@@ -39,6 +45,14 @@ function initials(name) {
     .join("")
     .slice(0, 2)
     .toUpperCase()
+}
+
+function winnerName(winner) {
+  if (!winner) return "—"
+  if (winner.name) return winner.name
+  return (
+    [winner.firstName, winner.lastName].filter(Boolean).join(" ").trim() || "—"
+  )
 }
 
 function formatDisplayDate(value) {
@@ -68,6 +82,41 @@ function StatusBadge({ status }) {
       />
       {status}
     </span>
+  )
+}
+
+function SoulWinnersCell({ winners = [], compact = false }) {
+  const list = Array.isArray(winners) ? winners.filter(Boolean) : []
+
+  if (list.length === 0) {
+    return <span className="text-sm text-muted-foreground">—</span>
+  }
+
+  if (compact) {
+    return (
+      <span className="truncate text-foreground/80">
+        {list.map(winnerName).join(", ")}
+      </span>
+    )
+  }
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      {list.map((winner, index) => {
+        const name = winnerName(winner)
+        return (
+          <div
+            key={winner.id || `${name}-${index}`}
+            className="flex items-center gap-2"
+          >
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-400 text-[10px] font-semibold text-[#1e2a4a]">
+              {initials(name)}
+            </div>
+            <span className="text-sm text-foreground/80">{name}</span>
+          </div>
+        )
+      })}
+    </div>
   )
 }
 
@@ -127,7 +176,7 @@ function RecordsTable({
               onSort={toggleSort}
             />
             <SortableTh
-              label="Soul Winner"
+              label="Soul Winners"
               sortKey="soulWinner"
               activeKey={sortKey}
               direction={sortDirection}
@@ -171,7 +220,13 @@ function RecordsTable({
                       {record.convertName}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {record.location || "—"}
+                      {[
+                        record.location || null,
+                        record.age != null ? `Age ${record.age}` : null,
+                        record.event || null,
+                      ]
+                        .filter(Boolean)
+                        .join(" · ") || "—"}
                     </p>
                   </div>
                 </div>
@@ -180,14 +235,7 @@ function RecordsTable({
                 {record.contact || "—"}
               </td>
               <td className="py-4 pr-4 align-top">
-                <div className="flex items-center gap-2">
-                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-400 text-[10px] font-semibold text-[#1e2a4a]">
-                    {initials(record.soulWinnerName)}
-                  </div>
-                  <span className="text-sm text-foreground/80">
-                    {record.soulWinnerName}
-                  </span>
-                </div>
+                <SoulWinnersCell winners={record.soulWinners} />
               </td>
               <td className="py-4 pr-4 align-top">
                 <StatusBadge status={record.status} />
@@ -231,7 +279,13 @@ function RecordsTable({
                     {record.convertName}
                   </p>
                   <p className="truncate text-xs text-muted-foreground">
-                    {record.location || "—"}
+                    {[
+                      record.location || null,
+                      record.age != null ? `Age ${record.age}` : null,
+                      record.event || null,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ") || "—"}
                   </p>
                   <p className="mt-0.5 text-xs text-muted-foreground">
                     {formatDisplayDate(record.date)}
@@ -248,11 +302,11 @@ function RecordsTable({
                   {record.contact || "—"}
                 </span>
               </div>
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-xs text-muted-foreground">Soul Winner</span>
-                <span className="truncate text-foreground/80">
-                  {record.soulWinnerName}
+              <div className="flex items-start justify-between gap-3">
+                <span className="shrink-0 text-xs text-muted-foreground">
+                  Soul Winners
                 </span>
+                <SoulWinnersCell winners={record.soulWinners} compact />
               </div>
               {record.notes ? (
                 <div>

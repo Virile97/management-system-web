@@ -3,6 +3,7 @@ import { NextResponse } from "next/server"
 import { api } from "@/lib/axios"
 import {
   setAccessTokenCookie,
+  renewSiblingCookies,
   forwardBackendSetCookie,
   getSessionLoginAt,
 } from "@/lib/session"
@@ -24,6 +25,7 @@ export async function POST(request) {
     )
 
     const token = backendRes.data?.data?.token
+    const user = backendRes.data?.data?.user
     if (!token) {
       return NextResponse.json(
         { success: false, message: "Refresh failed" },
@@ -39,6 +41,11 @@ export async function POST(request) {
       token,
       loginAt: getSessionLoginAt() ?? Date.now(),
     })
+
+    // This route isn't in the middleware matcher, so auth_user/csrf_token
+    // wouldn't otherwise get their sliding expiry renewed here — without
+    // this they can lapse independently of the (now-fresh) access token.
+    renewSiblingCookies(res, request, { user })
 
     // The backend may rotate the refresh token itself — relay whatever it sets.
     forwardBackendSetCookie(res, backendRes)

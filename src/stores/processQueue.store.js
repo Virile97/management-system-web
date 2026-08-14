@@ -1,11 +1,13 @@
 import { createProcessQueue } from "@/lib/process-queue"
 import { createTransaction } from "@/services/finance.service"
 import { createMember } from "@/services/member.service"
+import { createSoulWinningRecord } from "@/services/soulWinning.service"
 
 /** Shared app-wide background process queue. */
 const PROCESS_TYPES = {
   FINANCE_CREATE_TRANSACTION: "finance.createTransaction",
   MEMBERS_CREATE_MEMBER: "members.createMember",
+  SOUL_WINNING_CREATE_RECORD: "soulWinning.createRecord",
 }
 
 const useProcessQueueStore = createProcessQueue({
@@ -16,6 +18,8 @@ const useProcessQueueStore = createProcessQueue({
     [PROCESS_TYPES.FINANCE_CREATE_TRANSACTION]: (payload) =>
       createTransaction(payload),
     [PROCESS_TYPES.MEMBERS_CREATE_MEMBER]: (payload) => createMember(payload),
+    [PROCESS_TYPES.SOUL_WINNING_CREATE_RECORD]: (payload) =>
+      createSoulWinningRecord(payload),
   },
 })
 
@@ -74,10 +78,38 @@ function enqueueCreateMember({ form, label }) {
   })
 }
 
+/**
+ * High-level helper for recording a soul won without blocking the form.
+ */
+function enqueueCreateSoulWinningRecord({ payload, label, winnersLabel }) {
+  const name =
+    label ||
+    [payload?.firstName, payload?.middleName, payload?.lastName]
+      .filter(Boolean)
+      .join(" ")
+      .trim() ||
+    "New convert"
+
+  return useProcessQueueStore.getState().enqueue({
+    type: PROCESS_TYPES.SOUL_WINNING_CREATE_RECORD,
+    payload,
+    display: {
+      title: name,
+      subtitle: winnersLabel
+        ? `Soul won · ${winnersLabel}`
+        : payload?.wonAt
+          ? `Soul won · ${payload.wonAt}`
+          : "Soul won",
+      tone: "positive",
+    },
+  })
+}
+
 export {
   useProcessQueueStore,
   PROCESS_TYPES,
   enqueueCreateTransaction,
   enqueueCreateMember,
+  enqueueCreateSoulWinningRecord,
 }
 export default useProcessQueueStore

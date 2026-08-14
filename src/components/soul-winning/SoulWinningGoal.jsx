@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
-import { CalendarDays, Pencil, Sun, Target, X } from "lucide-react"
+import { CalendarDays, Pencil, Plus, Sun, Target, X } from "lucide-react"
 
 function formatBreakdownValue(value) {
   if (value == null || value === "") return "—"
@@ -29,6 +29,8 @@ function SetGoalModal({
   targetCount: initialTarget,
   onSave,
   isSaving = false,
+  mode = "edit",
+  lockYear = true,
 }) {
   const currentYear = new Date().getFullYear()
   const [year, setYear] = useState(String(initialYear || currentYear))
@@ -72,7 +74,7 @@ function SetGoalModal({
           <div className="flex items-center gap-2.5">
             <Target className="h-5 w-5 text-amber-300" />
             <DialogTitle className="font-heading text-lg font-normal text-white">
-              Set Annual Goal
+              {mode === "add" ? "Add Annual Goal" : "Edit Annual Goal"}
             </DialogTitle>
           </div>
           <button
@@ -86,8 +88,8 @@ function SetGoalModal({
 
         <div className="flex flex-col gap-4 px-4 py-5 sm:px-6">
           <p className="text-sm text-muted-foreground">
-            Set the annual soul winning target for a calendar year. Progress is
-            tracked year-to-date.
+            Set the annual soul winning target for {year || "this"} calendar
+            year. Progress tracks souls won in that year.
           </p>
 
           <div className="grid grid-cols-2 gap-3">
@@ -102,7 +104,7 @@ function SetGoalModal({
                 inputMode="numeric"
                 className="h-10 rounded-lg"
                 value={year}
-                disabled={isSaving}
+                disabled={isSaving || lockYear}
                 onChange={(event) => setYear(event.target.value)}
               />
             </div>
@@ -144,7 +146,7 @@ function SetGoalModal({
             onClick={handleSave}
             disabled={isSaving}
           >
-            {isSaving ? "Saving…" : "Save Goal"}
+            {isSaving ? "Saving…" : mode === "add" ? "Add Goal" : "Save Goal"}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -180,8 +182,12 @@ function SoulWinningGoal({
   const [isSetGoalOpen, setIsSetGoalOpen] = useState(false)
 
   const currentYear = new Date().getFullYear()
-  const year = Number(goal?.year) || Number(yearProp) || currentYear
-  const hasGoal = Boolean(goal)
+  const year = Number(yearProp) || Number(goal?.year) || currentYear
+  // Treat as set only when API returned a goal for this viewing year.
+  const hasGoal =
+    Boolean(goal) &&
+    (goal.year == null || Number(goal.year) === year) &&
+    Number(goal.targetCount) > 0
   const title =
     goal?.title || `Annual Soul Winning Goal — ${year}`
   const currentCount = Number(goal?.currentCount) || 0
@@ -189,6 +195,11 @@ function SoulWinningGoal({
   const remaining = Number(goal?.remaining) || 0
   const percent = Math.min(100, Math.round(Number(goal?.progressPercent) || 0))
   const breakdown = goal?.breakdown || null
+  const isCurrentYear = year === currentYear
+  const isPastYear = year < currentYear
+  // Past years with an existing goal are view-only — never show Edit.
+  const showAddGoal = !hasGoal
+  const showEditGoal = hasGoal && !isPastYear
 
   return (
     <>
@@ -199,18 +210,24 @@ function SoulWinningGoal({
               <Target className="h-4 w-4" />
             </div>
             <h2 className="truncate text-sm font-semibold text-foreground/90 sm:text-base">
-              {title}
+              {hasGoal ? title : `Annual Soul Winning Goal — ${year}`}
             </h2>
           </div>
 
-          <button
-            type="button"
-            onClick={() => setIsSetGoalOpen(true)}
-            className="inline-flex h-9 w-fit items-center gap-1.5 rounded-lg border border-amber-400/80 px-3 text-sm font-medium text-amber-600 transition-colors hover:bg-amber-50 hover:text-amber-700 dark:border-amber-400/60 dark:text-amber-300 dark:hover:bg-amber-400/10 dark:hover:text-amber-200"
-          >
-            <Pencil className="h-3.5 w-3.5" />
-            {hasGoal ? "Edit Goal" : "Set Goal"}
-          </button>
+          {showAddGoal || showEditGoal ? (
+            <button
+              type="button"
+              onClick={() => setIsSetGoalOpen(true)}
+              className="inline-flex h-9 w-fit items-center gap-1.5 rounded-lg border border-amber-400/80 px-3 text-sm font-medium text-amber-600 transition-colors hover:bg-amber-50 hover:text-amber-700 dark:border-amber-400/60 dark:text-amber-300 dark:hover:bg-amber-400/10 dark:hover:text-amber-200"
+            >
+              {showEditGoal ? (
+                <Pencil className="h-3.5 w-3.5" />
+              ) : (
+                <Plus className="h-3.5 w-3.5" />
+              )}
+              {showEditGoal ? "Edit Goal" : "Add Goal"}
+            </button>
+          ) : null}
         </div>
 
         <div className="mt-5 flex flex-wrap items-baseline gap-x-2 gap-y-1">
@@ -221,16 +238,23 @@ function SoulWinningGoal({
                 <span className="text-muted-foreground"> / {targetCount}</span>
               </p>
               <p className="text-sm text-muted-foreground">
-                souls won this year
+                {isCurrentYear
+                  ? "souls won this year"
+                  : `souls won in ${year}`}
               </p>
             </>
           ) : (
             <>
               <p className="font-heading text-3xl font-normal tabular-nums tracking-tight text-foreground sm:text-4xl">
-                —
+                {currentCount > 0 ? currentCount : "—"}
+                {currentCount > 0 ? (
+                  <span className="text-muted-foreground"> / —</span>
+                ) : null}
               </p>
               <p className="text-sm text-muted-foreground">
-                no annual goal set for {year}
+                {currentCount > 0
+                  ? `souls won in ${year} · no annual goal set`
+                  : `no annual goal set for ${year}`}
               </p>
             </>
           )}
@@ -247,7 +271,9 @@ function SoulWinningGoal({
           <span>
             {hasGoal
               ? `${percent}% of annual goal reached`
-              : "Set a goal to track annual progress"}
+              : isPastYear
+                ? `No annual goal was set for ${year}`
+                : `Add a ${year} goal to track annual progress`}
           </span>
           <span>
             {!hasGoal
@@ -265,7 +291,7 @@ function SoulWinningGoal({
             hint={
               hasGoal
                 ? `to hit ${targetCount} by year-end`
-                : "set a goal first"
+                : "add a goal first"
             }
             icon={CalendarDays}
             iconClassName="text-rose-500"
@@ -273,14 +299,14 @@ function SoulWinningGoal({
           <PaceColumn
             label="Per Week"
             value={formatBreakdownValue(breakdown?.perWeek)}
-            hint={hasGoal ? "weekly pace needed" : "set a goal first"}
+            hint={hasGoal ? "weekly pace needed" : "add a goal first"}
             icon={CalendarDays}
             iconClassName="text-slate-500"
           />
           <PaceColumn
             label="Per Day"
             value={formatBreakdownValue(breakdown?.perDay)}
-            hint={hasGoal ? "daily average target" : "set a goal first"}
+            hint={hasGoal ? "daily average target" : "add a goal first"}
             icon={Sun}
             iconClassName="text-amber-500"
           />
@@ -294,6 +320,8 @@ function SoulWinningGoal({
         targetCount={hasGoal ? targetCount : 120}
         onSave={onGoalChange}
         isSaving={isSaving}
+        mode={showEditGoal ? "edit" : "add"}
+        lockYear
       />
     </>
   )

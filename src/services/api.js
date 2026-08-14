@@ -182,4 +182,4 @@ async function withRetry(
   throw lastError
 }
 
-export { fetchJson, fetchWithMeta, withRetry }
+export { fetchJson, fetchWithMeta, withRetry, refreshSession }

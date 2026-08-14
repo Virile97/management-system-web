@@ -70,6 +70,37 @@ function setAccessTokenCookie(response, { token, loginAt }) {
 }
 
 /**
+ * Renews the auth_user and csrf_token cookies' sliding maxAge on a
+ * successful /auth/refresh. auth_user is rewritten from the backend's own
+ * refresh response (the source of truth) rather than echoed from the
+ * incoming request, since the whole point of calling this is that the
+ * browser's copy may have already expired by the time refresh runs — in
+ * that case there'd be nothing to "renew" from the request alone. csrf_token
+ * has no backend equivalent, so it's just carried forward if present.
+ *
+ * Mirrors what middleware does on every matched request — but /auth/refresh
+ * itself isn't in the middleware matcher, so without this, these two cookies
+ * would keep expiring on their original 24h clock independent of the (now
+ * fresh) access token.
+ */
+function renewSiblingCookies(response, request, { user } = {}) {
+  const common = { ...baseCookieOptions(), maxAge: AUTH_SESSION_MAX_AGE }
+
+  if (user)
+    response.cookies.set(AUTH_USER_COOKIE_NAME, JSON.stringify(user), {
+      ...common,
+      httpOnly: false,
+    })
+
+  const csrfToken = request.cookies.get(CSRF_COOKIE_NAME)?.value
+  if (csrfToken)
+    response.cookies.set(CSRF_COOKIE_NAME, csrfToken, {
+      ...common,
+      httpOnly: false,
+    })
+}
+
+/**
  * Relays the backend's own Set-Cookie header (its httpOnly refresh-token
  * cookie) from an axios response onto our Next.js response, so it reaches
  * the browser and is sent back to the backend on the next /auth/refresh
@@ -131,6 +162,7 @@ export {
   setSessionCookies,
   clearSessionCookies,
   setAccessTokenCookie,
+  renewSiblingCookies,
   forwardBackendSetCookie,
   readValidTokenCookie,
   getSessionToken,

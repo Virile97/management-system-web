@@ -50,7 +50,7 @@ function MemberTable({
       onToggleSelect={onToggleSelect}
       onToggleSelectAll={onToggleSelectAll}
       renderTableHead={(selection) => (
-        <tr className="border-b border-border bg-muted/60">
+        <tr className="border-b border-border bg-muted/40">
           <th className="w-10 py-3 pl-4">
             <Checkbox
               checked={selection.allSelected}
