@@ -23,6 +23,16 @@
   }
 }
 
+/* Hide scrollbars while keeping scroll (used by tabs, sidebar, main pane). */
+@utility scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 @theme inline {
   --font-heading: var(--font-serif);
   --font-sans: var(--font-sans);

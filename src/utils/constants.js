@@ -101,13 +101,17 @@ export const APP_API_ENDPOINTS = {
  * auth_token: httpOnly JWT used for backend Authorization.
  * csrf_token: non-httpOnly token sent as X-CSRF-Token on mutating /api/* requests.
  *
- * The backend's refresh-token cookie is httpOnly and opaque to this app.
- * Login/refresh handlers must forward its Set-Cookie header to the browser.
+ * The backend's refresh-token cookie is httpOnly. Login/refresh handlers
+ * forward its Set-Cookie to the browser with Path rewritten to
+ * REFRESH_TOKEN_COOKIE_PATH so `/api/auth/refresh` actually receives it.
  */
 export const CSRF_COOKIE_NAME = "csrf_token"
 export const CSRF_HEADER_NAME = "x-csrf-token"
 export const AUTH_USER_COOKIE_NAME = "auth_user"
 export const AUTH_TOKEN_COOKIE_NAME = "auth_token"
+export const REFRESH_TOKEN_COOKIE_NAME = "refreshToken"
+/** BFF path prefix — must match where we call refresh/logout. */
+export const REFRESH_TOKEN_COOKIE_PATH = "/api/auth"
 
 export const AUTH_SESSION_MAX_AGE = 60 * 60 * 24
 export const AUTH_SESSION_ABSOLUTE_MAX_AGE = 60 * 60 * 24 * 7

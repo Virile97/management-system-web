@@ -6,7 +6,10 @@ import {
   AUTH_SESSION_ABSOLUTE_MAX_AGE,
   AUTH_SESSION_MAX_AGE,
   CSRF_COOKIE_NAME,
+  REFRESH_TOKEN_COOKIE_NAME,
+  REFRESH_TOKEN_COOKIE_PATH,
 } from "@/utils/constants"
+
 
 function baseCookieOptions() {
   return {
@@ -54,7 +57,16 @@ function clearSessionCookies(response) {
   response.cookies.delete(AUTH_TOKEN_COOKIE_NAME)
   response.cookies.delete(AUTH_USER_COOKIE_NAME)
   response.cookies.delete(CSRF_COOKIE_NAME)
+  // Must match Path used when we relayed the backend refresh cookie, or the
+  // browser keeps a stale refreshToken and the next "silent login" succeeds.
+  response.cookies.set(REFRESH_TOKEN_COOKIE_NAME, "", {
+    ...baseCookieOptions(),
+    httpOnly: true,
+    path: REFRESH_TOKEN_COOKIE_PATH,
+    maxAge: 0,
+  })
 }
+
 
 /**
  * Updates just the access token half of the session (after a successful
@@ -70,18 +82,13 @@ function setAccessTokenCookie(response, { token, loginAt }) {
 }
 
 /**
- * Renews the auth_user and csrf_token cookies' sliding maxAge on a
- * successful /auth/refresh. auth_user is rewritten from the backend's own
- * refresh response (the source of truth) rather than echoed from the
- * incoming request, since the whole point of calling this is that the
- * browser's copy may have already expired by the time refresh runs — in
- * that case there'd be nothing to "renew" from the request alone. csrf_token
- * has no backend equivalent, so it's just carried forward if present.
+ * Renews auth_user / csrf_token on a successful /auth/refresh.
+ * auth_user comes from the backend refresh payload (source of truth).
+ * csrf is carried forward when present, otherwise minted fresh — long-idle
+ * tabs often lose csrf before the refresh token expires.
  *
- * Mirrors what middleware does on every matched request — but /auth/refresh
- * itself isn't in the middleware matcher, so without this, these two cookies
- * would keep expiring on their original 24h clock independent of the (now
- * fresh) access token.
+ * /auth/refresh is outside the middleware matcher, so this must renew these
+ * cookies explicitly or they keep expiring on their original 24h clock.
  */
 function renewSiblingCookies(response, request, { user } = {}) {
   const common = { ...baseCookieOptions(), maxAge: AUTH_SESSION_MAX_AGE }
@@ -92,29 +99,51 @@ function renewSiblingCookies(response, request, { user } = {}) {
       httpOnly: false,
     })
 
-  const csrfToken = request.cookies.get(CSRF_COOKIE_NAME)?.value
-  if (csrfToken)
-    response.cookies.set(CSRF_COOKIE_NAME, csrfToken, {
-      ...common,
-      httpOnly: false,
-    })
+  // After a long idle the csrf cookie may already be gone — mint a fresh one
+  // so mutating requests work immediately after silent refresh / auto-login.
+  const csrfToken =
+    request.cookies.get(CSRF_COOKIE_NAME)?.value || generateCsrfToken()
+  response.cookies.set(CSRF_COOKIE_NAME, csrfToken, {
+    ...common,
+    httpOnly: false,
+  })
 }
 
 /**
- * Relays the backend's own Set-Cookie header (its httpOnly refresh-token
- * cookie) from an axios response onto our Next.js response, so it reaches
- * the browser and is sent back to the backend on the next /auth/refresh
- * call. We never parse or name this cookie — it's opaque to this app.
+ * Relays the backend's httpOnly refresh-token Set-Cookie onto our response.
+ *
+ * The backend scopes Path to `/api/v1/auth` (its own mount). Relayed as-is,
+ * the browser would never send that cookie to our BFF (`/api/auth/refresh`),
+ * so silent refresh / auto-login always fails. Rewrite Path to the BFF auth
+ * prefix and drop Domain so the cookie is bound to this app's origin.
  */
+function rewriteBackendRefreshCookie(cookie) {
+  let next = String(cookie).replace(/;\s*Domain=[^;]*/gi, "")
+
+  if (/;\s*Path=/i.test(next)) {
+    next = next.replace(
+      /;\s*Path=[^;]*/i,
+      `; Path=${REFRESH_TOKEN_COOKIE_PATH}`
+    )
+  } else {
+    next = `${next}; Path=${REFRESH_TOKEN_COOKIE_PATH}`
+  }
+
+  return next
+}
+
 function forwardBackendSetCookie(response, axiosResponse) {
-  const raw = axiosResponse.headers?.["set-cookie"]
+  const raw =
+    axiosResponse.headers?.["set-cookie"] ??
+    axiosResponse.headers?.getSetCookie?.()
   if (!raw) return
 
   const cookies = Array.isArray(raw) ? raw : [raw]
   for (const cookie of cookies) {
-    response.headers.append("Set-Cookie", cookie)
+    response.headers.append("Set-Cookie", rewriteBackendRefreshCookie(cookie))
   }
 }
+
 
 /**
  * Validates the raw auth_token cookie value against the absolute session cap.

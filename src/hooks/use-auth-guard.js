@@ -11,9 +11,10 @@ import { refreshSession } from "@/services/api"
  *
  * `auth_user` is a convenience cookie renewed opportunistically by middleware
  * on matched requests — it can lapse (e.g. after a long idle tab) well before
- * the access/refresh tokens actually do. So on the "authenticated" path, a
- * missing `auth_user` triggers one silent refresh attempt before we treat the
- * session as dead, instead of redirecting on that cookie's presence alone.
+ * the access/refresh tokens actually do. When it's missing we attempt one
+ * silent refresh (httpOnly refreshToken) before deciding:
+ * - authenticated pages → stay if refresh restores the session, else /login
+ * - guest pages → auto-login to `redirectTo` if refresh succeeds
  *
  * @param {"authenticated" | "guest"} require - session state this page needs
  * @param {string} redirectTo - where to send the user if the check fails
@@ -28,12 +29,15 @@ function useAuthGuard(require, redirectTo) {
         return
       }
 
-      if (require === "guest") return
-
       const refreshed = await refreshSession()
       if (cancelled) return
 
-      if (refreshed && getCurrentUser()) return
+      if (refreshed && getCurrentUser()) {
+        if (require === "guest") window.location.replace(redirectTo)
+        return
+      }
+
+      if (require === "guest") return
 
       window.location.replace(redirectTo)
     }

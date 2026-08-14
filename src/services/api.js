@@ -8,7 +8,10 @@ let refreshPromise = null
 
 function refreshSession() {
   if (!refreshPromise) {
-    refreshPromise = fetch("/api/auth/refresh", { method: "POST" })
+    refreshPromise = fetch("/api/auth/refresh", {
+      method: "POST",
+      credentials: "same-origin",
+    })
       .then((res) => res.ok)
       .catch(() => false)
       .finally(() => {

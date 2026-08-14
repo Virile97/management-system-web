@@ -45,7 +45,7 @@ function DashboardLayout({ children }) {
             <ThemeToggle className="text-foreground/70 hover:bg-muted hover:text-foreground" />
           </header>
 
-          <div className="flex-1 overflow-y-auto">{children}</div>
+          <div className="flex-1 overflow-y-auto scrollbar-none">{children}</div>
         </div>
 
         <ProcessQueuePanel />
