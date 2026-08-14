@@ -35,6 +35,15 @@ export const API_ENDPOINTS = {
   // Attendance
   ATTENDANCE: `${API_V1}/attendance`,
   ATTENDANCE_BY_MEMBER: (memberId) => `${API_V1}/attendance/${memberId}`,
+
+  // Soul Winning
+  SOUL_WINNING_OVERVIEW: `${API_V1}/soul-winning/overview`,
+  SOUL_WINNING_GOALS: `${API_V1}/soul-winning/goals`,
+  SOUL_WINNING_RECORDS: `${API_V1}/soul-winning/records`,
+  SOUL_WINNING_RECORD_BY_ID: (id) => `${API_V1}/soul-winning/records/${id}`,
+  SOUL_WINNING_BAPTIZE: (id) => `${API_V1}/soul-winning/records/${id}/baptize`,
+  SOUL_WINNING_WINNERS: `${API_V1}/soul-winning/winners`,
+  SOUL_WINNING_TRENDS: `${API_V1}/soul-winning/trends`,
 }
 
 export const APP_API_ENDPOINTS = {
@@ -74,6 +83,15 @@ export const APP_API_ENDPOINTS = {
   // Attendance
   ATTENDANCE: "/api/attendance",
   ATTENDANCE_BY_MEMBER: (memberId) => `/api/attendance/${memberId}`,
+
+  // Soul Winning
+  SOUL_WINNING_OVERVIEW: "/api/soul-winning/overview",
+  SOUL_WINNING_GOALS: "/api/soul-winning/goals",
+  SOUL_WINNING_RECORDS: "/api/soul-winning/records",
+  SOUL_WINNING_RECORD_BY_ID: (id) => `/api/soul-winning/records/${id}`,
+  SOUL_WINNING_BAPTIZE: (id) => `/api/soul-winning/records/${id}/baptize`,
+  SOUL_WINNING_WINNERS: "/api/soul-winning/winners",
+  SOUL_WINNING_TRENDS: "/api/soul-winning/trends",
 }
 
 /**

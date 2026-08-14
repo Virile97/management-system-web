@@ -206,11 +206,17 @@ function MemberSearchModal({ open, onOpenChange, onSelect }) {
 }
 
 /**
- * Searchable member picker for linking an offering to a member.
+ * Searchable member picker for linking an offering / soul winner to a member.
  * Clicking the field opens a dedicated search modal.
  * Controlled via `member` ({ id, name } | null) + `onChange`.
  */
-function MemberPickerField({ member = null, onChange, disabled = false }) {
+function MemberPickerField({
+  member = null,
+  onChange,
+  disabled = false,
+  placeholder = "Search members...",
+  className,
+}) {
   const [isSearchOpen, setIsSearchOpen] = useState(false)
 
   function handleClear(event) {
@@ -221,7 +227,12 @@ function MemberPickerField({ member = null, onChange, disabled = false }) {
   return (
     <>
       {member ? (
-        <div className="flex h-10 items-center justify-between gap-2 rounded-lg border border-input bg-background px-3">
+        <div
+          className={cn(
+            "flex h-10 items-center justify-between gap-2 rounded-lg border border-input bg-background px-3",
+            className
+          )}
+        >
           <button
             type="button"
             className="min-w-0 flex-1 truncate text-left text-sm text-foreground/85"
@@ -247,10 +258,13 @@ function MemberPickerField({ member = null, onChange, disabled = false }) {
           type="button"
           onClick={() => setIsSearchOpen(true)}
           disabled={disabled}
-          className="relative flex h-10 w-full items-center rounded-lg border border-input bg-background px-3 text-left text-sm text-muted-foreground hover:bg-muted/40 disabled:cursor-not-allowed disabled:opacity-50"
+          className={cn(
+            "relative flex h-10 w-full items-center rounded-lg border border-input bg-background px-3 text-left text-sm text-muted-foreground hover:bg-muted/40 disabled:cursor-not-allowed disabled:opacity-50",
+            className
+          )}
         >
           <Search className="mr-2 h-4 w-4 shrink-0" />
-          <span>Search members...</span>
+          <span className="truncate">{placeholder}</span>
         </button>
       )}
 

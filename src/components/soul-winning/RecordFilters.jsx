@@ -1,3 +1,5 @@
+"use client"
+
 import { Input } from "@/components/ui/input"
 import {
   Select,
@@ -6,23 +8,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Search, Filter, Users } from "lucide-react"
+import { MemberPickerField } from "@/components/finances/MemberPickerField"
+import { cn } from "@/lib/utils"
+import { Search, Filter, X } from "lucide-react"
 
-const statusLabels = {
-  all: "All Statuses",
-  "new-convert": "New Convert",
-  "active-member": "Active Member",
-  inactive: "Inactive",
-}
+const STATUS_OPTIONS = [
+  { value: "all", label: "All Statuses" },
+  { value: "New Convert", label: "New Convert" },
+  { value: "Active Member", label: "Active Member" },
+  { value: "Inactive", label: "Inactive" },
+]
 
 function RecordFilters({
   search,
   onSearchChange,
-  status,
+  status = "all",
   onStatusChange,
-  soulWinner,
-  onSoulWinnerChange,
-  soulWinners,
+  winner = null,
+  onWinnerChange,
   resultCount,
 }) {
   return (
@@ -32,42 +35,53 @@ function RecordFilters({
           <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search converts or winners..."
-            className="h-10 rounded-lg bg-white pl-9"
+            className={cn(
+              "h-10 rounded-lg bg-white pl-9",
+              search && "pr-9"
+            )}
             value={search}
             onChange={(event) => onSearchChange(event.target.value)}
           />
+          {search ? (
+            <button
+              type="button"
+              onClick={() => onSearchChange("")}
+              aria-label="Clear search"
+              className="absolute top-1/2 right-2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted-foreground/15 hover:text-foreground"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          ) : null}
         </div>
 
-        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-row sm:gap-3">
+        <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-row sm:items-center sm:gap-3">
           <Select value={status} onValueChange={onStatusChange}>
-            <SelectTrigger className="h-10 w-full rounded-lg sm:w-44">
+            <SelectTrigger className="w-full rounded-lg bg-white data-[size=default]:h-10 sm:w-44">
               <Filter className="h-4 w-4 text-muted-foreground" />
-              <SelectValue>{(value) => statusLabels[value]}</SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="new-convert">New Convert</SelectItem>
-              <SelectItem value="active-member">Active Member</SelectItem>
-              <SelectItem value="inactive">Inactive</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select value={soulWinner} onValueChange={onSoulWinnerChange}>
-            <SelectTrigger className="h-10 w-full rounded-lg sm:w-48">
-              <Users className="h-4 w-4 text-muted-foreground" />
               <SelectValue>
-                {(value) => (value === "all" ? "All Winners" : value)}
+                {() =>
+                  STATUS_OPTIONS.find((option) => option.value === status)
+                    ?.label || "All Statuses"
+                }
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Soul Winners</SelectItem>
-              {soulWinners.map((winner) => (
-                <SelectItem key={winner} value={winner}>
-                  {winner}
+              {STATUS_OPTIONS.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
+
+          <div className="w-full sm:w-56">
+            <MemberPickerField
+              member={winner}
+              onChange={onWinnerChange}
+              placeholder="Filter by soul winner..."
+              className="bg-white hover:bg-white"
+            />
+          </div>
         </div>
       </div>
 

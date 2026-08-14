@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import {
   Dialog,
   DialogContent,
@@ -10,28 +11,76 @@ import {
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { Heart, X, Info } from "lucide-react"
+import { MemberPickerField } from "@/components/finances/MemberPickerField"
+import { toDateInputValue } from "@/utils/helpers"
+import { Heart, X } from "lucide-react"
+import { toast } from "sonner"
 
-const soulWinnerLabels = {
-  "kofi-agyeman": "Kofi Agyeman — Youth",
-  "emmanuel-boateng": "Emmanuel Boateng — Elders",
-  "grace-mensah": "Grace Mensah — Women's Ministry",
-  "yaa-amponsah": "Yaa Amponsah — Choir",
+function emptyForm() {
+  return {
+    winnerMemberId: null,
+    winnerName: "",
+    wonAt: toDateInputValue(),
+    firstName: "",
+    middleName: "",
+    lastName: "",
+    contact: "",
+    location: "",
+    notes: "",
+  }
 }
 
-const statusLabels = {
-  "new-convert": "New Convert",
-  "active-member": "Active Member",
-}
+function RecordSoulWonModal({ open, onOpenChange, onSaved }) {
+  const [form, setForm] = useState(emptyForm)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState("")
 
-function RecordSoulWonModal({ open, onOpenChange }) {
+  useEffect(() => {
+    if (!open) return
+    setForm(emptyForm())
+    setError("")
+    setIsSubmitting(false)
+  }, [open])
+
+  function updateField(field, value) {
+    setForm((prev) => ({ ...prev, [field]: value }))
+  }
+
+  const canSubmit =
+    Boolean(form.winnerMemberId) &&
+    Boolean(form.firstName.trim()) &&
+    Boolean(form.lastName.trim())
+
+  async function handleSubmit() {
+    if (!canSubmit || isSubmitting) return
+
+    setIsSubmitting(true)
+    setError("")
+
+    const payload = {
+      firstName: form.firstName.trim(),
+      lastName: form.lastName.trim(),
+      middleName: form.middleName.trim() || null,
+      contact: form.contact.trim() || null,
+      location: form.location.trim() || null,
+      notes: form.notes.trim() || null,
+      wonAt: form.wonAt || undefined,
+      winnerMemberId: form.winnerMemberId,
+    }
+
+    try {
+      await onSaved?.(payload)
+      onOpenChange(false)
+      toast.success("Soul winning record saved")
+    } catch (err) {
+      const message = err?.message || "Unable to save record"
+      setError(message)
+      toast.error(message)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
@@ -59,83 +108,96 @@ function RecordSoulWonModal({ open, onOpenChange }) {
             <Label>
               Soul Winner <span className="text-red-500">*</span>
             </Label>
-            <Select defaultValue="emmanuel-boateng">
-              <SelectTrigger className="h-10 w-full rounded-lg">
-                <SelectValue>{(value) => soulWinnerLabels[value]}</SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="kofi-agyeman">
-                  Kofi Agyeman — Youth
-                </SelectItem>
-                <SelectItem value="emmanuel-boateng">
-                  Emmanuel Boateng — Elders
-                </SelectItem>
-                <SelectItem value="grace-mensah">
-                  Grace Mensah — Women's Ministry
-                </SelectItem>
-                <SelectItem value="yaa-amponsah">
-                  Yaa Amponsah — Choir
-                </SelectItem>
-              </SelectContent>
-            </Select>
+            <MemberPickerField
+              member={
+                form.winnerMemberId
+                  ? { id: form.winnerMemberId, name: form.winnerName }
+                  : null
+              }
+              onChange={(member) => {
+                setForm((prev) => ({
+                  ...prev,
+                  winnerMemberId: member?.id || null,
+                  winnerName: member?.name || "",
+                }))
+              }}
+              disabled={isSubmitting}
+            />
+            <p className="text-xs text-muted-foreground">
+              Pick an existing member. Converts become members only after baptism.
+            </p>
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="soul-date">
-              Date <span className="text-red-500">*</span>
-            </Label>
+            <Label htmlFor="soul-date">Date</Label>
             <Input
               id="soul-date"
               type="date"
-              defaultValue="2026-08-04"
               className="h-10 rounded-lg"
+              value={form.wonAt}
+              disabled={isSubmitting}
+              onChange={(event) => updateField("wonAt", event.target.value)}
             />
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="convert-name">
-              Convert&apos;s Name <span className="text-red-500">*</span>
-            </Label>
-            <div className="relative">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="convert-first">
+                First name <span className="text-red-500">*</span>
+              </Label>
               <Input
-                id="convert-name"
-                placeholder="Full name of the person saved"
-                className="h-10 rounded-lg pr-9"
+                id="convert-first"
+                className="h-10 rounded-lg"
+                value={form.firstName}
+                disabled={isSubmitting}
+                onChange={(event) => updateField("firstName", event.target.value)}
               />
-              <Info className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#1e2a4a]" />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="convert-middle">Middle name</Label>
+              <Input
+                id="convert-middle"
+                className="h-10 rounded-lg"
+                value={form.middleName}
+                disabled={isSubmitting}
+                onChange={(event) =>
+                  updateField("middleName", event.target.value)
+                }
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="convert-last">
+                Last name <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="convert-last"
+                className="h-10 rounded-lg"
+                value={form.lastName}
+                disabled={isSubmitting}
+                onChange={(event) => updateField("lastName", event.target.value)}
+              />
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="convert-phone">Phone</Label>
-              <Input
-                id="convert-phone"
-                placeholder="+233 24 000 0000"
-                className="h-10 rounded-lg"
-              />
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <Label>Status</Label>
-              <Select defaultValue="new-convert">
-                <SelectTrigger className="h-10 w-full rounded-lg">
-                  <SelectValue>{(value) => statusLabels[value]}</SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="new-convert">New Convert</SelectItem>
-                  <SelectItem value="active-member">Active Member</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="convert-phone">Contact</Label>
+            <Input
+              id="convert-phone"
+              className="h-10 rounded-lg"
+              value={form.contact}
+              disabled={isSubmitting}
+              onChange={(event) => updateField("contact", event.target.value)}
+            />
           </div>
 
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="convert-address">Address / Location</Label>
             <Input
               id="convert-address"
-              placeholder="Area or neighbourhood"
               className="h-10 rounded-lg"
+              value={form.location}
+              disabled={isSubmitting}
+              onChange={(event) => updateField("location", event.target.value)}
             />
           </div>
 
@@ -143,11 +205,16 @@ function RecordSoulWonModal({ open, onOpenChange }) {
             <Label htmlFor="convert-notes">Notes</Label>
             <textarea
               id="convert-notes"
-              placeholder="Context about the encounter, follow-up needed, etc."
               rows={3}
+              value={form.notes}
+              disabled={isSubmitting}
+              onChange={(event) => updateField("notes", event.target.value)}
               className="w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+              placeholder="Context about the encounter, follow-up needed, etc."
             />
           </div>
+
+          {error ? <p className="text-sm text-destructive">{error}</p> : null}
         </div>
 
         <DialogFooter className="mx-0 mb-0 flex-col-reverse justify-end gap-3 rounded-b-xl border-t border-border bg-transparent px-4 py-4 sm:flex-row sm:px-6 sm:py-5">
@@ -156,14 +223,17 @@ function RecordSoulWonModal({ open, onOpenChange }) {
             variant="outline"
             className="h-10 rounded-lg px-5"
             onClick={() => onOpenChange(false)}
+            disabled={isSubmitting}
           >
             Cancel
           </Button>
           <Button
             type="button"
             className="h-10 rounded-lg bg-[#1e2a4a] px-5 text-white hover:bg-[#1e2a4a]/90"
+            disabled={!canSubmit || isSubmitting}
+            onClick={handleSubmit}
           >
-            Save Record
+            {isSubmitting ? "Saving…" : "Save Record"}
           </Button>
         </DialogFooter>
       </DialogContent>

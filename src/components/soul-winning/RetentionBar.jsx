@@ -1,16 +1,31 @@
 import { Card } from "@/components/ui/card"
 
-const segments = [
-  { label: "Active", count: 2, color: "#2f7d4f" },
-  { label: "New Convert", count: 3, color: "#1e2a4a" },
-  { label: "Inactive", count: 0, color: "#c9a24b" },
-]
+function RetentionBar({ retention = null }) {
+  const segments = [
+    {
+      label: "Active",
+      count: Number(retention?.active) || 0,
+      color: "#2f7d4f",
+    },
+    {
+      label: "New Convert",
+      count: Number(retention?.newConvert) || 0,
+      color: "#1e2a4a",
+    },
+    {
+      label: "Inactive",
+      count: Number(retention?.inactive) || 0,
+      color: "#c9a24b",
+    },
+  ]
 
-function RetentionBar() {
   const total = segments.reduce((sum, segment) => sum + segment.count, 0)
-  const activeCount =
-    segments.find((segment) => segment.label === "Active")?.count ?? 0
-  const retentionRate = total > 0 ? Math.round((activeCount / total) * 100) : 0
+  const retentionRate =
+    retention?.activeRetentionPercent != null
+      ? Math.round(Number(retention.activeRetentionPercent))
+      : total > 0
+        ? Math.round((segments[0].count / total) * 100)
+        : 0
 
   return (
     <Card className="rounded-2xl p-3 sm:p-6">
@@ -23,16 +38,20 @@ function RetentionBar() {
         </p>
       </div>
 
-      <div className="mt-3 flex h-2.5 w-full overflow-hidden rounded-full sm:mt-4 sm:h-3">
-        {segments.map((segment) => (
-          <div
-            key={segment.label}
-            style={{
-              width: total > 0 ? `${(segment.count / total) * 100}%` : 0,
-              backgroundColor: segment.color,
-            }}
-          />
-        ))}
+      <div className="mt-3 flex h-2.5 w-full overflow-hidden rounded-full bg-muted sm:mt-4 sm:h-3">
+        {total === 0 ? (
+          <div className="h-full w-full bg-muted" />
+        ) : (
+          segments.map((segment) => (
+            <div
+              key={segment.label}
+              style={{
+                width: `${(segment.count / total) * 100}%`,
+                backgroundColor: segment.color,
+              }}
+            />
+          ))
+        )}
       </div>
 
       <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 sm:mt-4 sm:gap-x-6">

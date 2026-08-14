@@ -14,45 +14,50 @@ const dailyConfig = {
   becameActive: { label: "Became Active", color: "#2f7d4f" },
 }
 
-const dailyData = [
-  { day: "Wed", soulsWon: 0, becameActive: 1 },
-  { day: "Thu", soulsWon: 0, becameActive: 1 },
-  { day: "Fri", soulsWon: 0, becameActive: 1 },
-  { day: "Sat", soulsWon: 0, becameActive: 1 },
-  { day: "Sun", soulsWon: 0, becameActive: 1 },
-  { day: "Mon", soulsWon: 0, becameActive: 1 },
-  { day: "Tue", soulsWon: 0, becameActive: 2 },
-]
-
-const dailyTotal = dailyData.reduce(
-  (sum, d) => sum + d.soulsWon + d.becameActive,
-  0
-)
-
 const monthlyConfig = {
   soulsWon: { label: "Souls Won", color: "#1e2a4a" },
-  activeMembers: { label: "Active Members", color: "#2f7d4f" },
+  becameActive: { label: "Became Active", color: "#2f7d4f" },
 }
 
-const monthlyData = [
-  { month: "Mar", soulsWon: 0, activeMembers: 1 },
-  { month: "Apr", soulsWon: 0, activeMembers: 1 },
-  { month: "May", soulsWon: 0, activeMembers: 1 },
-  { month: "Jun", soulsWon: 0, activeMembers: 1.5 },
-  { month: "Jul", soulsWon: 0, activeMembers: 5 },
-  { month: "Aug", soulsWon: 0, activeMembers: 2 },
-]
+function SoulTrendChart({
+  daily = [],
+  monthly = [],
+  leaderboard = [],
+  isLoading = false,
+}) {
+  const dailyRows = daily.map((entry) => ({
+    label: entry.label,
+    soulsWon: Number(entry.soulsWon) || 0,
+    becameActive: Number(entry.becameActive) || 0,
+  }))
+  const monthlyRows = monthly.map((entry) => ({
+    label: entry.label,
+    soulsWon: Number(entry.soulsWon) || 0,
+    becameActive: Number(entry.becameActive) || 0,
+  }))
+  const leaderboardRows = leaderboard.map((entry) => ({
+    id: entry.id,
+    name: entry.name,
+    count: Number(entry.count) || 0,
+  }))
 
-const winnerTotals = [
-  { name: "Kofi Agyeman", value: 5 },
-  { name: "Emmanuel Boateng", value: 2 },
-  { name: "Grace Mensah", value: 2 },
-  { name: "Yaa Amponsah", value: 2 },
-]
+  const dailyTotal = dailyRows.reduce(
+    (sum, row) => sum + row.soulsWon + row.becameActive,
+    0
+  )
+  const maxLeaderboard = Math.max(
+    ...leaderboardRows.map((row) => row.count),
+    1
+  )
 
-const maxWinnerValue = Math.max(...winnerTotals.map((winner) => winner.value))
+  if (isLoading) {
+    return (
+      <Card className="rounded-2xl p-8">
+        <p className="text-center text-sm text-muted-foreground">Loading…</p>
+      </Card>
+    )
+  }
 
-function SoulTrendChart() {
   return (
     <div className="flex flex-col gap-3 sm:gap-6">
       <div className="grid grid-cols-1 gap-3 sm:gap-6 lg:grid-cols-2">
@@ -73,11 +78,11 @@ function SoulTrendChart() {
               className="aspect-auto h-44 w-full"
             >
               <BarChart
-                data={dailyData}
+                data={dailyRows}
                 margin={{ left: 0, right: 0, top: 8, bottom: 0 }}
               >
                 <XAxis
-                  dataKey="day"
+                  dataKey="label"
                   axisLine={false}
                   tickLine={false}
                   tickMargin={12}
@@ -116,7 +121,7 @@ function SoulTrendChart() {
               className="aspect-auto h-44 w-full"
             >
               <LineChart
-                data={monthlyData}
+                data={monthlyRows}
                 margin={{ left: 0, right: 0, top: 8, bottom: 0 }}
               >
                 <CartesianGrid
@@ -125,7 +130,7 @@ function SoulTrendChart() {
                   className="stroke-border/60"
                 />
                 <XAxis
-                  dataKey="month"
+                  dataKey="label"
                   axisLine={false}
                   tickLine={false}
                   tickMargin={12}
@@ -135,19 +140,18 @@ function SoulTrendChart() {
                   dataKey="soulsWon"
                   type="monotone"
                   stroke="var(--color-soulsWon)"
-                  strokeOpacity={0}
                   strokeWidth={2}
-                  dot={false}
+                  dot={{ r: 3, fill: "var(--color-soulsWon)", strokeWidth: 0 }}
                   isAnimationActive={false}
                 />
                 <Line
-                  dataKey="activeMembers"
+                  dataKey="becameActive"
                   type="monotone"
-                  stroke="var(--color-activeMembers)"
+                  stroke="var(--color-becameActive)"
                   strokeWidth={2}
                   dot={{
-                    r: 4,
-                    fill: "var(--color-activeMembers)",
+                    r: 3,
+                    fill: "var(--color-becameActive)",
                     strokeWidth: 0,
                   }}
                   isAnimationActive={false}
@@ -163,23 +167,37 @@ function SoulTrendChart() {
 
       <Card className="rounded-2xl p-3 sm:p-6">
         <CardTitle className="font-heading text-base font-normal text-foreground/80 sm:text-lg">
-          Souls Won per Soul Winner — This Month
+          Souls Won per Soul Winner
         </CardTitle>
 
         <div className="mt-4 flex flex-col gap-3 sm:mt-6 sm:gap-4">
-          {winnerTotals.map((winner) => (
-            <div key={winner.name} className="flex items-center gap-2 sm:gap-4">
-              <p className="w-20 shrink-0 truncate text-xs text-foreground/80 sm:w-40 sm:text-sm">
-                {winner.name}
-              </p>
-              <div className="h-6 flex-1 overflow-hidden rounded-md bg-muted">
-                <div
-                  className="h-full rounded-md bg-[#2f7d4f]"
-                  style={{ width: `${(winner.value / maxWinnerValue) * 100}%` }}
-                />
+          {leaderboardRows.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              No records found.
+            </p>
+          ) : (
+            leaderboardRows.map((winner) => (
+              <div
+                key={winner.id || winner.name}
+                className="flex items-center gap-2 sm:gap-4"
+              >
+                <p className="w-20 shrink-0 truncate text-xs text-foreground/80 sm:w-40 sm:text-sm">
+                  {winner.name}
+                </p>
+                <div className="h-6 flex-1 overflow-hidden rounded-md bg-muted">
+                  <div
+                    className="h-full rounded-md bg-[#2f7d4f]"
+                    style={{
+                      width: `${(winner.count / maxLeaderboard) * 100}%`,
+                    }}
+                  />
+                </div>
+                <span className="w-8 shrink-0 text-right text-xs tabular-nums text-muted-foreground">
+                  {winner.count}
+                </span>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </Card>
     </div>

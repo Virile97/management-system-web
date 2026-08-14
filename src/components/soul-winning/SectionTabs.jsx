@@ -1,13 +1,13 @@
 import { cn } from "@/lib/utils"
-import { Users, Trophy, TrendingUp } from "lucide-react"
+import { Users, Heart, TrendingUp } from "lucide-react"
 
 const tabs = [
   { key: "records", label: "Records", shortLabel: "Records", icon: Users },
   {
     key: "leaderboard",
-    label: "Leaderboard",
-    shortLabel: "Board",
-    icon: Trophy,
+    label: "Soul Winners",
+    shortLabel: "Winners",
+    icon: Heart,
   },
   { key: "trend", label: "Trend Chart", shortLabel: "Trend", icon: TrendingUp },
 ]

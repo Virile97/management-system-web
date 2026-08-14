@@ -2,38 +2,42 @@ import { Card } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 import { Heart, Star, UserPlus, UserX } from "lucide-react"
 
-const cards = [
-  {
-    label: "Total Souls Won",
-    value: "5",
-    caption: "in selected period",
-    icon: Heart,
-    iconClassName: "bg-muted text-muted-foreground",
-  },
-  {
-    label: "New Converts",
-    value: "3",
-    caption: "60% of total",
-    icon: Star,
-    iconClassName: "bg-amber-50 text-amber-500",
-  },
-  {
-    label: "Now Active Members",
-    value: "2",
-    caption: "40% retention",
-    icon: UserPlus,
-    iconClassName: "bg-emerald-50 text-emerald-600",
-  },
-  {
-    label: "Went Inactive",
-    value: "0",
-    caption: "0% of total",
-    icon: UserX,
-    iconClassName: "bg-red-50 text-red-500",
-  },
-]
+function SoulStatsCards({ stats = null, isLoading = false }) {
+  const total = Number(stats?.totalSoulsWon) || 0
+  const cards = [
+    {
+      label: "Total Souls Won",
+      value: String(total),
+      caption: "in selected period",
+      icon: Heart,
+      iconClassName: "bg-muted text-muted-foreground",
+    },
+    {
+      label: "New Converts",
+      value: String(Number(stats?.newConverts) || 0),
+      caption: `${Number(stats?.newConvertsPercent) || 0}% of total`,
+      icon: Star,
+      iconClassName: "bg-amber-50 text-amber-500",
+    },
+    {
+      label: "Now Active Members",
+      value: String(Number(stats?.nowActiveMembers) || 0),
+      caption: `${Number(stats?.activeRetentionPercent) || 0}% retention`,
+      icon: UserPlus,
+      iconClassName: "bg-emerald-50 text-emerald-600",
+    },
+    {
+      label: "Went Inactive",
+      value: String(Number(stats?.wentInactive) || 0),
+      caption:
+        total > 0
+          ? `${Math.round(((Number(stats?.wentInactive) || 0) / total) * 100)}% of total`
+          : "0% of total",
+      icon: UserX,
+      iconClassName: "bg-red-50 text-red-500",
+    },
+  ]
 
-function SoulStatsCards() {
   return (
     <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
       {cards.map((card) => (
@@ -53,7 +57,7 @@ function SoulStatsCards() {
           </div>
 
           <div className="mt-2 font-heading text-xl font-normal text-foreground/85 sm:mt-4 sm:text-2xl">
-            {card.value}
+            {isLoading ? "—" : card.value}
           </div>
 
           <p className="mt-1 text-[11px] text-muted-foreground sm:mt-2 sm:text-xs">

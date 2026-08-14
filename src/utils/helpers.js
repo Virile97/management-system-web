@@ -143,6 +143,16 @@ function toPeriodDateRange(
     return { from: today, to: today }
   }
 
+  if (period === "This Week") {
+    const day = now.getDay()
+    const mondayOffset = day === 0 ? -6 : 1 - day
+    const monday = new Date(now)
+    monday.setDate(now.getDate() + mondayOffset)
+    const sunday = new Date(monday)
+    sunday.setDate(monday.getDate() + 6)
+    return { from: ymd(monday), to: ymd(sunday) }
+  }
+
   if (period === "This Month") {
     return {
       from: ymd(new Date(now.getFullYear(), now.getMonth(), 1)),
