@@ -487,7 +487,7 @@ function SoulWinningPageContent() {
       : recordsMeta.total || 0
 
   return (
-    <div className="min-h-screen bg-background px-3 py-4 sm:p-6 md:p-8">
+    <div className="bg-background px-3 py-4 sm:p-6 md:p-8">
       <div className="mx-auto max-w-6xl">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
           <div className="min-w-0">
@@ -533,6 +533,7 @@ function SoulWinningPageContent() {
             year={goalYear}
             onGoalChange={handleSaveGoal}
             isSaving={isSavingGoal}
+            isLoading={isOverviewLoading}
           />
         </div>
 

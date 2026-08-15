@@ -15,10 +15,11 @@ function DashboardLayout({ children }) {
 
   return (
     <SlipConfigProvider>
-      <div className="min-h-screen bg-background">
+      {/* Lock to viewport so body never scrolls under the fixed sidebar. */}
+      <div className="h-screen overflow-hidden bg-background">
         <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-        <div className="flex h-screen flex-col md:ml-72">
+        <div className="flex h-full flex-col md:ml-72">
           <header className="flex shrink-0 items-center gap-3 border-b border-border bg-background px-4 py-3 md:hidden">
             <button
               type="button"
@@ -45,7 +46,11 @@ function DashboardLayout({ children }) {
             <ThemeToggle className="text-foreground/70 hover:bg-muted hover:text-foreground" />
           </header>
 
-          <div className="flex-1 overflow-y-auto scrollbar-none">{children}</div>
+          {/* min-h-0 is required so this flex child can shrink and scroll
+              inside h-full instead of expanding the document. */}
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain scrollbar-none">
+            {children}
+          </div>
         </div>
 
         <ProcessQueuePanel />

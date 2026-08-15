@@ -18,6 +18,7 @@ import {
   CartesianGrid,
 } from "recharts"
 import { TrendingUp } from "lucide-react"
+import { SoulTrendChartSkeleton } from "@/components/soul-winning/SoulWinningSkeletons"
 
 const trendConfig = {
   professionsOfFaith: { label: "Professions of Faith", color: "#1e2a4a" },
@@ -116,11 +117,7 @@ function SoulTrendChart({
   )
 
   if (isLoading) {
-    return (
-      <Card className="rounded-2xl p-8">
-        <p className="text-center text-sm text-muted-foreground">Loading…</p>
-      </Card>
-    )
+    return <SoulTrendChartSkeleton />
   }
 
   return (

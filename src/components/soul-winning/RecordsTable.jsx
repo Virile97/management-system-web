@@ -7,6 +7,7 @@ import { Pagination } from "@/components/common/Pagination"
 import { useTableSort } from "@/hooks/use-table-sort"
 import { cn } from "@/lib/utils"
 import { Droplets } from "lucide-react"
+import { RecordsTableSkeleton } from "@/components/soul-winning/SoulWinningSkeletons"
 
 const statusStyles = {
   "New Convert":
@@ -141,11 +142,7 @@ function RecordsTable({
   const to = Math.min(page * pageSize, total)
 
   if (isLoading) {
-    return (
-      <Card className="rounded-2xl p-8">
-        <p className="text-center text-sm text-muted-foreground">Loading…</p>
-      </Card>
-    )
+    return <RecordsTableSkeleton />
   }
 
   return (

@@ -1,12 +1,17 @@
 import { Card } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 import { Heart, Star, UserPlus, UserX } from "lucide-react"
+import { SoulStatsCardsSkeleton } from "@/components/soul-winning/SoulWinningSkeletons"
 
 function SoulStatsCards({
   stats = null,
   isLoading = false,
   periodLabel = "selected period",
 }) {
+  if (isLoading) {
+    return <SoulStatsCardsSkeleton />
+  }
+
   const total = Number(stats?.totalSoulsWon) || 0
   const baptized = Number(stats?.baptized) || 0
   const wentInactive = Number(stats?.wentInactive) || 0
@@ -63,7 +68,7 @@ function SoulStatsCards({
           </div>
 
           <div className="mt-2 font-heading text-xl font-normal text-foreground/85 sm:mt-4 sm:text-2xl">
-            {isLoading ? "—" : card.value}
+            {card.value}
           </div>
 
           <p className="mt-1 text-[11px] text-muted-foreground sm:mt-2 sm:text-xs">

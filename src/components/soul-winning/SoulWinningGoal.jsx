@@ -13,6 +13,7 @@ import {
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { CalendarDays, Pencil, Plus, Sun, Target, X } from "lucide-react"
+import { SoulWinningGoalSkeleton } from "@/components/soul-winning/SoulWinningSkeletons"
 
 function formatBreakdownValue(value) {
   if (value == null || value === "") return "—"
@@ -178,6 +179,7 @@ function SoulWinningGoal({
   year: yearProp,
   onGoalChange,
   isSaving = false,
+  isLoading = false,
 }) {
   const [isSetGoalOpen, setIsSetGoalOpen] = useState(false)
 
@@ -200,6 +202,10 @@ function SoulWinningGoal({
   // Past years with an existing goal are view-only — never show Edit.
   const showAddGoal = !hasGoal
   const showEditGoal = hasGoal && !isPastYear
+
+  if (isLoading) {
+    return <SoulWinningGoalSkeleton />
+  }
 
   return (
     <>

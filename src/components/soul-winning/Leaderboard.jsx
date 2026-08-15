@@ -1,6 +1,7 @@
 import { Card } from "@/components/ui/card"
 import { Pagination } from "@/components/common/Pagination"
 import { Heart } from "lucide-react"
+import { LeaderboardSkeleton } from "@/components/soul-winning/SoulWinningSkeletons"
 
 function initials(name) {
   return String(name || "")
@@ -75,55 +76,57 @@ function Leaderboard({
 
   return (
     <div className="flex flex-col gap-4">
-      <Card className="rounded-2xl p-4 sm:p-5">
-        <div className="flex items-start gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-rose-50 text-rose-500">
-            <Heart className="h-4 w-4" />
-          </div>
-          <div className="min-w-0">
-            <h2 className="font-heading text-base font-normal text-foreground/85 sm:text-lg">
-              Soul Winners
-            </h2>
-            <p className="mt-0.5 text-sm text-muted-foreground">
-              {shared > 0
-                ? `${shared} soul${shared === 1 ? "" : "s"} won in this period · ${total} winner${total === 1 ? "" : "s"}`
-                : "Members who recorded souls won in this period"}
-            </p>
-          </div>
-        </div>
-      </Card>
-
       {isLoading ? (
-        <Card className="rounded-2xl p-8">
-          <p className="text-center text-sm text-muted-foreground">Loading…</p>
-        </Card>
-      ) : people.length === 0 ? (
-        <Card className="rounded-2xl p-8">
-          <p className="text-center text-sm text-muted-foreground">
-            No records found.
-          </p>
-        </Card>
+        <LeaderboardSkeleton />
       ) : (
-        <Card className="overflow-hidden rounded-2xl p-0">
-          <div className="grid grid-cols-1 gap-3 p-3 sm:grid-cols-2 sm:gap-4 sm:p-4">
-            {people.map((winner) => (
-              <SoulWinnerCard key={winner.id || winner.name} winner={winner} />
-            ))}
-          </div>
+        <>
+          <Card className="rounded-2xl p-4 sm:p-5">
+            <div className="flex items-start gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-rose-50 text-rose-500">
+                <Heart className="h-4 w-4" />
+              </div>
+              <div className="min-w-0">
+                <h2 className="font-heading text-base font-normal text-foreground/85 sm:text-lg">
+                  Soul Winners
+                </h2>
+                <p className="mt-0.5 text-sm text-muted-foreground">
+                  {shared > 0
+                    ? `${shared} soul${shared === 1 ? "" : "s"} won in this period · ${total} winner${total === 1 ? "" : "s"}`
+                    : "Members who recorded souls won in this period"}
+                </p>
+              </div>
+            </div>
+          </Card>
 
-          {total > 0 ? (
-            <Pagination
-              page={page}
-              totalPages={totalPages}
-              from={from}
-              to={to}
-              total={total}
-              pageSize={pageSize}
-              onPageChange={onPageChange}
-              onPageSizeChange={onPageSizeChange}
-            />
-          ) : null}
-        </Card>
+          {people.length === 0 ? (
+            <Card className="rounded-2xl p-8">
+              <p className="text-center text-sm text-muted-foreground">
+                No records found.
+              </p>
+            </Card>
+          ) : (
+            <Card className="overflow-hidden rounded-2xl p-0">
+              <div className="grid grid-cols-1 gap-3 p-3 sm:grid-cols-2 sm:gap-4 sm:p-4">
+                {people.map((winner) => (
+                  <SoulWinnerCard key={winner.id || winner.name} winner={winner} />
+                ))}
+              </div>
+
+              {total > 0 ? (
+                <Pagination
+                  page={page}
+                  totalPages={totalPages}
+                  from={from}
+                  to={to}
+                  total={total}
+                  pageSize={pageSize}
+                  onPageChange={onPageChange}
+                  onPageSizeChange={onPageSizeChange}
+                />
+              ) : null}
+            </Card>
+          )}
+        </>
       )}
     </div>
   )

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { RetentionBarSkeleton } from "@/components/soul-winning/SoulWinningSkeletons"
 
 function SegmentBar({ isLoading, empty, segments, legendSegments, summaryLabel }) {
   const [hovered, setHovered] = useState(null)
@@ -93,6 +94,10 @@ function SegmentBar({ isLoading, empty, segments, legendSegments, summaryLabel }
  * retention.active   → Baptism vs Active Retention
  */
 function RetentionBar({ retention = null, isLoading = false }) {
+  if (isLoading) {
+    return <RetentionBarSkeleton />
+  }
+
   const baptism = retention?.baptism || null
   const activeRetention = retention?.active || null
 
@@ -177,18 +182,14 @@ function RetentionBar({ retention = null, isLoading = false }) {
               : baptismTitle}
           </h2>
           <p className="text-xs font-medium text-emerald-600 sm:text-sm">
-            {isLoading ? "—" : `${baptismPercent}% baptism`}
+            {`${baptismPercent}% baptism`}
           </p>
         </div>
         <SegmentBar
-          isLoading={isLoading}
+          isLoading={false}
           empty={baptismDenominator === 0}
           segments={baptismSegments}
-          summaryLabel={
-            isLoading
-              ? null
-              : `${soulsWon || baptismDenominator} total · ${baptismPercent}% baptism`
-          }
+          summaryLabel={`${soulsWon || baptismDenominator} total · ${baptismPercent}% baptism`}
         />
       </div>
 
@@ -198,19 +199,15 @@ function RetentionBar({ retention = null, isLoading = false }) {
             {activeTitle}
           </h2>
           <p className="text-xs font-medium text-emerald-600 sm:text-sm">
-            {isLoading ? "—" : `${activeRetentionPercent}% active retention`}
+            {`${activeRetentionPercent}% active retention`}
           </p>
         </div>
         <SegmentBar
-          isLoading={isLoading}
+          isLoading={false}
           empty={baptized === 0}
           segments={activeBarSegments}
           legendSegments={activeLegendSegments}
-          summaryLabel={
-            isLoading
-              ? null
-              : `${baptized} baptism · ${activeRetentionPercent}% active retention`
-          }
+          summaryLabel={`${baptized} baptism · ${activeRetentionPercent}% active retention`}
         />
       </div>
     </div>
