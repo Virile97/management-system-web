@@ -14,6 +14,7 @@ import {
   LogOut,
   Loader2,
   ClipboardCheck,
+  FolderOpen,
 } from "lucide-react"
 import { ThemeToggle } from "@/components/theme/ThemeToggle"
 import { getCurrentUser } from "@/lib/auth"
@@ -23,6 +24,7 @@ import { useMemberFormStore } from "@/stores/memberForm.store"
 import { useMembersStore } from "@/stores/members.store"
 import { useFinanceStore } from "@/stores/finance.store"
 import { useAttendanceStore } from "@/stores/attendance.store"
+import { useFileStorageStore } from "@/stores/fileStorage.store"
 import { useProcessQueueStore } from "@/stores/processQueue.store"
 import { APP_API_ENDPOINTS } from "@/utils/constants"
 import { ERROR_MESSAGES } from "@/utils/errors"
@@ -82,6 +84,12 @@ const NAV_GROUPS = [
         label: "Finances",
         icon: PhilippinePeso,
         allowedFor: ["ADMIN", "FINANCE_ADMIN"],
+      },
+      {
+        href: "/file-storage",
+        label: "File Storage",
+        icon: FolderOpen,
+        allowedFor: ALL_ROLES,
       },
     ],
   },
@@ -176,6 +184,7 @@ function Sidebar({ open = false, onClose }) {
       useMembersStore.getState().reset()
       useFinanceStore.getState().reset()
       useAttendanceStore.getState().reset()
+      useFileStorageStore.getState().reset()
 
       onClose?.()
       router.push("/login")
@@ -226,7 +235,7 @@ function Sidebar({ open = false, onClose }) {
           <img
             src="/images/logo.png"
             alt="Lighthouse BBC"
-            className="size-11 shrink-0 rounded-xl object-cover ring-1 ring-white/15"
+            className="size-11 shrink-0 object-cover"
           />
           <div className="min-w-0 flex-1 pt-0.5">
             <p className="font-heading text-[15px] leading-snug font-semibold tracking-wide text-white">

@@ -1,0 +1,52 @@
+import { NextResponse } from "next/server"
+
+import { api, withAuthHeader } from "@/lib/axios"
+import { getSessionToken } from "@/lib/session"
+import { API_ENDPOINTS } from "@/utils/constants"
+
+export async function GET(request) {
+  const token = getSessionToken()
+  if (!token) {
+    return NextResponse.json(
+      { success: false, message: "Not authenticated" },
+      { status: 401 }
+    )
+  }
+
+  try {
+    const search = request.nextUrl.searchParams.toString()
+    const url = search
+      ? `${API_ENDPOINTS.FILE_STORAGE_FOLDERS}?${search}`
+      : API_ENDPOINTS.FILE_STORAGE_FOLDERS
+    const { data } = await api.get(url, { ...withAuthHeader(token) })
+    return NextResponse.json(data)
+  } catch (err) {
+    const status = err?.response?.status || 500
+    const message = err?.response?.data?.message || "Unable to fetch folders"
+
+    return NextResponse.json({ success: false, message }, { status })
+  }
+}
+
+export async function POST(request) {
+  const token = getSessionToken()
+  if (!token) {
+    return NextResponse.json(
+      { success: false, message: "Not authenticated" },
+      { status: 401 }
+    )
+  }
+
+  try {
+    const body = await request.json()
+    const { data } = await api.post(API_ENDPOINTS.FILE_STORAGE_FOLDERS, body, {
+      ...withAuthHeader(token),
+    })
+    return NextResponse.json(data, { status: 201 })
+  } catch (err) {
+    const status = err?.response?.status || 500
+    const message = err?.response?.data?.message || "Unable to create folder"
+
+    return NextResponse.json({ success: false, message }, { status })
+  }
+}

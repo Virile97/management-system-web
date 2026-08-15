@@ -58,6 +58,18 @@ export const API_ENDPOINTS = {
   NEW_BELIEVERS_ASSIGNABLE_STUDENTS: `${API_V1}/new-believers/assignable-students`,
   NEW_BELIEVERS_MEMBER_JOURNEY: (memberId) =>
     `${API_V1}/new-believers/journey/${memberId}`,
+
+  // File Storage
+  FILE_STORAGE_STATS: `${API_V1}/file-storage/stats`,
+  FILE_STORAGE_LIST: `${API_V1}/file-storage`,
+  FILE_STORAGE_UPLOAD: `${API_V1}/file-storage/upload`,
+  FILE_STORAGE_DOWNLOAD: (id) => `${API_V1}/file-storage/${id}/download`,
+  FILE_STORAGE_BY_ID: (id) => `${API_V1}/file-storage/${id}`,
+  FILE_STORAGE_MOVE: (id) => `${API_V1}/file-storage/${id}/move`,
+  FILE_STORAGE_FOLDERS: `${API_V1}/file-storage/folders`,
+  FILE_STORAGE_FOLDER_BY_ID: (id) => `${API_V1}/file-storage/folders/${id}`,
+  FILE_STORAGE_FOLDER_BREADCRUMB: (id) =>
+    `${API_V1}/file-storage/folders/${id}/breadcrumb`,
 }
 
 export const APP_API_ENDPOINTS = {
@@ -120,6 +132,18 @@ export const APP_API_ENDPOINTS = {
   NEW_BELIEVERS_ASSIGNABLE_STUDENTS: "/api/new-believers/assignable-students",
   NEW_BELIEVERS_MEMBER_JOURNEY: (memberId) =>
     `/api/new-believers/journey/${memberId}`,
+
+  // File Storage
+  FILE_STORAGE_STATS: "/api/file-storage/stats",
+  FILE_STORAGE_LIST: "/api/file-storage",
+  FILE_STORAGE_UPLOAD: "/api/file-storage/upload",
+  FILE_STORAGE_DOWNLOAD: (id) => `/api/file-storage/${id}/download`,
+  FILE_STORAGE_BY_ID: (id) => `/api/file-storage/${id}`,
+  FILE_STORAGE_MOVE: (id) => `/api/file-storage/${id}/move`,
+  FILE_STORAGE_FOLDERS: "/api/file-storage/folders",
+  FILE_STORAGE_FOLDER_BY_ID: (id) => `/api/file-storage/folders/${id}`,
+  FILE_STORAGE_FOLDER_BREADCRUMB: (id) =>
+    `/api/file-storage/folders/${id}/breadcrumb`,
 }
 
 /**
