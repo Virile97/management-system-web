@@ -1,4 +1,18 @@
-import { Video, Music, FileText, Image, FileType2, File, Archive } from "lucide-react"
+import {
+  Video,
+  Music,
+  FileText,
+  Image,
+  FileType2,
+  File,
+  Archive,
+  Download,
+  FolderOpen,
+  Info,
+  Link2,
+  Share2,
+  Pencil,
+} from "lucide-react"
 
 export const FILE_TYPE_OPTIONS = [
   { value: "VIDEO", label: "Videos", icon: Video },
@@ -9,11 +23,29 @@ export const FILE_TYPE_OPTIONS = [
   { value: "OTHER", label: "Others", icon: File },
 ]
 
+/** Singular, friendly Type-column label per file type (list view table). */
+export const FILE_TYPE_LABELS = {
+  VIDEO: "Video",
+  AUDIO: "Audio",
+  PDF: "PDF",
+  IMAGE: "Image",
+  DOCUMENT: "Document",
+  OTHER: "Other",
+}
+
 export const SORT_OPTIONS = [
   { value: "date", label: "Date" },
   { value: "name", label: "Name" },
   { value: "size", label: "Size" },
 ]
+
+/** Sensible default direction when switching to a sort field — newest date
+ * and largest size first, but name alphabetically (A-Z), not reversed. */
+export const SORT_FIELD_DEFAULT_ORDER = {
+  date: "desc",
+  name: "asc",
+  size: "desc",
+}
 
 export const UPLOAD_MENU_ITEMS = [
   { type: "VIDEO", label: "Video", icon: Video, accept: "video/*", iconClassName: "bg-[#EDE9FE] text-[#6D28D9]" },
@@ -87,7 +119,10 @@ export function getFileTypeBadge({ fileType, originalName }) {
   return { label, className }
 }
 
-export const MAX_UPLOAD_MB = 500
+// Must match the backend's FILE_STORAGE_MAX_UPLOAD_MB (see backend .env) —
+// this is only a client-side pre-check for instant feedback; the backend
+// enforces the real limit.
+export const MAX_UPLOAD_MB = 50
 
 export const ALLOWED_UPLOAD_MIME_TYPES = [
   "video/mp4",
@@ -118,6 +153,44 @@ export const ALLOWED_UPLOAD_MIME_TYPES = [
   "text/plain",
   "application/zip",
   "application/x-zip-compressed",
+]
+
+/** How clicking a file card/row should behave, based on extension (not just
+ * fileType — DOCUMENT covers csv/doc/xls/ppt, which each need a different
+ * open behavior). Signed URLs are private and short-lived, so the "viewer"
+ * actions pass the same signed URL straight to Google's public viewer —
+ * Google fetches it almost immediately after the tab opens, well inside the
+ * 10-minute expiry. */
+const GOOGLE_SHEETS_EXTENSIONS = new Set(["csv", "xls", "xlsx"])
+const GOOGLE_DOCS_EXTENSIONS = new Set(["doc", "docx", "ppt", "pptx"])
+
+export function resolveOpenAction({ fileType, originalName }) {
+  const ext = String(originalName || "").split(".").pop()?.toLowerCase()
+
+  if (fileType === "IMAGE" || fileType === "VIDEO") return "preview"
+  if (fileType === "PDF") return "pdf"
+  if (GOOGLE_SHEETS_EXTENSIONS.has(ext)) return "sheets"
+  if (GOOGLE_DOCS_EXTENSIONS.has(ext)) return "docs"
+  return "download"
+}
+
+export const GRID_FILE_MENU_ITEMS = [
+  { id: "download", label: "Download", icon: Download },
+  { id: "open", label: "Open", icon: FolderOpen },
+  { id: "rename", label: "Rename", icon: Pencil },
+  { id: "info", label: "File information", icon: Info },
+  { id: "copyLink", label: "Copy link", icon: Link2 },
+  { id: "share", label: "Share", icon: Share2 },
+  { id: "archive", label: "Archive", icon: Archive },
+]
+
+export const GRID_FOLDER_MENU_ITEMS = [
+  { id: "open", label: "Open", icon: FolderOpen },
+  { id: "download", label: "Download", icon: Download },
+  { id: "rename", label: "Rename", icon: Pencil },
+  { id: "info", label: "Folder information", icon: Info },
+  { id: "share", label: "Share", icon: Share2 },
+  { id: "archive", label: "Archive", icon: Archive },
 ]
 
 export function formatBytes(bytes) {

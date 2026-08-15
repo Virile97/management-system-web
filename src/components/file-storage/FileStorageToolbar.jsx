@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Search, LayoutGrid, List } from "lucide-react"
+import { Search, LayoutGrid, List, ArrowUpDown } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { AddMenu } from "./AddMenu"
 import { SORT_OPTIONS } from "./file-storage.constants"
@@ -18,7 +18,9 @@ function FileStorageToolbar({
   search,
   onSearchChange,
   sortBy,
+  sortOrder,
   onSortChange,
+  onToggleSortOrder,
   viewMode,
   onViewModeChange,
   onNewFolder,
@@ -56,6 +58,22 @@ function FileStorageToolbar({
           ))}
         </SelectContent>
       </Select>
+
+      <Button
+        type="button"
+        variant="outline"
+        size="icon"
+        aria-label={sortOrder === "asc" ? "Sort ascending" : "Sort descending"}
+        onClick={onToggleSortOrder}
+        className="h-10 w-10 shrink-0 rounded-lg border-[#E5E4E0] bg-white shadow-none"
+      >
+        <ArrowUpDown
+          className={cn(
+            "h-4 w-4 transition-transform",
+            sortOrder === "asc" && "scale-y-[-1]"
+          )}
+        />
+      </Button>
 
       <div className="flex h-10 items-center rounded-lg border border-[#E5E4E0] bg-white p-1">
         <Button

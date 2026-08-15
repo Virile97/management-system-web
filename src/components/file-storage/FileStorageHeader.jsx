@@ -6,7 +6,9 @@ function FileStorageHeader({
   search,
   onSearchChange,
   sortBy,
+  sortOrder,
   onSortChange,
+  onToggleSortOrder,
   viewMode,
   onViewModeChange,
   onNewFolder,
@@ -28,7 +30,9 @@ function FileStorageHeader({
         search={search}
         onSearchChange={onSearchChange}
         sortBy={sortBy}
+        sortOrder={sortOrder}
         onSortChange={onSortChange}
+        onToggleSortOrder={onToggleSortOrder}
         viewMode={viewMode}
         onViewModeChange={onViewModeChange}
         onNewFolder={onNewFolder}

@@ -28,6 +28,42 @@ function FileGridSkeleton({ count = 12 }) {
   )
 }
 
+/** Mirrors FileListView's actual row grid (checkbox, name+badge, type,
+ * size, uploader, date) instead of reusing the grid-card skeleton, which
+ * didn't match the table layout at all. */
+function FileListSkeleton({ count = 8 }) {
+  return (
+    <Card className="gap-0 overflow-hidden p-0">
+      <div className="grid grid-cols-[auto_minmax(0,2.5fr)_1fr_1fr_1fr_1fr] items-center gap-4 border-b border-border px-4 py-3">
+        <Skeleton className="h-4 w-4" />
+        <Skeleton className="h-3 w-12" />
+        <Skeleton className="h-3 w-10" />
+        <Skeleton className="h-3 w-10" />
+        <Skeleton className="h-3 w-20" />
+        <Skeleton className="h-3 w-10" />
+      </div>
+      {Array.from({ length: count }).map((_, index) => (
+        <div
+          key={index}
+          className={`grid grid-cols-[auto_minmax(0,2.5fr)_1fr_1fr_1fr_1fr] items-center gap-4 px-4 py-3.5 ${
+            index > 0 ? "border-t border-border" : ""
+          }`}
+        >
+          <Skeleton className="h-4 w-4" />
+          <div className="flex items-center gap-3">
+            <Skeleton className="h-8 min-w-[2.25rem] rounded-lg" />
+            <Skeleton className="h-4 w-40 max-w-full" />
+          </div>
+          <Skeleton className="h-3 w-14" />
+          <Skeleton className="h-3 w-12" />
+          <Skeleton className="h-3 w-16" />
+          <Skeleton className="h-3 w-14" />
+        </div>
+      ))}
+    </Card>
+  )
+}
+
 function SidebarSkeleton() {
   return (
     <aside className="flex w-full shrink-0 flex-col border-[#E5E4E0] bg-[#F3F2EE] lg:w-[220px] lg:border-r xl:w-[240px]">
@@ -91,6 +127,7 @@ function FileStoragePageSkeleton() {
 export {
   FileCardSkeleton,
   FileGridSkeleton,
+  FileListSkeleton,
   SidebarSkeleton,
   ToolbarSkeleton,
   FileStoragePageSkeleton,

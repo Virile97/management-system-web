@@ -19,13 +19,18 @@ function PopoverPortal({ ...props }) {
 
 function PopoverContent({
   className,
+  positionerClassName,
   sideOffset = 4,
   align = "start",
   ...props
 }) {
   return (
     <PopoverPortal>
-      <PopoverPrimitive.Positioner sideOffset={sideOffset} align={align}>
+      <PopoverPrimitive.Positioner
+        sideOffset={sideOffset}
+        align={align}
+        className={cn("z-50", positionerClassName)}
+      >
         <PopoverPrimitive.Popup
           data-slot="popover-content"
           className={cn(

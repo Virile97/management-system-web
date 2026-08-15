@@ -51,8 +51,13 @@ function uploadFile({ file, folderId, tags }, signal) {
   })
 }
 
-function getDownloadUrl(id, signal) {
-  return fetchJson(APP_API_ENDPOINTS.FILE_STORAGE_DOWNLOAD(id), { signal })
+/** By default returns an inline-viewable signed URL (no Content-Disposition:
+ * attachment) — required for thumbnails, previews, and viewer embeds, which
+ * silently download instead of rendering if this is ever forced. Pass
+ * `{ forceDownload: true }` only for an actual "download this file" action. */
+function getDownloadUrl(id, { forceDownload = false, signal } = {}) {
+  const query = forceDownload ? "?download=true" : ""
+  return fetchJson(`${APP_API_ENDPOINTS.FILE_STORAGE_DOWNLOAD(id)}${query}`, { signal })
 }
 
 function listFolders({ folderId } = {}, signal) {
@@ -121,6 +126,71 @@ function getFolderBreadcrumb(id, signal) {
   return fetchJson(APP_API_ENDPOINTS.FILE_STORAGE_FOLDER_BREADCRUMB(id), { signal })
 }
 
+/** Flat list of every archived file/folder, most-recently-archived first.
+ * Each item carries an `itemType: "file" | "folder"` field. */
+function listArchived(signal) {
+  return fetchJson(APP_API_ENDPOINTS.FILE_STORAGE_ARCHIVE, { signal })
+}
+
+function restoreFile(id, signal) {
+  return fetchJson(APP_API_ENDPOINTS.FILE_STORAGE_RESTORE(id), {
+    method: "POST",
+    headers: { ...getCsrfHeader() },
+    signal,
+  })
+}
+
+function permanentlyDeleteFile(id, signal) {
+  return fetchJson(APP_API_ENDPOINTS.FILE_STORAGE_PERMANENT_DELETE(id), {
+    method: "DELETE",
+    headers: { ...getCsrfHeader() },
+    signal,
+  })
+}
+
+function restoreFolder(id, signal) {
+  return fetchJson(APP_API_ENDPOINTS.FILE_STORAGE_FOLDER_RESTORE(id), {
+    method: "POST",
+    headers: { ...getCsrfHeader() },
+    signal,
+  })
+}
+
+function permanentlyDeleteFolder(id, signal) {
+  return fetchJson(APP_API_ENDPOINTS.FILE_STORAGE_FOLDER_PERMANENT_DELETE(id), {
+    method: "DELETE",
+    headers: { ...getCsrfHeader() },
+    signal,
+  })
+}
+
+async function listAllFilesInFolder(folderId, signal) {
+  const collected = []
+
+  async function walk(currentFolderId) {
+    let page = 1
+    let totalPages = 1
+
+    do {
+      const { data, meta } = await listFiles(
+        { folderId: currentFolderId, page, limit: 100 },
+        signal
+      )
+      if (data?.length) collected.push(...data)
+      totalPages = meta?.totalPages || 1
+      page += 1
+    } while (page <= totalPages)
+
+    const subfolders = await listFolders({ folderId: currentFolderId }, signal)
+    for (const subfolder of subfolders || []) {
+      await walk(subfolder.id)
+    }
+  }
+
+  await walk(folderId)
+  return collected
+}
+
 export {
   getFileStorageStats,
   listFiles,
@@ -134,6 +204,12 @@ export {
   moveFile,
   deleteFile,
   getFolderBreadcrumb,
+  listAllFilesInFolder,
+  listArchived,
+  restoreFile,
+  permanentlyDeleteFile,
+  restoreFolder,
+  permanentlyDeleteFolder,
 }
 export default {
   getFileStorageStats,
@@ -148,4 +224,10 @@ export default {
   moveFile,
   deleteFile,
   getFolderBreadcrumb,
+  listAllFilesInFolder,
+  listArchived,
+  restoreFile,
+  permanentlyDeleteFile,
+  restoreFolder,
+  permanentlyDeleteFolder,
 }

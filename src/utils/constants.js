@@ -70,6 +70,12 @@ export const API_ENDPOINTS = {
   FILE_STORAGE_FOLDER_BY_ID: (id) => `${API_V1}/file-storage/folders/${id}`,
   FILE_STORAGE_FOLDER_BREADCRUMB: (id) =>
     `${API_V1}/file-storage/folders/${id}/breadcrumb`,
+  FILE_STORAGE_ARCHIVE: `${API_V1}/file-storage/archive`,
+  FILE_STORAGE_RESTORE: (id) => `${API_V1}/file-storage/${id}/restore`,
+  FILE_STORAGE_PERMANENT_DELETE: (id) => `${API_V1}/file-storage/${id}/permanent`,
+  FILE_STORAGE_FOLDER_RESTORE: (id) => `${API_V1}/file-storage/folders/${id}/restore`,
+  FILE_STORAGE_FOLDER_PERMANENT_DELETE: (id) =>
+    `${API_V1}/file-storage/folders/${id}/permanent`,
 }
 
 export const APP_API_ENDPOINTS = {
@@ -144,6 +150,12 @@ export const APP_API_ENDPOINTS = {
   FILE_STORAGE_FOLDER_BY_ID: (id) => `/api/file-storage/folders/${id}`,
   FILE_STORAGE_FOLDER_BREADCRUMB: (id) =>
     `/api/file-storage/folders/${id}/breadcrumb`,
+  FILE_STORAGE_ARCHIVE: "/api/file-storage/archive",
+  FILE_STORAGE_RESTORE: (id) => `/api/file-storage/${id}/restore`,
+  FILE_STORAGE_PERMANENT_DELETE: (id) => `/api/file-storage/${id}/permanent`,
+  FILE_STORAGE_FOLDER_RESTORE: (id) => `/api/file-storage/folders/${id}/restore`,
+  FILE_STORAGE_FOLDER_PERMANENT_DELETE: (id) =>
+    `/api/file-storage/folders/${id}/permanent`,
 }
 
 /**

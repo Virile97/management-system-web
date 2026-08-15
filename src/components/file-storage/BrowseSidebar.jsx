@@ -1,9 +1,17 @@
 import { cn } from "@/lib/utils"
-import { LayoutGrid } from "lucide-react"
+import { LayoutGrid, Archive } from "lucide-react"
 import { FILE_TYPE_OPTIONS } from "./file-storage.constants"
 import { StorageProgressBar } from "./FileStoragePrimitives"
 
-function BrowseSidebar({ counts, activeType, onTypeChange, stats }) {
+function BrowseSidebar({
+  counts,
+  activeType,
+  onTypeChange,
+  stats,
+  isArchiveView = false,
+  onArchiveClick,
+  archiveCount = 0,
+}) {
   const allCount = stats?.totalFiles ?? 0
 
   return (
@@ -19,7 +27,7 @@ function BrowseSidebar({ counts, activeType, onTypeChange, stats }) {
             onClick={() => onTypeChange(null)}
             className={cn(
               "flex items-center justify-between rounded-lg px-3 py-2.5 text-left text-sm transition-colors",
-              !activeType
+              !isArchiveView && !activeType
                 ? "bg-[#E8E6E1] font-semibold text-foreground"
                 : "font-medium text-foreground/75 hover:bg-[#EBE9E4]"
             )}
@@ -38,7 +46,7 @@ function BrowseSidebar({ counts, activeType, onTypeChange, stats }) {
               onClick={() => onTypeChange(value)}
               className={cn(
                 "flex items-center justify-between rounded-lg px-3 py-2.5 text-left text-sm transition-colors",
-                activeType === value
+                !isArchiveView && activeType === value
                   ? "bg-[#E8E6E1] font-semibold text-foreground"
                   : "font-medium text-foreground/75 hover:bg-[#EBE9E4]"
               )}
@@ -54,6 +62,27 @@ function BrowseSidebar({ counts, activeType, onTypeChange, stats }) {
           ))}
         </nav>
 
+        {onArchiveClick && (
+          <nav className="flex flex-col gap-0.5 border-t border-[#E0DED8] pt-4">
+            <button
+              type="button"
+              onClick={onArchiveClick}
+              className={cn(
+                "flex items-center justify-between rounded-lg px-3 py-2.5 text-left text-sm transition-colors",
+                isArchiveView
+                  ? "bg-[#E8E6E1] font-semibold text-foreground"
+                  : "font-medium text-foreground/75 hover:bg-[#EBE9E4]"
+              )}
+            >
+              <span className="flex items-center gap-2.5">
+                <Archive className="h-4 w-4 shrink-0 stroke-[1.75]" />
+                Archive
+              </span>
+              <span className="text-sm text-muted-foreground">{archiveCount}</span>
+            </button>
+          </nav>
+        )}
+
         <div className="mt-auto rounded-xl border border-[#E0DED8] bg-white p-4">
           <div className="mb-3 flex items-center justify-between">
             <p className="text-sm font-semibold text-foreground">Storage</p>
@@ -62,9 +91,11 @@ function BrowseSidebar({ counts, activeType, onTypeChange, stats }) {
             </span>
           </div>
           <StorageProgressBar
+            usedBytes={stats?.usedBytes ?? 0}
             usedGB={stats?.usedGB ?? 0}
             quotaGB={stats?.quotaGB ?? 5}
             usedPercent={stats?.usedPercent ?? 0}
+            remainingGB={stats?.remainingGB}
           />
           <button
             type="button"
