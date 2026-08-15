@@ -31,8 +31,21 @@ function AddLessonModal({ open, onOpenChange, nextSortOrder = 1, onConfirm }) {
 
   async function handleConfirm() {
     if (isSubmitting) return
-    if (!title.trim()) {
+
+    const trimmedTitle = title.trim()
+    const trimmedDescription = description.trim()
+    const parsedSortOrder = Number(sortOrder)
+
+    if (!sortOrder || !Number.isInteger(parsedSortOrder) || parsedSortOrder < 1) {
+      setError("Lesson number is required")
+      return
+    }
+    if (!trimmedTitle) {
       setError("Title is required")
+      return
+    }
+    if (!trimmedDescription) {
+      setError("Description is required")
       return
     }
 
@@ -40,9 +53,9 @@ function AddLessonModal({ open, onOpenChange, nextSortOrder = 1, onConfirm }) {
     setError("")
     try {
       await onConfirm?.({
-        title: title.trim(),
-        description: description.trim() || null,
-        sortOrder: sortOrder ? Number(sortOrder) : undefined,
+        title: trimmedTitle,
+        description: trimmedDescription,
+        sortOrder: parsedSortOrder,
       })
       onOpenChange(false)
     } catch (err) {
@@ -76,11 +89,14 @@ function AddLessonModal({ open, onOpenChange, nextSortOrder = 1, onConfirm }) {
 
         <div className="flex flex-col gap-4 px-4 py-5 sm:px-6">
           <div className="space-y-1.5">
-            <Label htmlFor="nbc-lesson-number">Lesson number</Label>
+            <Label htmlFor="nbc-lesson-number">
+              Lesson number <span className="text-destructive">*</span>
+            </Label>
             <Input
               id="nbc-lesson-number"
               type="number"
               min={1}
+              required
               value={sortOrder}
               onChange={(event) => setSortOrder(event.target.value)}
               className="h-10 rounded-lg"
@@ -88,9 +104,12 @@ function AddLessonModal({ open, onOpenChange, nextSortOrder = 1, onConfirm }) {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="nbc-lesson-title">Title</Label>
+            <Label htmlFor="nbc-lesson-title">
+              Title <span className="text-destructive">*</span>
+            </Label>
             <Input
               id="nbc-lesson-title"
+              required
               value={title}
               onChange={(event) => setTitle(event.target.value)}
               placeholder="e.g. Assurance of Salvation"
@@ -99,9 +118,12 @@ function AddLessonModal({ open, onOpenChange, nextSortOrder = 1, onConfirm }) {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="nbc-lesson-description">Description</Label>
+            <Label htmlFor="nbc-lesson-description">
+              Description <span className="text-destructive">*</span>
+            </Label>
             <textarea
               id="nbc-lesson-description"
+              required
               value={description}
               onChange={(event) => setDescription(event.target.value)}
               rows={3}

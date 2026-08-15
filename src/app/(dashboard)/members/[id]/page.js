@@ -349,6 +349,7 @@ function MemberDetailPageContent() {
             ) : (
               <MemberOverviewPanel
                 member={member}
+                memberId={memberId}
                 attendance={attendance}
                 isAttendanceLoading={isAttendanceLoading}
                 attendanceError={attendanceError}

@@ -5,6 +5,7 @@ import { Pagination } from "@/components/common/Pagination"
 import { ListCardSkeleton } from "@/components/dashboard/DashboardSkeletons"
 import { cn } from "@/lib/utils"
 import { LayoutGrid, Clock, CalendarX } from "lucide-react"
+import { MemberNbcJourneyCard } from "@/components/members/MemberNbcJourneyCard"
 
 function formatDate(value) {
   if (!value) return "—"
@@ -117,6 +118,7 @@ function AttendanceDayCard({ record }) {
 
 function MemberOverviewPanel({
   member,
+  memberId,
   attendance,
   isAttendanceLoading,
   attendanceError,
@@ -163,6 +165,11 @@ function MemberOverviewPanel({
           </p>
         )}
       </Card>
+
+      <MemberNbcJourneyCard
+        memberId={memberId}
+        isNewBeliever={Boolean(member.isNewBeliever)}
+      />
 
       <Card className="overflow-hidden rounded-2xl p-0">
         <div className="flex items-center gap-2 px-4 pt-4 sm:px-5 sm:pt-5">

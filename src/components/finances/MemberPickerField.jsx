@@ -17,13 +17,21 @@ import { Search, X, Loader2 } from "lucide-react"
 
 const RESULT_LIMIT = 20
 
+function matchesMemberSearch(member, needle) {
+  const tokens = needle.trim().toLowerCase().split(/\s+/).filter(Boolean)
+  if (!tokens.length) return false
+
+  const haystack = `${member.name || ""} ${member.email || ""}`.toLowerCase()
+  return tokens.every((token) => haystack.includes(token))
+}
+
 /**
  * Prefer the persisted members store (current page + accumulated cache) so
  * typing an already-known name never waits on the network. Returns [] when
  * nothing local matches — caller then falls back to the API.
  */
 function searchLocalMembers(needle) {
-  const normalized = needle.trim().toLowerCase()
+  const normalized = needle.trim()
   if (!normalized) return []
 
   const { members, cache } = useMembersStore.getState()
@@ -32,8 +40,7 @@ function searchLocalMembers(needle) {
 
   const matches = []
   for (const member of Object.values(byId)) {
-    const haystack = `${member.name || ""} ${member.email || ""}`.toLowerCase()
-    if (!haystack.includes(normalized)) continue
+    if (!matchesMemberSearch(member, normalized)) continue
     matches.push(member)
     if (matches.length >= RESULT_LIMIT) break
   }

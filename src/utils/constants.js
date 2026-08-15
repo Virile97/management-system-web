@@ -56,6 +56,8 @@ export const API_ENDPOINTS = {
   NEW_BELIEVERS_ENROLLMENT_BY_ID: (id) =>
     `${API_V1}/new-believers/enrollments/${id}`,
   NEW_BELIEVERS_ASSIGNABLE_STUDENTS: `${API_V1}/new-believers/assignable-students`,
+  NEW_BELIEVERS_MEMBER_JOURNEY: (memberId) =>
+    `${API_V1}/new-believers/journey/${memberId}`,
 }
 
 export const APP_API_ENDPOINTS = {
@@ -116,6 +118,8 @@ export const APP_API_ENDPOINTS = {
   NEW_BELIEVERS_ENROLLMENT_BY_ID: (id) =>
     `/api/new-believers/enrollments/${id}`,
   NEW_BELIEVERS_ASSIGNABLE_STUDENTS: "/api/new-believers/assignable-students",
+  NEW_BELIEVERS_MEMBER_JOURNEY: (memberId) =>
+    `/api/new-believers/journey/${memberId}`,
 }
 
 /**

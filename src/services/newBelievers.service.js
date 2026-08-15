@@ -51,6 +51,12 @@ function searchAssignableStudents({ search = "", limit = 20 } = {}, signal) {
   )
 }
 
+function getMemberNbcJourney(memberId, signal) {
+  return fetchJson(APP_API_ENDPOINTS.NEW_BELIEVERS_MEMBER_JOURNEY(memberId), {
+    signal,
+  })
+}
+
 export {
   getNewBelieversOverview,
   createNbcLesson,
@@ -58,6 +64,7 @@ export {
   createNbcEnrollment,
   updateNbcEnrollment,
   searchAssignableStudents,
+  getMemberNbcJourney,
 }
 export default {
   getNewBelieversOverview,
@@ -66,4 +73,5 @@ export default {
   createNbcEnrollment,
   updateNbcEnrollment,
   searchAssignableStudents,
+  getMemberNbcJourney,
 }
