@@ -103,7 +103,7 @@ function MemberProfileCard({ member, onEdit }) {
           label="Joined"
           value={formatDate(member.joinedAt || member.createdAt)}
         />
-        <DetailRow icon={Droplet} label="Baptized" value={member.baptized} />
+        <DetailRow icon={Droplet} label="Baptism Date" value={member.baptized} />
         <DetailRow
           icon={Briefcase}
           label="Occupation"

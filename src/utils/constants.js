@@ -45,6 +45,17 @@ export const API_ENDPOINTS = {
   SOUL_WINNING_BAPTIZE: (id) => `${API_V1}/soul-winning/records/${id}/baptize`,
   SOUL_WINNING_WINNERS: `${API_V1}/soul-winning/winners`,
   SOUL_WINNING_TRENDS: `${API_V1}/soul-winning/trends`,
+
+  // New Believers
+  NEW_BELIEVERS_OVERVIEW: `${API_V1}/new-believers/overview`,
+  NEW_BELIEVERS_LESSONS: `${API_V1}/new-believers/lessons`,
+  NEW_BELIEVERS_LESSON_BY_ID: (id) => `${API_V1}/new-believers/lessons/${id}`,
+  NEW_BELIEVERS_ENROLLMENTS: `${API_V1}/new-believers/enrollments`,
+  NEW_BELIEVERS_ENROLLMENT_MOVE: (id) =>
+    `${API_V1}/new-believers/enrollments/${id}/move`,
+  NEW_BELIEVERS_ENROLLMENT_BY_ID: (id) =>
+    `${API_V1}/new-believers/enrollments/${id}`,
+  NEW_BELIEVERS_ASSIGNABLE_STUDENTS: `${API_V1}/new-believers/assignable-students`,
 }
 
 export const APP_API_ENDPOINTS = {
@@ -94,6 +105,17 @@ export const APP_API_ENDPOINTS = {
   SOUL_WINNING_BAPTIZE: (id) => `/api/soul-winning/records/${id}/baptize`,
   SOUL_WINNING_WINNERS: "/api/soul-winning/winners",
   SOUL_WINNING_TRENDS: "/api/soul-winning/trends",
+
+  // New Believers
+  NEW_BELIEVERS_OVERVIEW: "/api/new-believers/overview",
+  NEW_BELIEVERS_LESSONS: "/api/new-believers/lessons",
+  NEW_BELIEVERS_LESSON_BY_ID: (id) => `/api/new-believers/lessons/${id}`,
+  NEW_BELIEVERS_ENROLLMENTS: "/api/new-believers/enrollments",
+  NEW_BELIEVERS_ENROLLMENT_MOVE: (id) =>
+    `/api/new-believers/enrollments/${id}/move`,
+  NEW_BELIEVERS_ENROLLMENT_BY_ID: (id) =>
+    `/api/new-believers/enrollments/${id}`,
+  NEW_BELIEVERS_ASSIGNABLE_STUDENTS: "/api/new-believers/assignable-students",
 }
 
 /**

@@ -72,7 +72,7 @@ function BaptizeModal({ open, onOpenChange, record, onConfirm }) {
           </p>
 
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="baptized-at">Baptism date</Label>
+            <Label htmlFor="baptized-at">Baptism Date</Label>
             <Input
               id="baptized-at"
               type="date"

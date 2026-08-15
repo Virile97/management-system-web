@@ -49,7 +49,7 @@ function escapeCsvValue(value) {
 }
 
 function membersToCsv(members) {
-  const headers = ["Name", "Email", "Phone", "Status", "Group", "Baptized"]
+  const headers = ["Name", "Email", "Phone", "Status", "Group", "Baptism Date"]
   const rows = members.map((member) => [
     member.name || "",
     member.email || "",

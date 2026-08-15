@@ -108,7 +108,7 @@ const MEMBER_FORM_VALIDATORS = {
     required: "Birth date is required",
   },
   baptizedAt: {
-    required: "Baptized date is required",
+    required: "Baptism date is required",
   },
   age: {
     required: "Age is required",

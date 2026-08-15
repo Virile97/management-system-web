@@ -81,6 +81,7 @@ function buildInitialForm(selectFields) {
     baptizedAt: "",
     age: "",
     groupIds: [],
+    isNewBeliever: false,
     ...Object.fromEntries(selectFields.map((field) => [field.name, ""])),
   }
 }
@@ -130,7 +131,7 @@ const CONTACT_FIELDS = [
 
 const DATE_AGE_FIELDS = [
   { name: "birthDate", label: "Birth Date", type: "date", required: true },
-  { name: "baptizedAt", label: "Baptized Date", type: "date", required: true },
+  { name: "baptizedAt", label: "Baptism Date", type: "date", required: true },
   {
     name: "age",
     label: "Age",
@@ -180,6 +181,34 @@ function MultiSelectField({ label, options, value, onToggle }) {
         ))}
       </div>
     </div>
+  )
+}
+
+function BooleanCheckboxField({
+  name,
+  label,
+  description,
+  checked = false,
+  onChange,
+}) {
+  return (
+    <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-input px-3 py-3">
+      <Checkbox
+        className="mt-0.5"
+        checked={Boolean(checked)}
+        onCheckedChange={(next) => onChange(name, Boolean(next))}
+      />
+      <span className="min-w-0">
+        <span className="block text-sm font-medium text-foreground/85">
+          {label}
+        </span>
+        {description ? (
+          <span className="mt-0.5 block text-xs text-muted-foreground">
+            {description}
+          </span>
+        ) : null}
+      </span>
+    </label>
   )
 }
 
@@ -242,6 +271,7 @@ export {
   DATE_AGE_FIELDS,
   SelectField,
   MultiSelectField,
+  BooleanCheckboxField,
   FormField,
   getFieldError,
 }

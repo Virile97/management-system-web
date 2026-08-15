@@ -127,6 +127,7 @@ function toCreateMemberPayload(form) {
   if (form.level) payload.levelId = form.level
   if (form.lighthouseGroup) payload.lighthouseGroupId = form.lighthouseGroup
   if (form.groupIds.length) payload.groupIds = form.groupIds
+  payload.isNewBeliever = Boolean(form.isNewBeliever)
 
   return payload
 }
@@ -155,6 +156,7 @@ function toUpdateMemberPayload(form) {
   if (form.lighthouseGroup) payload.lighthouseGroupId = form.lighthouseGroup
 
   payload.groupIds = form.groupIds
+  payload.isNewBeliever = Boolean(form.isNewBeliever)
 
   return payload
 }

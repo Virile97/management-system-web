@@ -79,7 +79,7 @@ function MemberTable({
             onSort={toggleSort}
           />
           <SortableTh
-            label="Baptized At"
+            label="Baptism Date"
             sortKey="baptizedAt"
             activeKey={sortKey}
             direction={sortDirection}

@@ -18,6 +18,7 @@ import {
   DATE_AGE_FIELDS,
   SelectField,
   MultiSelectField,
+  BooleanCheckboxField,
   FormField,
   getFieldError,
 } from "@/components/members/memberFormFields"
@@ -212,6 +213,14 @@ function AddMemberModal({ open, onOpenChange }) {
                 options={groupOptions}
                 value={form.groupIds}
                 onToggle={handleToggleGroup}
+              />
+
+              <BooleanCheckboxField
+                name="isNewBeliever"
+                label="New believer"
+                description="Mark this member for New Believers Class"
+                checked={form.isNewBeliever}
+                onChange={handleChange}
               />
             </>
           )}

@@ -21,11 +21,16 @@ const RESTRICTED_FOR_USER_ROLE = [
   "/dashboard",
   "/finances",
   "/soul-winning",
+  "/new-believers",
   "/settings",
 ]
 
 // Finance admins manage money only — no attendance or soul-winning surfaces.
-const RESTRICTED_FOR_FINANCE_ADMIN = ["/attendance", "/soul-winning"]
+const RESTRICTED_FOR_FINANCE_ADMIN = [
+  "/attendance",
+  "/soul-winning",
+  "/new-believers",
+]
 
 export function middleware(request) {
   const tokenSession = readValidTokenCookie(
@@ -189,6 +194,7 @@ export const config = {
     "/attendance/:path*",
     "/finances/:path*",
     "/soul-winning/:path*",
+    "/new-believers/:path*",
     "/settings/:path*",
     "/login",
     "/set-password",
@@ -201,5 +207,7 @@ export const config = {
     "/api/settings/:path*",
     "/api/upload/:path*",
     "/api/users/:path*",
+    "/api/soul-winning/:path*",
+    "/api/new-believers/:path*",
   ],
 }

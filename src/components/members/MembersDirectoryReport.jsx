@@ -129,7 +129,7 @@ function MembersDirectoryReport({
                 Group
               </th>
               <th className="py-1.5 text-left text-[8px] font-medium tracking-wide text-[#1e2a4a]/55 uppercase">
-                Baptized
+                Baptism Date
               </th>
             </tr>
           </thead>

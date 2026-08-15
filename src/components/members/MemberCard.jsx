@@ -101,7 +101,7 @@ function MemberCard({
           )}
         </div>
         <div className="min-w-0">
-          <p className="text-xs text-muted-foreground">Baptized</p>
+          <p className="text-xs text-muted-foreground">Baptism Date</p>
           <p className="text-foreground/80">{member.baptized}</p>
         </div>
       </div>

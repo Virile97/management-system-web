@@ -19,6 +19,7 @@ import {
   DATE_AGE_FIELDS,
   SelectField,
   MultiSelectField,
+  BooleanCheckboxField,
   FormField,
   getFieldError,
 } from "@/components/members/memberFormFields"
@@ -45,6 +46,7 @@ function memberToForm(member) {
     lighthouseGroup:
       member.lighthouseGroupId || member.lighthouseGroup?.id || "",
     groupIds: member.groups?.map((g) => g.id) || [],
+    isNewBeliever: Boolean(member.isNewBeliever),
   }
 }
 
@@ -228,6 +230,14 @@ function EditMemberModal({ open, onOpenChange, memberId, onUpdated }) {
                 options={groupOptions}
                 value={form.groupIds}
                 onToggle={handleToggleGroup}
+              />
+
+              <BooleanCheckboxField
+                name="isNewBeliever"
+                label="New believer"
+                description="Mark this member for New Believers Class"
+                checked={form.isNewBeliever}
+                onChange={handleChange}
               />
             </>
           )}
