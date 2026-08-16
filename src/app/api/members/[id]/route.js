@@ -60,5 +60,21 @@ export async function PATCH(request, { params }) {
 }
 
 export async function DELETE(request, { params }) {
-  return NextResponse.json({ message: "Not implemented" }, { status: 501 })
+  const token = getSessionToken()
+  if (!token) {
+    return NextResponse.json(
+      { success: false, message: "Not authenticated" },
+      { status: 401 }
+    )
+  }
+
+  try {
+    await api.delete(API_ENDPOINTS.MEMBER_BY_ID(params.id), withAuthHeader(token))
+    return new NextResponse(null, { status: 204 })
+  } catch (err) {
+    const status = err?.response?.status || 500
+    const message = err?.response?.data?.message || "Unable to delete member"
+
+    return NextResponse.json({ success: false, message }, { status })
+  }
 }

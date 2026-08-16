@@ -26,6 +26,19 @@ const useMembersStore = create(
           for (const member of members) cache[member.id] = member
           return { cache }
         }),
+      // Deleted members must be evicted from the accumulated search-fast-path
+      // cache too, or a still-active search keeps serving them from cache
+      // instead of hitting the API — the delete succeeds server-side but the
+      // member appears to linger in the UI.
+      removeCachedMembers: (ids) =>
+        set((state) => {
+          const cache = { ...state.cache }
+
+          for (const id of ids) delete cache[id]
+
+          const members = state.members.filter((m) => !ids.includes(m.id))
+          return { cache, members }
+        }),
       getCachedMembers: () => Object.values(get().cache),
       reset: () => set(initialState),
     }),

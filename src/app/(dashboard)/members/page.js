@@ -76,17 +76,25 @@ function MembersPageContent() {
   const [search, setSearch] = useState("")
   const debouncedSearch = useDebounce(search, 300)
 
-  const { members, meta, query, setMembers, cacheMembers, getCachedMembers } =
-    useMembersStore(
-      useShallow((state) => ({
-        members: state.members,
-        meta: state.meta,
-        query: state.query,
-        setMembers: state.setMembers,
-        cacheMembers: state.cacheMembers,
-        getCachedMembers: state.getCachedMembers,
-      }))
-    )
+  const {
+    members,
+    meta,
+    query,
+    setMembers,
+    cacheMembers,
+    getCachedMembers,
+    removeCachedMembers,
+  } = useMembersStore(
+    useShallow((state) => ({
+      members: state.members,
+      meta: state.meta,
+      query: state.query,
+      setMembers: state.setMembers,
+      cacheMembers: state.cacheMembers,
+      getCachedMembers: state.getCachedMembers,
+      removeCachedMembers: state.removeCachedMembers,
+    }))
+  )
 
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState("")
@@ -376,7 +384,39 @@ function MembersPageContent() {
     setDeleteError("")
     setIsDeleting(true)
     try {
-      await bulkDeleteMembers(Array.from(selectedIds))
+      const result = await bulkDeleteMembers(Array.from(selectedIds))
+      const blocked = result?.blocked || []
+
+      if (blocked.length > 0) {
+        // Backend skips members with dependent records instead of failing
+        // the whole request — surface that instead of silently closing as
+        // if everything was deleted, otherwise the skipped members just
+        // reappear on refresh with no explanation.
+        const names = blocked.map((b) => b.name).join(", ")
+        setDeleteError(
+          result.deletedCount > 0
+            ? `Deleted ${result.deletedCount} member${result.deletedCount === 1 ? "" : "s"}. Could not delete: ${names}.`
+            : `Could not delete: ${names}.`
+        )
+
+        if (result.deletedCount > 0) {
+          removeCachedMembers(result.deletedIds || [])
+          setSelectedById((prev) => {
+            const next = new Map(prev)
+            for (const id of result.deletedIds || []) next.delete(id)
+            return next
+          })
+          setRefreshKey((key) => key + 1)
+        }
+
+        return
+      }
+
+      // The accumulated search-fast-path cache (see searchCache above) has
+      // no way to know these members are gone — without this, a delete
+      // while a search is active re-serves the deleted member straight
+      // from cache on the next refetch, even though it's really gone.
+      removeCachedMembers(result?.deletedIds || Array.from(selectedIds))
       setSelectedById(new Map())
       setIsDeleteSelectedOpen(false)
       setRefreshKey((key) => key + 1)

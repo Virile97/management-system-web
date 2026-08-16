@@ -181,6 +181,14 @@ function updateMember(id, form) {
   )
 }
 
+function deleteMember(id, signal) {
+  return fetchJson(APP_API_ENDPOINTS.MEMBER_BY_ID(id), {
+    method: "DELETE",
+    headers: { ...getCsrfHeader() },
+    signal,
+  })
+}
+
 function bulkDeleteMembers(ids) {
   return fetchJson(
     APP_API_ENDPOINTS.MEMBERS_BULK_DELETE,
@@ -194,6 +202,7 @@ export {
   getMemberBreakdown,
   createMember,
   updateMember,
+  deleteMember,
   bulkDeleteMembers,
   getMemberFormConfig,
   getMemberById,
