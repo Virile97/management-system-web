@@ -16,11 +16,11 @@ export async function DELETE(request, { params }) {
   const { id } = await params
 
   try {
-    await api.delete(
+    const { data } = await api.delete(
       API_ENDPOINTS.FILE_STORAGE_FOLDER_PERMANENT_DELETE(id),
       withAuthHeader(token)
     )
-    return new NextResponse(null, { status: 204 })
+    return NextResponse.json(data)
   } catch (err) {
     const status = err?.response?.status || 500
     const message = err?.response?.data?.message || "Unable to permanently delete folder"

@@ -40,10 +40,7 @@ function FileStorageToolbar({
       </div>
 
       <Select value={sortBy} onValueChange={onSortChange}>
-        <SelectTrigger
-          className="h-10 w-auto min-w-[7.25rem] rounded-lg border-[#E5E4E0] bg-white shadow-none"
-          size="default"
-        >
+        <SelectTrigger className="h-10 w-auto min-w-[7.25rem] rounded-lg border-[#E5E4E0] bg-white py-0 shadow-none data-[size=default]:h-10">
           <SelectValue>
             {(value) =>
               `Sort: ${SORT_OPTIONS.find((o) => o.value === value)?.label || "Date"}`

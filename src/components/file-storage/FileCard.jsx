@@ -6,8 +6,17 @@ import {
   gridCardClassName,
   GridSelectedOverlay,
 } from "./FileStoragePrimitives"
-import { ImageCardPreview, PdfCardPreview } from "./FileThumbnail"
-import { GRID_FILE_MENU_ITEMS, formatBytes } from "./file-storage.constants"
+import {
+  ImageCardPreview,
+  PdfCardPreview,
+  DocCardPreview,
+  VideoCardPreview,
+} from "./FileThumbnail"
+import {
+  GRID_FILE_MENU_ITEMS,
+  formatBytes,
+  isOfficeDocument,
+} from "./file-storage.constants"
 import { GridItemMenu } from "./GridItemMenu"
 import { useGridItemInteraction } from "@/hooks/use-grid-item-interaction"
 
@@ -69,9 +78,15 @@ function GridCardSurface({
   menuItems,
   onMenuAction,
   children,
+  draggable = false,
+  onDragStart,
+  onDragEnd,
 }) {
   return (
     <div
+      draggable={draggable && !isBusy}
+      onDragStart={draggable ? onDragStart : undefined}
+      onDragEnd={draggable ? onDragEnd : undefined}
       className={gridCardClassName({
         selected,
         className: `group relative ${className}`,
@@ -91,7 +106,7 @@ function GridCardSurface({
             handleClick()
           }
         }}
-        className={`relative h-full w-full text-left outline-none ${surfaceClassName} ${
+        className={`relative h-full w-full select-none text-left outline-none ${surfaceClassName} ${
           isBusy ? "pointer-events-none opacity-60" : "cursor-pointer"
         }`}
       >
@@ -112,6 +127,9 @@ function PreviewCard({
   onMenuAction,
   bgClassName,
   Preview,
+  draggable,
+  onDragStart,
+  onDragEnd,
 }) {
   return (
     <GridCardSurface
@@ -122,7 +140,10 @@ function PreviewCard({
       menuItems={GRID_FILE_MENU_ITEMS}
       onMenuAction={onMenuAction}
       surfaceClassName="min-h-[156px]"
-      className={`overflow-hidden rounded-xl border border-[#E5E4E0] transition-all hover:border-[#D8D6D0] ${bgClassName}`}
+      className={`overflow-hidden border border-[#E5E4E0] transition-all hover:border-[#D8D6D0] ${bgClassName}`}
+      draggable={draggable}
+      onDragStart={onDragStart}
+      onDragEnd={onDragEnd}
     >
       <GridSelectedOverlay selected={selected} />
       <Preview file={file} />
@@ -134,13 +155,17 @@ function PreviewCard({
   )
 }
 
-function PdfGridCard({
+function ThumbnailGridCard({
   file,
   handleClick,
   handleDoubleClick,
   isBusy,
   selected,
   onMenuAction,
+  Preview,
+  draggable,
+  onDragStart,
+  onDragEnd,
 }) {
   const footerDate = formatFooterDate(file.createdAt)
   const footerLabel = file.uploadedByName
@@ -156,7 +181,10 @@ function PdfGridCard({
       menuItems={GRID_FILE_MENU_ITEMS}
       onMenuAction={onMenuAction}
       surfaceClassName="flex min-h-[240px] flex-col"
-      className="overflow-hidden rounded-xl border border-[#E5E4E0] bg-[#F3F2EE] transition-all hover:border-[#D8D6D0]"
+      className="overflow-hidden border border-[#E5E4E0] bg-[#F3F2EE] transition-all hover:border-[#D8D6D0]"
+      draggable={draggable}
+      onDragStart={onDragStart}
+      onDragEnd={onDragEnd}
     >
       <GridSelectedOverlay selected={selected} />
 
@@ -172,7 +200,7 @@ function PdfGridCard({
       </div>
 
       <div className="flex flex-1 px-3 pb-2">
-        <PdfCardPreview file={file} variant="inset" />
+        <Preview file={file} variant="inset" />
       </div>
 
       <div className="flex items-center gap-2 px-3 pb-3 pt-1">
@@ -188,11 +216,26 @@ function PdfGridCard({
   )
 }
 
-function FileCard({ file, onSelect, onOpen, onMenuAction, isBusy, selected }) {
+function FileCard({
+  file,
+  onSelect,
+  onOpen,
+  onMenuAction,
+  isBusy,
+  selected,
+  draggable = false,
+  onDragStart,
+  onDragEnd,
+}) {
   const { handleClick, handleDoubleClick } = useGridItemInteraction({
     onSelect,
     onOpen,
   })
+  const dragProps = {
+    draggable,
+    onDragStart: draggable ? (event) => onDragStart?.(event, file) : undefined,
+    onDragEnd: draggable ? onDragEnd : undefined,
+  }
 
   if (file.fileType === "IMAGE") {
     return (
@@ -205,19 +248,53 @@ function FileCard({ file, onSelect, onOpen, onMenuAction, isBusy, selected }) {
         onMenuAction={(action) => onMenuAction?.(action, file)}
         bgClassName="bg-[#FEF3C7]"
         Preview={ImageCardPreview}
+        {...dragProps}
       />
     )
   }
 
-  if (file.fileType === "PDF") {
+  if (file.fileType === "VIDEO") {
     return (
-      <PdfGridCard
+      <PreviewCard
         file={file}
         handleClick={handleClick}
         handleDoubleClick={handleDoubleClick}
         isBusy={isBusy}
         selected={selected}
         onMenuAction={(action) => onMenuAction?.(action, file)}
+        bgClassName="bg-[#EDE9FE]"
+        Preview={VideoCardPreview}
+        {...dragProps}
+      />
+    )
+  }
+
+  if (file.fileType === "PDF") {
+    return (
+      <ThumbnailGridCard
+        file={file}
+        handleClick={handleClick}
+        handleDoubleClick={handleDoubleClick}
+        isBusy={isBusy}
+        selected={selected}
+        onMenuAction={(action) => onMenuAction?.(action, file)}
+        Preview={PdfCardPreview}
+        {...dragProps}
+      />
+    )
+  }
+
+  if (file.fileType === "DOCUMENT" && isOfficeDocument(file.originalName)) {
+    return (
+      <ThumbnailGridCard
+        file={file}
+        handleClick={handleClick}
+        handleDoubleClick={handleDoubleClick}
+        isBusy={isBusy}
+        selected={selected}
+        onMenuAction={(action) => onMenuAction?.(action, file)}
+        Preview={DocCardPreview}
+        {...dragProps}
       />
     )
   }
@@ -231,7 +308,8 @@ function FileCard({ file, onSelect, onOpen, onMenuAction, isBusy, selected }) {
       menuItems={GRID_FILE_MENU_ITEMS}
       onMenuAction={(action) => onMenuAction?.(action, file)}
       surfaceClassName="min-h-[156px]"
-      className="rounded-xl border border-[#E5E4E0] bg-white transition-all hover:border-[#D8D6D0]"
+      className="border border-[#E5E4E0] bg-white transition-all hover:border-[#D8D6D0]"
+      {...dragProps}
     >
       <div className="flex min-h-[156px] flex-col gap-3 p-4">
         <GridSelectedOverlay selected={selected} />

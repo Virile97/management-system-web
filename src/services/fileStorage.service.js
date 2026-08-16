@@ -60,6 +60,15 @@ function getDownloadUrl(id, { forceDownload = false, signal } = {}) {
   return fetchJson(`${APP_API_ENDPOINTS.FILE_STORAGE_DOWNLOAD(id)}${query}`, { signal })
 }
 
+/** Signed URL for the backend-generated grid-view thumbnail. Only call this
+ * once a file's thumbnailStatus is READY — the backend rejects the request
+ * otherwise (see file-storage.service.js#getThumbnailUrl). Same (id, { signal })
+ * shape as getDownloadUrl so both are interchangeable as a urlFetcher for
+ * useSignedUrlInView. */
+function getThumbnailUrl(id, { signal } = {}) {
+  return fetchJson(APP_API_ENDPOINTS.FILE_STORAGE_THUMBNAIL(id), { signal })
+}
+
 function listFolders({ folderId } = {}, signal) {
   const params = new URLSearchParams()
   if (folderId) params.set("folderId", folderId)
@@ -196,6 +205,7 @@ export {
   listFiles,
   uploadFile,
   getDownloadUrl,
+  getThumbnailUrl,
   listFolders,
   createFolder,
   renameFolder,
@@ -216,6 +226,7 @@ export default {
   listFiles,
   uploadFile,
   getDownloadUrl,
+  getThumbnailUrl,
   listFolders,
   createFolder,
   renameFolder,

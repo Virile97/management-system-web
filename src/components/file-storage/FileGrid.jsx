@@ -18,6 +18,10 @@ function FileGrid({
   onToggleSelectAll,
   onFileAction,
   onFolderAction,
+  canMove = false,
+  onDragItemStart,
+  onDragItemEnd,
+  onDropItemInFolder,
 }) {
   const selectionActive = (selectedKeys?.size ?? 0) > 0
 
@@ -56,6 +60,12 @@ function FileGrid({
               onSelect={onToggleSelect && (() => onToggleSelect(key))}
               onOpen={() => onFolderClick?.(folder)}
               onMenuAction={onFolderAction}
+              draggable={canMove}
+              onDragStart={onDragItemStart}
+              onDragEnd={onDragItemEnd}
+              onDropItem={
+                onDropItemInFolder && ((target) => onDropItemInFolder(target))
+              }
             />
           )
         })}
@@ -70,6 +80,9 @@ function FileGrid({
               onSelect={onToggleSelect && (() => onToggleSelect(key))}
               onOpen={() => onFileClick?.(file)}
               onMenuAction={onFileAction}
+              draggable={canMove}
+              onDragStart={onDragItemStart}
+              onDragEnd={onDragItemEnd}
             />
           )
         })}

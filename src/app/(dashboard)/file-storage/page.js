@@ -41,7 +41,6 @@ export default function FileStoragePage() {
   const [isPageDragging, setIsPageDragging] = useState(false)
   const [isBulkActionBusy, setIsBulkActionBusy] = useState(false)
   const [previewFile, setPreviewFile] = useState(null)
-  const [previewUrl, setPreviewUrl] = useState(null)
   const [infoItem, setInfoItem] = useState(null)
   const [infoKind, setInfoKind] = useState(null)
   const [renameItem, setRenameItem] = useState(null)
@@ -53,6 +52,7 @@ export default function FileStoragePage() {
   const [permanentDeleteItem, setPermanentDeleteItem] = useState(null)
   const [isPermanentDeleteBusy, setIsPermanentDeleteBusy] = useState(false)
   const [permanentDeleteError, setPermanentDeleteError] = useState("")
+  const [draggedFile, setDraggedFile] = useState(null)
   // Keyed "file:<id>" / "folder:<id>" so files and folders share one
   // selection set without id collisions.
   const [selectedKeys, setSelectedKeys] = useState(() => new Set())
@@ -302,21 +302,23 @@ export default function FileStoragePage() {
   }
 
   async function handleFileClick(file) {
+    const action = resolveOpenAction(file)
+    // The preview modal fetches its own signed URL (and re-fetches as the
+    // user navigates the slider), so it doesn't need one from here.
+    if (action === "preview") {
+      setPreviewFile(file)
+      return
+    }
+
     setBusyFileId(file.id)
     try {
-      const action = resolveOpenAction(file)
       // Only an actual "download" forces Content-Disposition: attachment —
-      // preview/pdf/sheets/docs all need an inline URL or the browser
-      // downloads the file instead of rendering/embedding it.
+      // pdf/sheets/docs all need an inline URL or the browser downloads the
+      // file instead of rendering/embedding it.
       const { url } = await fileStorageService.getDownloadUrl(file.id, {
         forceDownload: action === "download",
       })
 
-      if (action === "preview") {
-        setPreviewFile(file)
-        setPreviewUrl(url)
-        return
-      }
       if (action === "sheets" || action === "docs") {
         window.open(
           `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`,
@@ -399,7 +401,7 @@ export default function FileStoragePage() {
     try {
       const files = await fileStorageService.listAllFilesInFolder(folder.id)
       if (files.length === 0) {
-        toast.info("This folder has no files to download")
+        toast.success(`${folder.name} is empty`)
         return
       }
 
@@ -417,6 +419,32 @@ export default function FileStoragePage() {
       )
     } catch (err) {
       toast.error(err?.message || "Unable to download folder")
+    }
+  }
+
+  // Drag-to-move: only files can be dragged onto a folder to move them in —
+  // there's no folder-move endpoint (only FILE_STORAGE_MOVE), so dropping a
+  // folder onto another folder is intentionally not wired up.
+  function handleItemDragStart(event, file) {
+    event.dataTransfer.effectAllowed = "move"
+    setDraggedFile(file)
+  }
+
+  function handleItemDragEnd() {
+    setDraggedFile(null)
+  }
+
+  async function handleDropOnFolder(targetFolder) {
+    const file = draggedFile
+    setDraggedFile(null)
+    if (!file || file.folderId === targetFolder.id) return
+
+    try {
+      await fileStorageService.moveFile(file.id, targetFolder.id)
+      toast.success(`Moved "${file.name}" to ${targetFolder.name}`)
+      refresh()
+    } catch (err) {
+      toast.error(err?.message || "Unable to move file")
     }
   }
 
@@ -593,24 +621,24 @@ export default function FileStoragePage() {
   }
 
   function handlePageDragEnter(event) {
-    if (!isAdmin) return
+    if (!isAdmin || draggedFile) return
     event.preventDefault()
     setIsPageDragging(true)
   }
 
   function handlePageDragOver(event) {
-    if (!isAdmin) return
+    if (!isAdmin || draggedFile) return
     event.preventDefault()
   }
 
   function handlePageDragLeave(event) {
-    if (!isAdmin) return
+    if (!isAdmin || draggedFile) return
     if (event.currentTarget.contains(event.relatedTarget)) return
     setIsPageDragging(false)
   }
 
   function handlePageDrop(event) {
-    if (!isAdmin) return
+    if (!isAdmin || draggedFile) return
     event.preventDefault()
     setIsPageDragging(false)
     const file = event.dataTransfer?.files?.[0]
@@ -760,6 +788,10 @@ export default function FileStoragePage() {
                 onToggleSelectAll={toggleSelectAll}
                 onFileAction={handleFileAction}
                 onFolderAction={handleFolderAction}
+                canMove={isAdmin}
+                onDragItemStart={handleItemDragStart}
+                onDragItemEnd={handleItemDragEnd}
+                onDropItemInFolder={handleDropOnFolder}
               />
             ) : (
               <FileListView
@@ -803,13 +835,11 @@ export default function FileStoragePage() {
       <FilePreviewModal
         open={Boolean(previewFile)}
         onOpenChange={(open) => {
-          if (!open) {
-            setPreviewFile(null)
-            setPreviewUrl(null)
-          }
+          if (!open) setPreviewFile(null)
         }}
         file={previewFile}
-        url={previewUrl}
+        files={files}
+        onFileAction={handleFileAction}
       />
       <FileInfoModal
         open={Boolean(infoItem)}

@@ -20,7 +20,10 @@ function PermanentDeleteConfirmModal({ open, onOpenChange, item, onConfirm, isBu
           <DialogTitle>Delete this {label} permanently?</DialogTitle>
           <DialogDescription>
             {item?.name ? `"${item.name}" ` : "This item "}
-            will be permanently deleted{item?.itemType === "folder" ? " along with everything inside it" : ""}. This cannot be undone.
+            will be permanently deleted. This cannot be undone.
+            {item?.itemType === "folder"
+              ? " If it still contains archived files or subfolders, delete those first."
+              : ""}
           </DialogDescription>
         </DialogHeader>
         {error && <p className="text-sm text-destructive">{error}</p>}

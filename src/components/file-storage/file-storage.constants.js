@@ -174,6 +174,15 @@ export function resolveOpenAction({ fileType, originalName }) {
   return "download"
 }
 
+/** True for Word/Excel/PowerPoint files — the same extensions routed to the
+ * Google Docs Viewer by resolveOpenAction's "sheets"/"docs" actions. Used to
+ * give these a grid-card thumbnail like PDF/images instead of falling back
+ * to the generic badge card. */
+export function isOfficeDocument(originalName) {
+  const ext = String(originalName || "").split(".").pop()?.toLowerCase()
+  return GOOGLE_SHEETS_EXTENSIONS.has(ext) || GOOGLE_DOCS_EXTENSIONS.has(ext)
+}
+
 export const GRID_FILE_MENU_ITEMS = [
   { id: "download", label: "Download", icon: Download },
   { id: "open", label: "Open", icon: FolderOpen },

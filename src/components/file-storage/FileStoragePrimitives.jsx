@@ -11,7 +11,7 @@ function GridSelectedOverlay({ selected }) {
 
   return (
     <div
-      className="pointer-events-none absolute inset-0 z-10 rounded-xl bg-blue-500/18 transition-colors duration-150"
+      className="pointer-events-none absolute inset-0 z-10 bg-blue-500/18 transition-colors duration-150"
       aria-hidden
     />
   )
