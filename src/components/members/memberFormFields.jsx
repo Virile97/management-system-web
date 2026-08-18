@@ -1,5 +1,6 @@
 "use client"
 
+import { useMemo } from "react"
 import { X } from "lucide-react"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
@@ -12,7 +13,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { SearchableCombobox } from "@/components/common/SearchableCombobox"
 import { MEMBER_FORM_VALIDATORS } from "@/utils/validators"
+import { useAddressBookStore } from "@/stores/addressBook.store"
 
 // Same header background/style as AddUserDialog's dark navy band, so every
 // modal in the app (Add User, Add Member, Edit Member) reads consistently.
@@ -279,6 +282,44 @@ function FormField({ field, value, error, onChange, onBlur }) {
   )
 }
 
+// Address suggestions come from every unique address ever saved on a member
+// form submit (see useAddressBookStore) — typing a new one is still allowed
+// via SearchableCombobox's allowCreate.
+function AddressFormField({ field, value, error, onChange, onBlur }) {
+  const { name, label, required } = field
+  const addresses = useAddressBookStore((state) => state.addresses)
+
+  const options = useMemo(
+    () => addresses.map((address) => ({ value: address, label: address })),
+    [addresses]
+  )
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      <Label htmlFor={`member-${name}`}>
+        {label} {required && <span className="text-red-500">*</span>}
+      </Label>
+      <SearchableCombobox
+        id={`member-${name}`}
+        options={options}
+        value={value}
+        onChange={(next) => {
+          onChange(name, next)
+          onBlur(name, next)
+        }}
+        allowCreate
+        clearable
+        placeholder="Street, City"
+        searchPlaceholder="Search or type an address…"
+        emptyText="No saved addresses"
+        createLabel="Use"
+        className="[&_button]:h-10"
+      />
+      {error && <p className="text-xs text-red-500">{error}</p>}
+    </div>
+  )
+}
+
 export {
   MemberDialogHeader,
   buildSelectFields,
@@ -293,6 +334,7 @@ export {
   MultiSelectField,
   BooleanCheckboxField,
   FormField,
+  AddressFormField,
   getFieldError,
   getMemberFormFieldError,
 }

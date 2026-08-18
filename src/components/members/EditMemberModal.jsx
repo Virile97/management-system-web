@@ -12,6 +12,7 @@ import {
   getMemberById,
 } from "@/services/member.service"
 import { useMemberFormStore } from "@/stores/memberForm.store"
+import { useAddressBookStore } from "@/stores/addressBook.store"
 import {
   MemberDialogHeader,
   buildSelectFields,
@@ -23,13 +24,13 @@ import {
   MultiSelectField,
   BooleanCheckboxField,
   FormField,
+  AddressFormField,
   applyOptionalFieldConfig,
   getMemberFormFieldError,
 } from "@/components/members/memberFormFields"
 import { MemberDateFormField } from "@/components/members/MemberDatePicker"
 
 function memberToForm(member) {
-  console.log('lol', member)
   return {
     firstName: member.firstName || "",
     middleName: member.middleName || "",
@@ -53,6 +54,7 @@ function memberToForm(member) {
 function EditMemberModal({ open, onOpenChange, memberId, onUpdated }) {
   const config = useMemberFormStore((state) => state.config)
   const setConfig = useMemberFormStore((state) => state.setConfig)
+  const addAddress = useAddressBookStore((state) => state.addAddress)
   const [isConfigLoading, setIsConfigLoading] = useState(false)
   const [configError, setConfigError] = useState("")
 
@@ -156,6 +158,7 @@ function EditMemberModal({ open, onOpenChange, memberId, onUpdated }) {
 
     try {
       await updateMember(memberId, form)
+      addAddress(form.address)
       resetState()
       onUpdated?.()
       onOpenChange(false)
@@ -207,16 +210,22 @@ function EditMemberModal({ open, onOpenChange, memberId, onUpdated }) {
                 ))}
               </div>
 
-              {CONTACT_FIELDS.map((field) => (
-                <FormField
-                  key={field.name}
-                  field={applyOptionalFieldConfig(field)}
-                  value={form[field.name]}
-                  error={errors[field.name]}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                />
-              ))}
+              {CONTACT_FIELDS.map((field) => {
+                const fieldConfig = applyOptionalFieldConfig(field)
+                const FieldComponent =
+                  field.name === "address" ? AddressFormField : FormField
+
+                return (
+                  <FieldComponent
+                    key={field.name}
+                    field={fieldConfig}
+                    value={form[field.name]}
+                    error={errors[field.name]}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                  />
+                )
+              })}
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 {DATE_AGE_FIELDS.map((field) => {
