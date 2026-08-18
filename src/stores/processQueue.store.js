@@ -1,12 +1,18 @@
-import { createProcessQueue } from "@/lib/process-queue"
-import { createTransaction } from "@/services/finance.service"
-import { createMember } from "@/services/member.service"
+import { createProcessQueue, PROCESS_STATUS } from "@/lib/process-queue"
+import {
+  createTransaction,
+  deleteTransaction,
+  formatDeleteError,
+} from "@/services/finance.service"
+import { bulkDeleteMembers, createMember } from "@/services/member.service"
 import { createSoulWinningRecord } from "@/services/soulWinning.service"
 
 /** Shared app-wide background process queue. */
 const PROCESS_TYPES = {
   FINANCE_CREATE_TRANSACTION: "finance.createTransaction",
+  FINANCE_DELETE_TRANSACTION: "finance.deleteTransaction",
   MEMBERS_CREATE_MEMBER: "members.createMember",
+  MEMBERS_DELETE_MEMBER: "members.deleteMember",
   SOUL_WINNING_CREATE_RECORD: "soulWinning.createRecord",
 }
 
@@ -17,7 +23,30 @@ const useProcessQueueStore = createProcessQueue({
   handlers: {
     [PROCESS_TYPES.FINANCE_CREATE_TRANSACTION]: (payload) =>
       createTransaction(payload),
+    [PROCESS_TYPES.FINANCE_DELETE_TRANSACTION]: async ({ id }) => {
+      try {
+        await deleteTransaction(id)
+      } catch (err) {
+        // Already gone — treat as success so the queue moves on.
+        if (err?.status !== 404 && err?.code !== "NOT_FOUND") {
+          throw new Error(formatDeleteError(err))
+        }
+      }
+    },
     [PROCESS_TYPES.MEMBERS_CREATE_MEMBER]: (payload) => createMember(payload),
+    [PROCESS_TYPES.MEMBERS_DELETE_MEMBER]: async ({ id }) => {
+      const result = await bulkDeleteMembers([id])
+      const blocked = result?.blocked || []
+
+      if (blocked.length > 0) {
+        const name = blocked[0]?.name || "Member"
+        throw new Error(
+          `Could not delete ${name} — member has dependent records`
+        )
+      }
+
+      return result
+    },
     [PROCESS_TYPES.SOUL_WINNING_CREATE_RECORD]: (payload) =>
       createSoulWinningRecord(payload),
   },
@@ -79,6 +108,58 @@ function enqueueCreateMember({ form, label }) {
 }
 
 /**
+ * High-level helper for deleting transactions without blocking the table.
+ * One queue job per transaction so large selections drain sequentially,
+ * failures can be retried individually, and the UI stays responsive.
+ */
+function enqueueDeleteTransactions({ transactions }) {
+  return (transactions || []).map((transaction) => {
+    const amount = Math.abs(Number(transaction.amount) || 0)
+    const sign = Number(transaction.amount) > 0 ? "+" : "−"
+
+    return useProcessQueueStore.getState().enqueue({
+      type: PROCESS_TYPES.FINANCE_DELETE_TRANSACTION,
+      payload: { id: transaction.id },
+      display: {
+        title: transaction.description || "Transaction",
+        subtitle:
+          [transaction.type, transaction.category].filter(Boolean).join(" · ") ||
+          "Delete transaction",
+        value: `${sign}${currencyFormatter.format(amount)}`,
+        tone: "negative",
+      },
+    })
+  })
+}
+
+/**
+ * High-level helper for deleting members without blocking the table.
+ * One queue job per member so large selections drain sequentially,
+ * failures can be retried individually, and the UI stays responsive.
+ */
+function enqueueDeleteMembers({ members }) {
+  return (members || []).map((member) => {
+    const name =
+      member?.name ||
+      [member?.firstName, member?.middleName, member?.lastName]
+        .filter(Boolean)
+        .join(" ")
+        .trim() ||
+      "Member"
+
+    return useProcessQueueStore.getState().enqueue({
+      type: PROCESS_TYPES.MEMBERS_DELETE_MEMBER,
+      payload: { id: member.id },
+      display: {
+        title: name,
+        subtitle: "Delete member",
+        tone: "negative",
+      },
+    })
+  })
+}
+
+/**
  * High-level helper for recording a soul won without blocking the form.
  */
 function enqueueCreateSoulWinningRecord({ payload, label, winnersLabel }) {
@@ -105,11 +186,43 @@ function enqueueCreateSoulWinningRecord({ payload, label, winnersLabel }) {
   })
 }
 
+function createPendingDeleteIdSelector(processType) {
+  return (state) => {
+    const ids = []
+
+    for (const item of state.items) {
+      if (
+        item.type !== processType ||
+        (item.status !== PROCESS_STATUS.queued &&
+          item.status !== PROCESS_STATUS.running)
+      ) {
+        continue
+      }
+
+      if (item.payload?.id) ids.push(item.payload.id)
+    }
+
+    ids.sort()
+    return ids
+  }
+}
+
+const selectPendingMemberDeleteIds = createPendingDeleteIdSelector(
+  PROCESS_TYPES.MEMBERS_DELETE_MEMBER
+)
+const selectPendingTransactionDeleteIds = createPendingDeleteIdSelector(
+  PROCESS_TYPES.FINANCE_DELETE_TRANSACTION
+)
+
 export {
   useProcessQueueStore,
   PROCESS_TYPES,
+  selectPendingMemberDeleteIds,
+  selectPendingTransactionDeleteIds,
   enqueueCreateTransaction,
+  enqueueDeleteTransactions,
   enqueueCreateMember,
+  enqueueDeleteMembers,
   enqueueCreateSoulWinningRecord,
 }
 export default useProcessQueueStore

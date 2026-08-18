@@ -141,7 +141,29 @@ const DATE_AGE_FIELDS = [
   },
 ]
 
-function SelectField({ field, value, onChange }) {
+/** Optional on add/edit member forms — still validated when provided. */
+const OPTIONAL_MEMBER_FIELDS = new Set(["birthDate", "age", "address"])
+
+function applyOptionalFieldConfig(field) {
+  return OPTIONAL_MEMBER_FIELDS.has(field.name)
+    ? { ...field, required: false }
+    : field
+}
+
+function getFieldError(field, value) {
+  const { required, validate } = MEMBER_FORM_VALIDATORS[field]
+
+  if (!value) return required ?? ""
+  if (validate) return validate(value)
+  return ""
+}
+
+function getMemberFormFieldError(field, value) {
+  if (OPTIONAL_MEMBER_FIELDS.has(field) && !value) return ""
+  return getFieldError(field, value)
+}
+
+function SelectField({ field, value, onChange, error }) {
   const { name, label, required, options } = field
 
   return (
@@ -150,7 +172,10 @@ function SelectField({ field, value, onChange }) {
         {label} {required && <span className="text-red-500">*</span>}
       </Label>
       <Select value={value} onValueChange={(next) => onChange(name, next)}>
-        <SelectTrigger className="h-10 w-full rounded-lg">
+        <SelectTrigger
+          className="h-10 w-full rounded-lg"
+          aria-invalid={Boolean(error)}
+        >
           <SelectValue>{(val) => options[val]}</SelectValue>
         </SelectTrigger>
         <SelectContent>
@@ -161,6 +186,7 @@ function SelectField({ field, value, onChange }) {
           ))}
         </SelectContent>
       </Select>
+      {error && <p className="text-xs text-red-500">{error}</p>}
     </div>
   )
 }
@@ -253,14 +279,6 @@ function FormField({ field, value, error, onChange, onBlur }) {
   )
 }
 
-function getFieldError(field, value) {
-  const { required, validate } = MEMBER_FORM_VALIDATORS[field]
-
-  if (!value) return required ?? ""
-  if (validate) return validate(value)
-  return ""
-}
-
 export {
   MemberDialogHeader,
   buildSelectFields,
@@ -269,9 +287,12 @@ export {
   NAME_FIELDS,
   CONTACT_FIELDS,
   DATE_AGE_FIELDS,
+  OPTIONAL_MEMBER_FIELDS,
+  applyOptionalFieldConfig,
   SelectField,
   MultiSelectField,
   BooleanCheckboxField,
   FormField,
   getFieldError,
+  getMemberFormFieldError,
 }

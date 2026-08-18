@@ -29,7 +29,6 @@ import { register as registerAbortController } from "@/lib/abort-registry"
 import {
   listMembers,
   getMemberBreakdown,
-  bulkDeleteMembers,
 } from "@/services/member.service"
 import { useMembersStore } from "@/stores/members.store"
 import {
@@ -38,6 +37,8 @@ import {
 } from "@/utils/constants"
 import {
   PROCESS_TYPES,
+  enqueueDeleteMembers,
+  selectPendingMemberDeleteIds,
   useProcessQueueStore,
 } from "@/stores/processQueue.store"
 import { Plus, QrCode, Trash2, FileDown } from "lucide-react"
@@ -118,17 +119,51 @@ function MembersPageContent() {
   const [isExportOpen, setIsExportOpen] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
   const lastCompleted = useProcessQueueStore((state) => state.lastCompleted)
+  const pendingDeleteIds = useProcessQueueStore(
+    useShallow(selectPendingMemberDeleteIds)
+  )
+  const deletingMemberIds = useMemo(
+    () => new Set(pendingDeleteIds),
+    [pendingDeleteIds]
+  )
+  const activeDeleteCount = pendingDeleteIds.length
   const isFirstCompleted = useRef(true)
+  const prevActiveDeleteCount = useRef(0)
+  const skipCreateRefresh = useRef(true)
 
-  // Refresh the directory when a queued member create finishes.
+  // Evict deleted members from the search cache as each job succeeds.
   useEffect(() => {
     if (isFirstCompleted.current) {
       isFirstCompleted.current = false
       return
     }
-    if (lastCompleted?.type !== PROCESS_TYPES.MEMBERS_CREATE_MEMBER) return
-    setRefreshKey((key) => key + 1)
+    if (lastCompleted?.type !== PROCESS_TYPES.MEMBERS_DELETE_MEMBER) return
+
+    const job = useProcessQueueStore
+      .getState()
+      .items.find((item) => item.id === lastCompleted.id)
+    const memberId = job?.payload?.id
+
+    if (memberId) removeCachedMembers([memberId])
+  }, [lastCompleted, removeCachedMembers])
+
+  // Refresh when a queued create finishes (still one refetch per create).
+  useEffect(() => {
+    if (skipCreateRefresh.current) {
+      skipCreateRefresh.current = false
+      return
+    }
+    if (lastCompleted?.type === PROCESS_TYPES.MEMBERS_CREATE_MEMBER) {
+      setRefreshKey((key) => key + 1)
+    }
   }, [lastCompleted])
+
+  useEffect(() => {
+    if (prevActiveDeleteCount.current > 0 && activeDeleteCount === 0) {
+      setRefreshKey((key) => key + 1)
+    }
+    prevActiveDeleteCount.current = activeDeleteCount
+  }, [activeDeleteCount])
 
   // Map keeps full member objects across pages so Print QR / export can use
   // selections from pages the user is no longer viewing.
@@ -144,8 +179,6 @@ function MembersPageContent() {
   const [printMember, setPrintMember] = useState(null)
   const [isPrintSelectedOpen, setIsPrintSelectedOpen] = useState(false)
   const [isDeleteSelectedOpen, setIsDeleteSelectedOpen] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
-  const [deleteError, setDeleteError] = useState("")
 
   // Filters both the table (listMembers) and the breakdown chart
   // (getMemberBreakdown) — same from/to sent to both so they stay in sync.
@@ -203,10 +236,12 @@ function MembersPageContent() {
   }
 
   function openMember(member) {
+    if (deletingMemberIds.has(member.id)) return
     router.push(`/members/${member.id}`)
   }
 
   function openEditMember(member) {
+    if (deletingMemberIds.has(member.id)) return
     updateParams({ isEdit: "true", memberId: member.id })
   }
 
@@ -353,6 +388,8 @@ function MembersPageContent() {
   const filtersDisabled = meta.total === 0 && !hasActiveFilters
 
   function toggleSelect(member) {
+    if (deletingMemberIds.has(member.id)) return
+
     setSelectedById((prev) => {
       const next = new Map(prev)
 
@@ -367,9 +404,12 @@ function MembersPageContent() {
 
   function toggleSelectAll(pageRows) {
     setSelectedById((prev) => {
-      const allSelected = pageRows.every((member) => prev.has(member.id))
+      const selectableRows = pageRows.filter(
+        (member) => !deletingMemberIds.has(member.id)
+      )
+      const allSelected = selectableRows.every((member) => prev.has(member.id))
       const next = new Map(prev)
-      pageRows.forEach((member) => {
+      selectableRows.forEach((member) => {
         if (allSelected) {
           next.delete(member.id)
         } else {
@@ -380,51 +420,12 @@ function MembersPageContent() {
     })
   }
 
-  async function handleConfirmBulkDelete() {
-    setDeleteError("")
-    setIsDeleting(true)
-    try {
-      const result = await bulkDeleteMembers(Array.from(selectedIds))
-      const blocked = result?.blocked || []
-
-      if (blocked.length > 0) {
-        // Backend skips members with dependent records instead of failing
-        // the whole request — surface that instead of silently closing as
-        // if everything was deleted, otherwise the skipped members just
-        // reappear on refresh with no explanation.
-        const names = blocked.map((b) => b.name).join(", ")
-        setDeleteError(
-          result.deletedCount > 0
-            ? `Deleted ${result.deletedCount} member${result.deletedCount === 1 ? "" : "s"}. Could not delete: ${names}.`
-            : `Could not delete: ${names}.`
-        )
-
-        if (result.deletedCount > 0) {
-          removeCachedMembers(result.deletedIds || [])
-          setSelectedById((prev) => {
-            const next = new Map(prev)
-            for (const id of result.deletedIds || []) next.delete(id)
-            return next
-          })
-          setRefreshKey((key) => key + 1)
-        }
-
-        return
-      }
-
-      // The accumulated search-fast-path cache (see searchCache above) has
-      // no way to know these members are gone — without this, a delete
-      // while a search is active re-serves the deleted member straight
-      // from cache on the next refetch, even though it's really gone.
-      removeCachedMembers(result?.deletedIds || Array.from(selectedIds))
-      setSelectedById(new Map())
-      setIsDeleteSelectedOpen(false)
-      setRefreshKey((key) => key + 1)
-    } catch (err) {
-      setDeleteError(err?.message || "Unable to delete selected members")
-    } finally {
-      setIsDeleting(false)
-    }
+  function handleConfirmBulkDelete() {
+    // Queue deletes so the dialog closes immediately and each member
+    // is processed in the background — same pattern as Add Member.
+    enqueueDeleteMembers({ members: selectedMembers })
+    setSelectedById(new Map())
+    setIsDeleteSelectedOpen(false)
   }
 
   return (
@@ -537,6 +538,7 @@ function MembersPageContent() {
             members={members}
             isLoading={isLoading}
             selected={selectedIds}
+            deletingIds={deletingMemberIds}
             onToggleSelect={toggleSelect}
             onToggleSelectAll={toggleSelectAll}
             onPrintMember={setPrintMember}
@@ -593,10 +595,7 @@ function MembersPageContent() {
 
       <Dialog
         open={isDeleteSelectedOpen}
-        onOpenChange={(open) => {
-          if (!open) setDeleteError("")
-          setIsDeleteSelectedOpen(open)
-        }}
+        onOpenChange={setIsDeleteSelectedOpen}
       >
         <DialogContent>
           <DialogHeader>
@@ -606,27 +605,23 @@ function MembersPageContent() {
             </DialogTitle>
             <DialogDescription>
               This will permanently remove the selected member
-              {selectedIds.size === 1 ? "" : "s"} from the system. This action
-              cannot be undone.
+              {selectedIds.size === 1 ? "" : "s"} from the system. Deletions
+              run in the background — track progress in the process panel.
+              This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
-          {deleteError && (
-            <p className="text-sm text-destructive">{deleteError}</p>
-          )}
           <DialogFooter>
             <Button
               variant="outline"
               onClick={() => setIsDeleteSelectedOpen(false)}
-              disabled={isDeleting}
             >
               Cancel
             </Button>
             <Button
               className="bg-destructive text-white hover:bg-destructive/90"
               onClick={handleConfirmBulkDelete}
-              disabled={isDeleting}
             >
-              {isDeleting ? "Deleting…" : "Delete"}
+              Delete
             </Button>
           </DialogFooter>
         </DialogContent>

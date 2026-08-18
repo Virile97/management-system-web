@@ -1,9 +1,11 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { toast } from "sonner"
 import { Dialog, DialogContent, DialogFooter } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { MEMBER_FORM_VALIDATORS } from "@/utils/validators"
+import { calculateAge, toDateInputValue } from "@/utils/helpers"
 import {
   updateMember,
   getMemberFormConfig,
@@ -21,15 +23,13 @@ import {
   MultiSelectField,
   BooleanCheckboxField,
   FormField,
-  getFieldError,
+  applyOptionalFieldConfig,
+  getMemberFormFieldError,
 } from "@/components/members/memberFormFields"
-
-function toDateInputValue(value) {
-  if (!value) return ""
-  return new Date(value).toISOString().slice(0, 10)
-}
+import { MemberDateFormField } from "@/components/members/MemberDatePicker"
 
 function memberToForm(member) {
+  console.log('lol', member)
   return {
     firstName: member.firstName || "",
     middleName: member.middleName || "",
@@ -97,7 +97,22 @@ function EditMemberModal({ open, onOpenChange, memberId, onUpdated }) {
   const groupOptions = config ? buildGroupOptions(config) : {}
 
   function handleChange(field, value) {
+    if (field === "birthDate") {
+      const age = String(calculateAge(value))
+      setForm((prev) => ({ ...prev, birthDate: value, age }))
+      setErrors((prev) => ({
+        ...prev,
+        birthDate: getMemberFormFieldError("birthDate", value),
+        age: getMemberFormFieldError("age", age),
+      }))
+      return
+    }
+
     setForm((prev) => ({ ...prev, [field]: value }))
+    setErrors((prev) => ({
+      ...prev,
+      [field]: getMemberFormFieldError(field, value),
+    }))
   }
 
   function handleToggleGroup(optionValue) {
@@ -109,10 +124,11 @@ function EditMemberModal({ open, onOpenChange, memberId, onUpdated }) {
     }))
   }
 
-  function handleBlur(field) {
+  function handleBlur(field, nextValue) {
+    const value = nextValue ?? form[field]
     setErrors((prev) => ({
       ...prev,
-      [field]: getFieldError(field, form[field]),
+      [field]: getMemberFormFieldError(field, value),
     }))
   }
 
@@ -127,7 +143,7 @@ function EditMemberModal({ open, onOpenChange, memberId, onUpdated }) {
     const nextErrors = Object.fromEntries(
       Object.keys(MEMBER_FORM_VALIDATORS).map((field) => [
         field,
-        getFieldError(field, form[field]),
+        getMemberFormFieldError(field, form[field]),
       ])
     )
     setErrors(nextErrors)
@@ -143,6 +159,7 @@ function EditMemberModal({ open, onOpenChange, memberId, onUpdated }) {
       resetState()
       onUpdated?.()
       onOpenChange(false)
+      toast.success("Member updated")
     } catch (err) {
       setSubmitError(
         err?.message || "Unable to update member. Please try again."
@@ -193,7 +210,7 @@ function EditMemberModal({ open, onOpenChange, memberId, onUpdated }) {
               {CONTACT_FIELDS.map((field) => (
                 <FormField
                   key={field.name}
-                  field={field}
+                  field={applyOptionalFieldConfig(field)}
                   value={form[field.name]}
                   error={errors[field.name]}
                   onChange={handleChange}
@@ -202,16 +219,33 @@ function EditMemberModal({ open, onOpenChange, memberId, onUpdated }) {
               ))}
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                {DATE_AGE_FIELDS.map((field) => (
-                  <FormField
-                    key={field.name}
-                    field={field}
-                    value={form[field.name]}
-                    error={errors[field.name]}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                  />
-                ))}
+                {DATE_AGE_FIELDS.map((field) => {
+                  const fieldConfig = applyOptionalFieldConfig(field)
+
+                  if (field.type === "date") {
+                    return (
+                      <MemberDateFormField
+                        key={field.name}
+                        field={fieldConfig}
+                        value={form[field.name]}
+                        error={errors[field.name]}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                      />
+                    )
+                  }
+
+                  return (
+                    <FormField
+                      key={field.name}
+                      field={fieldConfig}
+                      value={form[field.name]}
+                      error={errors[field.name]}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                    />
+                  )
+                })}
               </div>
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -220,6 +254,7 @@ function EditMemberModal({ open, onOpenChange, memberId, onUpdated }) {
                     key={field.name}
                     field={field}
                     value={form[field.name]}
+                    error={errors[field.name]}
                     onChange={handleChange}
                   />
                 ))}

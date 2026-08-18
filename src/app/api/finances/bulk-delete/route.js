@@ -26,7 +26,11 @@ export async function POST(request) {
     const status = err?.response?.status || 500
     const message =
       err?.response?.data?.message || "Unable to delete transactions"
+    const code = err?.response?.data?.code
 
-    return NextResponse.json({ success: false, message }, { status })
+    return NextResponse.json(
+      { success: false, message, ...(code ? { code } : {}) },
+      { status }
+    )
   }
 }

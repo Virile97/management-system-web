@@ -20,6 +20,7 @@ function MemberTable({
   members: rows,
   isLoading,
   selected,
+  deletingIds,
   onToggleSelect,
   onToggleSelectAll,
   onPrintMember,
@@ -105,6 +106,7 @@ function MemberTable({
             onPrint={onPrintMember}
             onEdit={onEditMember}
             onOpen={onOpenMember}
+            isDeleting={deletingIds?.has(member.id)}
           />
         ))
       }
@@ -118,6 +120,7 @@ function MemberTable({
             onPrint={onPrintMember}
             onEdit={onEditMember}
             onOpen={onOpenMember}
+            isDeleting={deletingIds?.has(member.id)}
           />
         ))
       }

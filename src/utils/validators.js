@@ -48,15 +48,15 @@ function isValidAge(value) {
 }
 
 /**
- * Letters, spaces, hyphens, and apostrophes only (covers names like "Mary Anne" or "D'Souza")
- * — no digits or other symbols
+ * Unicode letters, spaces, hyphens, and apostrophes only — supports names
+ * like "Peña", "José", "Mary Anne", or "D'Souza". No digits or other symbols.
  */
-const NAME_REGEX = /^[a-zA-Z]+(?:[ '-][a-zA-Z]+)*$/
+const NAME_REGEX = /^[\p{L}\p{M}]+(?:[ '-][\p{L}\p{M}]+)*$/u
 
 /**
  * Validates that a value contains only letters (plus spaces/hyphens/apostrophes
- * between words) — no numbers or other special characters. Pass
- * { optional: true } to allow an empty value (e.g. for an optional middle name).
+ * between words) — no numbers or other special characters. Accented letters
+ * such as ñ are allowed. Pass { optional: true } to allow an empty value.
  */
 function isValidName(value, { optional = false } = {}) {
   if (typeof value !== "string") return false
@@ -124,6 +124,7 @@ const MEMBER_FORM_VALIDATORS = {
   level: {
     required: "Level is required",
   },
+  lighthouseGroup: {},
 }
 
 export {

@@ -34,21 +34,30 @@ function MemberCard({
   onPrint,
   onEdit,
   onOpen,
+  isDeleting = false,
 }) {
   return (
     <div
       className={cn(
         "flex flex-col gap-3 border-b border-border p-4 transition-colors last:border-0",
         checked && "bg-primary/3",
-        onOpen && "cursor-pointer active:bg-muted/40"
+        onOpen && !isDeleting && "cursor-pointer active:bg-muted/40",
+        isDeleting && "pointer-events-none opacity-50"
       )}
-      onClick={() => onOpen?.(member)}
+      aria-busy={isDeleting || undefined}
+      onClick={() => {
+        if (!isDeleting) onOpen?.(member)
+      }}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
           {/* Stops the checkbox tap from also opening the member. */}
           <span onClick={(event) => event.stopPropagation()}>
-            <Checkbox checked={checked} onCheckedChange={onCheckedChange} />
+            <Checkbox
+              checked={checked}
+              onCheckedChange={onCheckedChange}
+              disabled={isDeleting}
+            />
           </span>
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#1e2a4a] text-xs font-semibold text-white ring-2 ring-background">
             {initials(member.name)}
@@ -113,15 +122,17 @@ function MemberCard({
         <button
           type="button"
           onClick={() => onEdit?.(member)}
-          className="rounded-md px-2 py-1 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          disabled={isDeleting}
+          className="rounded-md px-2 py-1 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
         >
           Edit
         </button>
         <button
           type="button"
           onClick={() => onPrint?.(member)}
+          disabled={isDeleting}
           aria-label={`Print QR code for ${member.name}`}
-          className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
         >
           <QrCode className="h-4 w-4" />
         </button>

@@ -34,19 +34,24 @@ function MemberRow({
   onPrint,
   onEdit,
   onOpen,
+  isDeleting = false,
 }) {
   return (
     <tr
       className={cn(
         "border-b border-border transition-colors last:border-0",
         checked && "bg-primary/3",
-        onOpen && "cursor-pointer hover:bg-muted/40"
+        onOpen && !isDeleting && "cursor-pointer hover:bg-muted/40",
+        isDeleting && "pointer-events-none opacity-50"
       )}
-      onClick={() => onOpen?.(member)}
+      aria-busy={isDeleting || undefined}
+      onClick={() => {
+        if (!isDeleting) onOpen?.(member)
+      }}
       role={onOpen ? "link" : undefined}
-      tabIndex={onOpen ? 0 : undefined}
+      tabIndex={onOpen && !isDeleting ? 0 : undefined}
       onKeyDown={(event) => {
-        if (event.key === "Enter") onOpen?.(member)
+        if (event.key === "Enter" && !isDeleting) onOpen?.(member)
       }}
     >
       {/* Checkbox and the action buttons sit inside the row, so their clicks
@@ -55,7 +60,11 @@ function MemberRow({
         className="w-10 py-4 pl-4"
         onClick={(event) => event.stopPropagation()}
       >
-        <Checkbox checked={checked} onCheckedChange={onCheckedChange} />
+        <Checkbox
+          checked={checked}
+          onCheckedChange={onCheckedChange}
+          disabled={isDeleting}
+        />
       </td>
       <td className="py-4 pr-4">
         <div className="flex items-center gap-3">
@@ -112,15 +121,17 @@ function MemberRow({
           <button
             type="button"
             onClick={() => onEdit?.(member)}
-            className="rounded-md px-2 py-1 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            disabled={isDeleting}
+            className="rounded-md px-2 py-1 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
           >
             Edit
           </button>
           <button
             type="button"
             onClick={() => onPrint?.(member)}
+            disabled={isDeleting}
             aria-label={`Print QR code for ${member.name}`}
-            className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
           >
             <QrCode className="h-4 w-4" />
           </button>

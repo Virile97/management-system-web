@@ -20,8 +20,10 @@ import {
   MultiSelectField,
   BooleanCheckboxField,
   FormField,
-  getFieldError,
+  applyOptionalFieldConfig,
+  getMemberFormFieldError,
 } from "@/components/members/memberFormFields"
+import { MemberDateFormField } from "@/components/members/MemberDatePicker"
 
 function AddMemberModal({ open, onOpenChange }) {
   const config = useMemberFormStore((state) => state.config)
@@ -75,15 +77,21 @@ function AddMemberModal({ open, onOpenChange }) {
 
   function handleChange(field, value) {
     if (field === "birthDate") {
-      setForm((prev) => ({
+      const age = String(calculateAge(value))
+      setForm((prev) => ({ ...prev, birthDate: value, age }))
+      setErrors((prev) => ({
         ...prev,
-        birthDate: value,
-        age: String(calculateAge(value)),
+        birthDate: getMemberFormFieldError("birthDate", value),
+        age: getMemberFormFieldError("age", age),
       }))
       return
     }
 
     setForm((prev) => ({ ...prev, [field]: value }))
+    setErrors((prev) => ({
+      ...prev,
+      [field]: getMemberFormFieldError(field, value),
+    }))
   }
 
   function handleToggleGroup(optionValue) {
@@ -95,10 +103,11 @@ function AddMemberModal({ open, onOpenChange }) {
     }))
   }
 
-  function handleBlur(field) {
+  function handleBlur(field, nextValue) {
+    const value = nextValue ?? form[field]
     setErrors((prev) => ({
       ...prev,
-      [field]: getFieldError(field, form[field]),
+      [field]: getMemberFormFieldError(field, value),
     }))
   }
 
@@ -117,7 +126,7 @@ function AddMemberModal({ open, onOpenChange }) {
     const nextErrors = Object.fromEntries(
       Object.keys(MEMBER_FORM_VALIDATORS).map((field) => [
         field,
-        getFieldError(field, form[field]),
+        getMemberFormFieldError(field, form[field]),
       ])
     )
     setErrors(nextErrors)
@@ -176,7 +185,7 @@ function AddMemberModal({ open, onOpenChange }) {
               {CONTACT_FIELDS.map((field) => (
                 <FormField
                   key={field.name}
-                  field={field}
+                  field={applyOptionalFieldConfig(field)}
                   value={form[field.name]}
                   error={errors[field.name]}
                   onChange={handleChange}
@@ -185,16 +194,33 @@ function AddMemberModal({ open, onOpenChange }) {
               ))}
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                {DATE_AGE_FIELDS.map((field) => (
-                  <FormField
-                    key={field.name}
-                    field={field}
-                    value={form[field.name]}
-                    error={errors[field.name]}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                  />
-                ))}
+                {DATE_AGE_FIELDS.map((field) => {
+                  const fieldConfig = applyOptionalFieldConfig(field)
+
+                  if (field.type === "date") {
+                    return (
+                      <MemberDateFormField
+                        key={field.name}
+                        field={fieldConfig}
+                        value={form[field.name]}
+                        error={errors[field.name]}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                      />
+                    )
+                  }
+
+                  return (
+                    <FormField
+                      key={field.name}
+                      field={fieldConfig}
+                      value={form[field.name]}
+                      error={errors[field.name]}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                    />
+                  )
+                })}
               </div>
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -203,6 +229,7 @@ function AddMemberModal({ open, onOpenChange }) {
                     key={field.name}
                     field={field}
                     value={form[field.name]}
+                    error={errors[field.name]}
                     onChange={handleChange}
                   />
                 ))}

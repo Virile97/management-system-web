@@ -61,6 +61,10 @@ const useFinanceStore = create(
           isTableLoading: false,
           tableError: "",
         }),
+      removeCachedTransactions: (ids) =>
+        set((state) => ({
+          transactions: state.transactions.filter((t) => !ids.includes(t.id)),
+        })),
       setSearch: (search) => set({ search }),
       setDateFrom: (dateFrom) => set({ dateFrom }),
       setDateTo: (dateTo) => set({ dateTo }),

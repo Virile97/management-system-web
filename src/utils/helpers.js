@@ -47,6 +47,8 @@ function sanitizeDecimalInput(value, { decimals = 2 } = {}) {
  * timezones ahead of UTC. Defaults to today.
  */
 function toDateInputValue(date = new Date()) {
+  if (!date) return ""
+
   const value = date instanceof Date ? date : new Date(date)
   if (Number.isNaN(value.getTime())) return ""
 

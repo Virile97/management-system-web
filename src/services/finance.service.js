@@ -102,11 +102,30 @@ function updateTransaction(id, payload) {
   )
 }
 
+function deleteTransaction(id) {
+  return fetchJson(APP_API_ENDPOINTS.TRANSACTION_BY_ID(id), {
+    method: "DELETE",
+    headers: { ...getCsrfHeader() },
+  })
+}
+
 function bulkDeleteTransactions(ids) {
   return fetchJson(
     APP_API_ENDPOINTS.TRANSACTIONS_BULK_DELETE,
     mutationOptions("POST", { ids })
   )
+}
+
+function formatDeleteError(err, fallback = "Unable to delete transaction") {
+  if (err?.status === 403) {
+    return "You don't have permission to delete transactions."
+  }
+
+  if (err?.status === 404 || err?.code === "NOT_FOUND") {
+    return "This transaction was already deleted or could not be found."
+  }
+
+  return err?.message || fallback
 }
 
 export {
@@ -118,5 +137,7 @@ export {
   getTransactionById,
   createTransaction,
   updateTransaction,
+  deleteTransaction,
   bulkDeleteTransactions,
+  formatDeleteError,
 }

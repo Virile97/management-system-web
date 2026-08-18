@@ -19,6 +19,7 @@ import {
   ArrowDownRight,
   Receipt,
   Trash2,
+  Pencil,
 } from "lucide-react"
 
 const FILTERS = ["All", "Income", "Expense"]
@@ -96,7 +97,9 @@ function TransactionTable({
   onToggleSelect,
   onToggleSelectAll,
   onDeleteSelected,
+  onDelete,
   onEdit,
+  deletingIds,
   page,
   totalPages,
   total,
@@ -272,15 +275,23 @@ function TransactionTable({
         </tr>
       )}
       renderDesktopRows={(rows, selection) =>
-        rows.map((transaction) => (
+        rows.map((transaction) => {
+          const isDeleting = deletingIds?.has(transaction.id)
+
+          return (
           <tr
             key={transaction.id}
-            className="border-b border-border last:border-0"
+            className={cn(
+              "border-b border-border last:border-0",
+              isDeleting && "pointer-events-none opacity-50"
+            )}
+            aria-busy={isDeleting || undefined}
           >
             <td className="w-10 py-4 pl-4">
               <Checkbox
                 checked={selection.isSelected(transaction)}
                 onCheckedChange={() => selection.toggle(transaction)}
+                disabled={isDeleting}
               />
             </td>
             <td className="py-4 pr-4 text-sm text-foreground/80">
@@ -330,22 +341,43 @@ function TransactionTable({
               {currencyFormatter.format(Math.abs(transaction.amount))}
             </td>
             <td className="py-4 pr-4 text-right">
-              <button
-                type="button"
-                onClick={() => onEdit?.(transaction)}
-                className="text-sm font-medium text-foreground/80 hover:text-foreground"
-              >
-                Edit
-              </button>
+              <div className="flex items-center justify-end gap-1">
+                <button
+                  type="button"
+                  onClick={() => onEdit?.(transaction)}
+                  disabled={isDeleting}
+                  aria-label={`Edit ${transaction.description || "transaction"}`}
+                  className="rounded-md p-2 text-muted-foreground hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <Pencil className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onDelete?.(transaction)}
+                  disabled={isDeleting}
+                  aria-label={`Delete ${transaction.description || "transaction"}`}
+                  className="rounded-md p-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
             </td>
           </tr>
-        ))
+          )
+        })
       }
       renderMobileRows={(rows, selection) =>
-        rows.map((transaction) => (
+        rows.map((transaction) => {
+          const isDeleting = deletingIds?.has(transaction.id)
+
+          return (
           <div
             key={transaction.id}
-            className="flex flex-col gap-2.5 border-b border-border px-3 py-4 last:border-0 sm:px-4"
+            className={cn(
+              "flex flex-col gap-2.5 border-b border-border px-3 py-4 last:border-0 sm:px-4",
+              isDeleting && "pointer-events-none opacity-50"
+            )}
+            aria-busy={isDeleting || undefined}
           >
             <div className="flex items-start justify-between gap-3">
               <div className="flex min-w-0 items-start gap-2.5">
@@ -353,6 +385,7 @@ function TransactionTable({
                   className="mt-0.5"
                   checked={selection.isSelected(transaction)}
                   onCheckedChange={() => selection.toggle(transaction)}
+                  disabled={isDeleting}
                 />
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-foreground/85">
@@ -406,16 +439,30 @@ function TransactionTable({
                 </span>
               </div>
 
-              <button
-                type="button"
-                onClick={() => onEdit?.(transaction)}
-                className="shrink-0 text-sm font-medium text-foreground/80 hover:text-foreground"
-              >
-                Edit
-              </button>
+              <div className="flex shrink-0 items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => onEdit?.(transaction)}
+                  disabled={isDeleting}
+                  aria-label={`Edit ${transaction.description || "transaction"}`}
+                  className="rounded-md p-2 text-muted-foreground hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <Pencil className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onDelete?.(transaction)}
+                  disabled={isDeleting}
+                  aria-label={`Delete ${transaction.description || "transaction"}`}
+                  className="rounded-md p-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
             </div>
           </div>
-        ))
+          )
+        })
       }
       page={page}
       totalPages={totalPages}

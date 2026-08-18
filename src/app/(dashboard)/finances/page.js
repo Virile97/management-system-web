@@ -34,11 +34,12 @@ import {
   getFinanceTrend,
   getTransactionsConfig,
   listTransactions,
-  bulkDeleteTransactions,
 } from "@/services/finance.service"
 import { useFinanceStore } from "@/stores/finance.store"
 import {
   PROCESS_TYPES,
+  enqueueDeleteTransactions,
+  selectPendingTransactionDeleteIds,
   useProcessQueueStore,
 } from "@/stores/processQueue.store"
 import {
@@ -111,25 +112,60 @@ function FinancesPageContent() {
     () => Array.from(selectedById.values()),
     [selectedById]
   )
-  const [isDeleteSelectedOpen, setIsDeleteSelectedOpen] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
-  const [deleteError, setDeleteError] = useState("")
+  const [deleteDialog, setDeleteDialog] = useState(null)
   const [refreshKey, setRefreshKey] = useState(0)
   const [isExportOpen, setIsExportOpen] = useState(false)
   const lastCompleted = useProcessQueueStore((state) => state.lastCompleted)
+  const pendingDeleteIds = useProcessQueueStore(
+    useShallow(selectPendingTransactionDeleteIds)
+  )
+  const deletingTransactionIds = useMemo(
+    () => new Set(pendingDeleteIds),
+    [pendingDeleteIds]
+  )
+  const activeDeleteCount = pendingDeleteIds.length
   const isFirstCompleted = useRef(true)
+  const prevActiveDeleteCount = useRef(0)
+  const skipCreateRefresh = useRef(true)
 
-  // Refresh finance views when a queued create finishes successfully.
+  // Evict deleted transactions from the table as each job succeeds.
   useEffect(() => {
     if (isFirstCompleted.current) {
       isFirstCompleted.current = false
       return
     }
-    if (lastCompleted?.type !== PROCESS_TYPES.FINANCE_CREATE_TRANSACTION) {
+    if (lastCompleted?.type !== PROCESS_TYPES.FINANCE_DELETE_TRANSACTION) {
       return
     }
-    setRefreshKey((key) => key + 1)
+
+    const job = useProcessQueueStore
+      .getState()
+      .items.find((item) => item.id === lastCompleted.id)
+    const transactionId = job?.payload?.id
+
+    if (transactionId) {
+      useFinanceStore.getState().removeCachedTransactions([transactionId])
+    }
   }, [lastCompleted])
+
+  // Refresh when a queued create finishes (still one refetch per create).
+  useEffect(() => {
+    if (skipCreateRefresh.current) {
+      skipCreateRefresh.current = false
+      return
+    }
+    if (lastCompleted?.type === PROCESS_TYPES.FINANCE_CREATE_TRANSACTION) {
+      setRefreshKey((key) => key + 1)
+    }
+  }, [lastCompleted])
+
+  // Refresh table and summary once when the delete queue fully drains.
+  useEffect(() => {
+    if (prevActiveDeleteCount.current > 0 && activeDeleteCount === 0) {
+      setRefreshKey((key) => key + 1)
+    }
+    prevActiveDeleteCount.current = activeDeleteCount
+  }, [activeDeleteCount])
 
   const periodValue = PERIOD_VALUES[period] ?? "month"
 
@@ -274,6 +310,7 @@ function FinancesPageContent() {
   }
 
   function openEditTransaction(transaction) {
+    if (deletingTransactionIds.has(transaction.id)) return
     updateParams({
       isEdit: "true",
       transactionId: transaction.id,
@@ -404,7 +441,7 @@ function FinancesPageContent() {
       unregister()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [periodValue, periodFrom, periodTo])
+  }, [periodValue, periodFrom, periodTo, refreshKey])
 
   // Type/category/offering-type options rarely change, so fetch them once
   // per session and reuse whatever's already in the store — only call the
@@ -560,6 +597,8 @@ function FinancesPageContent() {
   }
 
   function toggleSelect(transaction) {
+    if (deletingTransactionIds.has(transaction.id)) return
+
     setSelectedById((prev) => {
       const next = new Map(prev)
 
@@ -575,12 +614,15 @@ function FinancesPageContent() {
 
   function toggleSelectAll(pageRows) {
     setSelectedById((prev) => {
-      const allSelected = pageRows.every((transaction) =>
+      const selectableRows = pageRows.filter(
+        (transaction) => !deletingTransactionIds.has(transaction.id)
+      )
+      const allSelected = selectableRows.every((transaction) =>
         prev.has(transaction.id)
       )
       const next = new Map(prev)
 
-      pageRows.forEach((transaction) => {
+      selectableRows.forEach((transaction) => {
         if (allSelected) {
           next.delete(transaction.id)
         } else {
@@ -592,20 +634,41 @@ function FinancesPageContent() {
     })
   }
 
-  async function handleConfirmBulkDelete() {
-    setDeleteError("")
-    setIsDeleting(true)
+  function openDeleteDialog(transaction) {
+    if (deletingTransactionIds.has(transaction.id)) return
+    setDeleteDialog({ type: "single", transaction })
+  }
 
-    try {
-      await bulkDeleteTransactions(Array.from(selectedIds))
+  function openBulkDeleteDialog() {
+    setDeleteDialog({ type: "bulk" })
+  }
+
+  function closeDeleteDialog() {
+    setDeleteDialog(null)
+  }
+
+  function handleConfirmDelete() {
+    if (!deleteDialog) return
+
+    const transactionsToDelete =
+      deleteDialog.type === "single"
+        ? [deleteDialog.transaction]
+        : selectedTransactions
+
+    enqueueDeleteTransactions({ transactions: transactionsToDelete })
+
+    if (deleteDialog.type === "single") {
+      setSelectedById((prev) => {
+        if (!prev.has(deleteDialog.transaction.id)) return prev
+        const next = new Map(prev)
+        next.delete(deleteDialog.transaction.id)
+        return next
+      })
+    } else {
       setSelectedById(new Map())
-      setIsDeleteSelectedOpen(false)
-      setRefreshKey((key) => key + 1)
-    } catch (err) {
-      setDeleteError(err?.message || "Unable to delete selected transactions")
-    } finally {
-      setIsDeleting(false)
     }
+
+    closeDeleteDialog()
   }
 
   return (
@@ -704,8 +767,10 @@ function FinancesPageContent() {
             selected={selectedIds}
             onToggleSelect={toggleSelect}
             onToggleSelectAll={toggleSelectAll}
-            onDeleteSelected={() => setIsDeleteSelectedOpen(true)}
+            onDeleteSelected={openBulkDeleteDialog}
+            onDelete={openDeleteDialog}
             onEdit={openEditTransaction}
+            deletingIds={deletingTransactionIds}
             page={page}
             totalPages={meta.totalPages}
             total={meta.total}
@@ -766,41 +831,47 @@ function FinancesPageContent() {
       />
 
       <Dialog
-        open={isDeleteSelectedOpen}
+        open={deleteDialog !== null}
         onOpenChange={(open) => {
-          if (!open) setDeleteError("")
-          setIsDeleteSelectedOpen(open)
+          if (!open) closeDeleteDialog()
         }}
       >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              Delete {selectedIds.size} transaction
-              {selectedIds.size === 1 ? "" : "s"}?
+              {deleteDialog?.type === "single"
+                ? "Delete transaction?"
+                : `Delete ${selectedIds.size} transaction${selectedIds.size === 1 ? "" : "s"}?`}
             </DialogTitle>
             <DialogDescription>
-              This will permanently remove the selected transaction
-              {selectedIds.size === 1 ? "" : "s"} from the system. This action
-              cannot be undone.
+              {deleteDialog?.type === "single" ? (
+                <>
+                  This will permanently remove{" "}
+                  <span className="font-medium text-foreground">
+                    {deleteDialog.transaction.description || "this transaction"}
+                  </span>{" "}
+                  from the system. Deletions run in the background — track
+                  progress in the process panel. This action cannot be undone.
+                </>
+              ) : (
+                <>
+                  This will permanently remove the selected transaction
+                  {selectedIds.size === 1 ? "" : "s"} from the system.
+                  Deletions run in the background — track progress in the process
+                  panel. This action cannot be undone.
+                </>
+              )}
             </DialogDescription>
           </DialogHeader>
-          {deleteError && (
-            <p className="text-sm text-destructive">{deleteError}</p>
-          )}
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsDeleteSelectedOpen(false)}
-              disabled={isDeleting}
-            >
+            <Button variant="outline" onClick={closeDeleteDialog}>
               Cancel
             </Button>
             <Button
               className="bg-destructive text-white hover:bg-destructive/90"
-              onClick={handleConfirmBulkDelete}
-              disabled={isDeleting}
+              onClick={handleConfirmDelete}
             >
-              {isDeleting ? "Deleting…" : "Delete"}
+              Delete
             </Button>
           </DialogFooter>
         </DialogContent>

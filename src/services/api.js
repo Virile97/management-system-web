@@ -100,7 +100,10 @@ async function fetchWithMeta(url, options, { _isRetry = false } = {}) {
   }
 
   if (!res.ok || !body.success) {
-    throw new Error(body.message || ERROR_MESSAGES.GENERIC)
+    const err = new Error(body.message || ERROR_MESSAGES.GENERIC)
+    err.status = res.status
+    if (body.code) err.code = body.code
+    throw err
   }
 
   return { data: body.data, meta: body.meta }
