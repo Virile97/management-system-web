@@ -48,10 +48,12 @@ function isValidAge(value) {
 }
 
 /**
- * Unicode letters, spaces, hyphens, and apostrophes only — supports names
- * like "Peña", "José", "Mary Anne", or "D'Souza". No digits or other symbols.
+ * Unicode letters, spaces, hyphens, apostrophes, and an optional trailing
+ * period per word — supports names like "Peña", "José", "Mary Anne",
+ * "D'Souza", or abbreviated prefixes like "Sto. Niño"/"Sto. Tomas". No
+ * digits or other symbols.
  */
-const NAME_REGEX = /^[\p{L}\p{M}]+(?:[ '-][\p{L}\p{M}]+)*$/u
+const NAME_REGEX = /^[\p{L}\p{M}]+\.?(?:[ '-][\p{L}\p{M}]+\.?)*$/u
 
 /**
  * Validates that a value contains only letters (plus spaces/hyphens/apostrophes
