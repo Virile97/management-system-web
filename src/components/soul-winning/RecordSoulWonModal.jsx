@@ -89,6 +89,7 @@ function RecordSoulWonModal({ open, onOpenChange }) {
   const canSubmit =
     form.soulWinners.length > 0 &&
     Boolean(form.firstName.trim()) &&
+    Boolean(form.lastName.trim()) &&
     Boolean(form.event.trim())
 
   function handleSubmit() {
@@ -105,7 +106,7 @@ function RecordSoulWonModal({ open, onOpenChange }) {
 
     const payload = {
       firstName: form.firstName.trim(),
-      lastName: form.lastName.trim() || null,
+      lastName: form.lastName.trim(),
       middleName: form.middleName.trim() || null,
       contact: form.contact.trim() || null,
       location: form.location.trim() || null,
@@ -272,7 +273,9 @@ function RecordSoulWonModal({ open, onOpenChange }) {
                 />
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="convert-last">Last name</Label>
+                <Label htmlFor="convert-last">
+                  Last name <span className="text-red-500">*</span>
+                </Label>
                 <Input
                   id="convert-last"
                   className="h-10 rounded-lg"
