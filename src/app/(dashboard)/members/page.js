@@ -180,16 +180,15 @@ function MembersPageContent() {
     if (memberId) removeCachedMembers([memberId])
   }, [lastCompleted, removeCachedMembers])
 
-  // Refresh when a queued create or update finishes (one refetch per job).
+  // Refresh when a queued create finishes (still one refetch per create).
+  // Updates are patched into the cache directly by EditMemberModal instead
+  // of refetching — see updateCachedMember.
   useEffect(() => {
     if (skipCreateRefresh.current) {
       skipCreateRefresh.current = false
       return
     }
-    if (
-      lastCompleted?.type === PROCESS_TYPES.MEMBERS_CREATE_MEMBER ||
-      lastCompleted?.type === PROCESS_TYPES.MEMBERS_UPDATE_MEMBER
-    ) {
+    if (lastCompleted?.type === PROCESS_TYPES.MEMBERS_CREATE_MEMBER) {
       setRefreshKey((key) => key + 1)
     }
   }, [lastCompleted])

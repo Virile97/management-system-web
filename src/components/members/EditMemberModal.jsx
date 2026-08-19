@@ -5,7 +5,11 @@ import { Dialog, DialogContent, DialogFooter } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { MEMBER_FORM_VALIDATORS } from "@/utils/validators"
 import { calculateAge, toDateInputValue } from "@/utils/helpers"
-import { getMemberFormConfig, getMemberById } from "@/services/member.service"
+import {
+  getMemberFormConfig,
+  getMemberById,
+  normalizeMember,
+} from "@/services/member.service"
 import { useMemberFormStore } from "@/stores/memberForm.store"
 import { useAddressBookStore } from "@/stores/addressBook.store"
 import { enqueueUpdateMember } from "@/stores/processQueue.store"
@@ -48,7 +52,42 @@ function memberToForm(member) {
   }
 }
 
-function EditMemberModal({ open, onOpenChange, memberId }) {
+// Inverse of memberToForm — merges edited form values back onto the raw
+// member (resolving id-only fields to the {id, name}/{id, role} shapes
+// normalizeMember expects), so the table can be patched optimistically
+// without an extra fetch after a queued update completes.
+function formToMember(form, config, rawMember) {
+  const findById = (items, id) => items?.find((item) => item.id === id)
+
+  return {
+    ...rawMember,
+    firstName: form.firstName,
+    middleName: form.middleName,
+    lastName: form.lastName,
+    email: form.email,
+    contact: form.contact,
+    address: form.address,
+    birthDate: form.birthDate,
+    baptizedAt: form.baptizedAt,
+    age: form.age === "" ? null : Number(form.age),
+    gender: form.gender,
+    statusId: form.status,
+    status: findById(config?.statuses, form.status) || rawMember.status,
+    levelId: form.level,
+    level: findById(config?.levels, form.level) || rawMember.level,
+    lighthouseGroupId: form.lighthouseGroup,
+    lighthouseGroup:
+      findById(config?.lighthouseGroups, form.lighthouseGroup) ||
+      rawMember.lighthouseGroup,
+    groups: form.groupIds
+      .map((id) => findById(config?.groups, id))
+      .filter(Boolean),
+    isNewBeliever: form.isNewBeliever,
+    needsUpdate: form.needsUpdate,
+  }
+}
+
+function EditMemberModal({ open, onOpenChange, memberId, onUpdated }) {
   const config = useMemberFormStore((state) => state.config)
   const setConfig = useMemberFormStore((state) => state.setConfig)
   const addAddress = useAddressBookStore((state) => state.addAddress)
@@ -57,6 +96,7 @@ function EditMemberModal({ open, onOpenChange, memberId }) {
 
   const [errors, setErrors] = useState({})
   const [form, setForm] = useState(null)
+  const [rawMember, setRawMember] = useState(null)
 
   useEffect(() => {
     if (!open || !memberId) return
@@ -78,6 +118,7 @@ function EditMemberModal({ open, onOpenChange, memberId }) {
 
         if (!config) setConfig(configData)
         setForm(memberToForm(member))
+        setRawMember(member)
       } catch (err) {
         if (controller.signal.aborted) return
         setConfigError(err?.message || "Unable to load member")
@@ -131,6 +172,7 @@ function EditMemberModal({ open, onOpenChange, memberId }) {
 
   function resetState() {
     setForm(null)
+    setRawMember(null)
     setErrors({})
     setConfigError("")
   }
@@ -149,9 +191,12 @@ function EditMemberModal({ open, onOpenChange, memberId }) {
 
     // Queue the update so the modal closes immediately and the member's row
     // stays locked (via selectPendingMemberUpdateIds) until it drains —
-    // same flow as AddMemberModal's queued create.
+    // same flow as AddMemberModal's queued create. The table is patched
+    // optimistically from the form instead of refetching after the queue
+    // job completes.
     addAddress(form.address)
     enqueueUpdateMember({ id: memberId, form })
+    onUpdated?.(normalizeMember(formToMember(form, config, rawMember)))
     resetState()
     onOpenChange(false)
   }
