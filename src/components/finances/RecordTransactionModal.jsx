@@ -27,6 +27,7 @@ import { getMemberById, normalizeMember } from "@/services/member.service"
 import { useMembersStore } from "@/stores/members.store"
 import { enqueueCreateTransaction } from "@/stores/processQueue.store"
 import { MemberPickerField } from "@/components/finances/MemberPickerField"
+import { MemberDatePicker } from "@/components/members/MemberDatePicker"
 import { sanitizeDecimalInput, toDateInputValue } from "@/utils/helpers"
 import { toast } from "sonner"
 
@@ -589,16 +590,13 @@ function RecordTransactionModal({
                 <Label htmlFor="transaction-date">
                   Date <span className="text-red-500">*</span>
                 </Label>
-                <Input
+                <MemberDatePicker
                   id="transaction-date"
-                  type="date"
                   value={form.date}
-                  onChange={(e) =>
-                    setForm((prev) => ({ ...prev, date: e.target.value }))
+                  onChange={(next) =>
+                    setForm((prev) => ({ ...prev, date: next }))
                   }
                   disabled={isSubmitting}
-                  required
-                  className="h-10 rounded-lg"
                 />
               </div>
             </>
