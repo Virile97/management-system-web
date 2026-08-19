@@ -1,5 +1,5 @@
 "use client"
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import {
   Dialog,
   DialogContent,
@@ -12,10 +12,12 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { MemberSearchModal } from "@/components/finances/MemberPickerField"
 import { SearchableCombobox } from "@/components/common/SearchableCombobox"
+import { MemberDatePicker } from "@/components/members/MemberDatePicker"
 import { toDateInputValue } from "@/utils/helpers"
 import { SOUL_WINNING_EVENT_OPTIONS } from "@/utils/constants"
 import { Heart, Search, X } from "lucide-react"
 import { enqueueCreateSoulWinningRecord } from "@/stores/processQueue.store"
+import { useAddressBookStore } from "@/stores/addressBook.store"
 function emptyForm() {
   return {
     soulWinners: [],
@@ -36,6 +38,12 @@ function RecordSoulWonModal({ open, onOpenChange }) {
   const [error, setError] = useState("")
   const [isWinnerPickerOpen, setIsWinnerPickerOpen] = useState(false)
   const [isEventPickerOpen, setIsEventPickerOpen] = useState(false)
+  const addresses = useAddressBookStore((state) => state.addresses)
+  const addAddress = useAddressBookStore((state) => state.addAddress)
+  const addressOptions = useMemo(
+    () => addresses.map((address) => ({ value: address, label: address })),
+    [addresses]
+  )
 
   useEffect(() => {
     if (!open) return
@@ -119,6 +127,7 @@ function RecordSoulWonModal({ open, onOpenChange }) {
       payload,
       winnersLabel,
     })
+    addAddress(form.location)
     resetForm()
   }
 
@@ -214,12 +223,10 @@ function RecordSoulWonModal({ open, onOpenChange }) {
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="soul-date">Date</Label>
-                <Input
+                <MemberDatePicker
                   id="soul-date"
-                  type="date"
-                  className="h-10 rounded-lg"
                   value={form.wonAt}
-                  onChange={(event) => updateField("wonAt", event.target.value)}
+                  onChange={(next) => updateField("wonAt", next)}
                 />
               </div>
               <div className="flex flex-col gap-1.5">
@@ -308,11 +315,18 @@ function RecordSoulWonModal({ open, onOpenChange }) {
 
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="convert-address">Address / Location</Label>
-              <Input
+              <SearchableCombobox
                 id="convert-address"
-                className="h-10 rounded-lg"
+                options={addressOptions}
                 value={form.location}
-                onChange={(event) => updateField("location", event.target.value)}
+                onChange={(next) => updateField("location", next)}
+                allowCreate
+                clearable
+                placeholder="St., Brgy., City, Province"
+                searchPlaceholder="Search or type an address…"
+                emptyText="No saved addresses"
+                createLabel="Use"
+                className="[&_button]:h-10"
               />
             </div>
 

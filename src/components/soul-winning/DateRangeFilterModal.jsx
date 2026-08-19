@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { SearchableCombobox } from "@/components/common/SearchableCombobox"
 import { cn } from "@/lib/utils"
 import { Calendar, X, ChevronLeft, ChevronRight } from "lucide-react"
 
@@ -32,12 +33,13 @@ const monthNames = [
   "December",
 ]
 
-// Calendar jump list: a couple of years ahead for planning, and far enough
-// back to cover typical historical filters without an endless scroll.
+// Calendar jump list: current year down through 1900, covering the full
+// historical range members' dates might fall in.
 const CURRENT_YEAR = new Date().getFullYear()
+const MIN_YEAR = 1900
 const YEAR_OPTIONS = Array.from(
-  { length: 22 },
-  (_, index) => CURRENT_YEAR + 1 - index
+  { length: CURRENT_YEAR - MIN_YEAR + 1 },
+  (_, index) => CURRENT_YEAR - index
 )
 
 function getDaysInMonth(year, month) {
@@ -126,6 +128,10 @@ function DateRangeFilterModal({
   const yearOptions = YEAR_OPTIONS.includes(viewYear)
     ? YEAR_OPTIONS
     : [...YEAR_OPTIONS, viewYear].sort((a, b) => b - a)
+  const yearComboboxOptions = yearOptions.map((year) => ({
+    value: String(year),
+    label: String(year),
+  }))
 
   function goToPrevMonth() {
     if (viewMonth === 0) {
@@ -256,21 +262,21 @@ function DateRangeFilterModal({
                 </SelectContent>
               </Select>
 
-              <Select
+              <SearchableCombobox
+                options={yearComboboxOptions}
                 value={String(viewYear)}
-                onValueChange={(value) => setViewYear(Number(value))}
-              >
-                <SelectTrigger className="w-22 rounded-lg bg-card data-[size=default]:h-9">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {yearOptions.map((year) => (
-                    <SelectItem key={year} value={String(year)}>
-                      {year}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                onChange={(next) => {
+                  const year = Number(next)
+                  if (!Number.isFinite(year)) return
+                  setViewYear(year)
+                }}
+                allowCreate={false}
+                clearable={false}
+                placeholder="Year"
+                searchPlaceholder="Search year…"
+                emptyText="No years found"
+                className="w-24 [&_button]:h-9 [&_button]:bg-card"
+              />
             </div>
 
             <button
