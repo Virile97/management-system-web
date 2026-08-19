@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useMemo, useRef, useState } from "react"
 import { CalendarDays, X } from "lucide-react"
 import { Label } from "@/components/ui/label"
 import {
@@ -97,17 +97,11 @@ function MemberDatePicker({
 
   const [open, setOpen] = useState(false)
   const skipCloseBlurRef = useRef(false)
+  // Deliberately not resynced from `value`/`selected` on every open — the
+  // calendar should stay on whatever year/month the user last navigated to
+  // across repeated opens, not jump back to the selected date each time.
   const [viewYear, setViewYear] = useState(selected?.year ?? now.getFullYear())
   const [viewMonth, setViewMonth] = useState(selected?.month ?? now.getMonth())
-
-  useEffect(() => {
-    if (!open) return
-
-    const point = toDatePoint(value)
-    setViewYear(point?.year ?? now.getFullYear())
-    setViewMonth(point?.month ?? now.getMonth())
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open])
 
   const yearOptions = useMemo(
     () => buildYearOptions(minYear, maxYear, viewYear),

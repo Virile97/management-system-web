@@ -56,11 +56,21 @@ function normalizeMember(member) {
         })
       : "—",
     status: member.status?.name ?? "—",
+    level: member.level?.name ?? "—",
+    levelId: member.levelId || member.level?.id || "",
   }
 }
 
 async function listMembers(
-  { page = 1, limit = 20, search = "", status = "", from = "", to = "" } = {},
+  {
+    page = 1,
+    limit = 20,
+    search = "",
+    status = "",
+    levelId = "",
+    from = "",
+    to = "",
+  } = {},
   signal
 ) {
   const params = new URLSearchParams({
@@ -70,6 +80,7 @@ async function listMembers(
 
   if (search) params.set("search", search)
   if (status) params.set("status", status)
+  if (levelId) params.set("levelId", levelId)
   if (from) params.set("from", from)
   if (to) params.set("to", to)
 

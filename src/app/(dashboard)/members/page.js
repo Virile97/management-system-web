@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog"
 import { MemberFilters } from "@/components/members/MemberFilters"
 import { MemberSearch } from "@/components/members/MemberSearch"
+import { MemberLevelFilter } from "@/components/members/MemberLevelFilter"
 import { MemberTable } from "@/components/members/MemberTable"
 import { AddMemberModal } from "@/components/members/AddMemberModal"
 import { EditMemberModal } from "@/components/members/EditMemberModal"
@@ -29,8 +30,10 @@ import { register as registerAbortController } from "@/lib/abort-registry"
 import {
   listMembers,
   getMemberBreakdown,
+  getMemberFormConfig,
 } from "@/services/member.service"
 import { useMembersStore } from "@/stores/members.store"
+import { useMemberFormStore } from "@/stores/memberForm.store"
 import {
   DEFAULT_PAGE_SIZE,
   resolvePageSize,
@@ -58,6 +61,7 @@ function queriesMatch(a, b) {
     a.page === b.page &&
     a.limit === b.limit &&
     a.status === b.status &&
+    a.level === b.level &&
     a.search === b.search &&
     a.from === b.from &&
     a.to === b.to
@@ -71,6 +75,7 @@ function MembersPageContent() {
   const page = Math.max(1, parseInt(searchParams.get("page"), 10) || 1)
   const pageSize = resolvePageSize(searchParams.get("limit"))
   const activeFilter = searchParams.get("status") || DEFAULT_STATUS
+  const activeLevel = searchParams.get("level") || ""
   const isEditParam = searchParams.get("isEdit") === "true"
   const editMemberIdParam = searchParams.get("memberId")
 
@@ -100,15 +105,37 @@ function MembersPageContent() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState("")
 
+  const formConfig = useMemberFormStore((state) => state.config)
+  const setFormConfig = useMemberFormStore((state) => state.setConfig)
+  const levelOptions = formConfig?.levels || []
+
+  // Levels power the filter dropdown; reuse the Add/Edit member form's
+  // cached config instead of a dedicated fetch when it's already loaded.
+  useEffect(() => {
+    if (useMemberFormStore.getState().config) return
+
+    const controller = new AbortController()
+
+    getMemberFormConfig(controller.signal)
+      .then((data) => {
+        if (controller.signal.aborted) return
+        setFormConfig(data)
+      })
+      .catch(() => {})
+
+    return () => controller.abort()
+  }, [setFormConfig])
+
   // Accumulates every member ever fetched (any page/filter), so a new search
   // can be answered from state first without hitting the API.
-  function searchCache(query, status) {
+  function searchCache(query, status, level) {
     const needle = query.trim().toLowerCase()
     if (!needle) return null
 
     const matches = []
     for (const member of getCachedMembers()) {
       if (status !== DEFAULT_STATUS && member.status !== status) continue
+      if (level && member.levelId !== level) continue
       const haystack = `${member.name} ${member.email || ""}`.toLowerCase()
       if (haystack.includes(needle)) matches.push(member)
     }
@@ -230,6 +257,10 @@ function MembersPageContent() {
     updateParams({ status: nextFilter })
   }
 
+  function updateLevel(nextLevel) {
+    updateParams({ level: nextLevel })
+  }
+
   function updateSearch(nextSearch) {
     setSearch(nextSearch)
     goToPage(1)
@@ -256,6 +287,7 @@ function MembersPageContent() {
       page,
       limit: pageSize,
       status: activeFilter,
+      level: activeLevel,
       search: debouncedSearch,
       from: dateFrom,
       to: dateTo,
@@ -284,7 +316,7 @@ function MembersPageContent() {
       // Disabled while a date range is active — the cache was accumulated
       // without any date filtering, so it can't answer a ranged query correctly.
       if (debouncedSearch && !hasDateRange) {
-        const cached = searchCache(debouncedSearch, activeFilter)
+        const cached = searchCache(debouncedSearch, activeFilter, activeLevel)
         if (cached) {
           setMembers(
             cached,
@@ -306,6 +338,7 @@ function MembersPageContent() {
             limit: pageSize,
             search: debouncedSearch,
             status: activeFilter === DEFAULT_STATUS ? "" : activeFilter,
+            levelId: activeLevel,
             from: dateFrom,
             to: dateTo,
           },
@@ -343,7 +376,16 @@ function MembersPageContent() {
       controller.abort()
       unregister()
     }
-  }, [page, pageSize, activeFilter, debouncedSearch, dateFrom, dateTo, refreshKey])
+  }, [
+    page,
+    pageSize,
+    activeFilter,
+    activeLevel,
+    debouncedSearch,
+    dateFrom,
+    dateTo,
+    refreshKey,
+  ])
 
   const [breakdown, setBreakdown] = useState({ total: 0, breakdown: [] })
   const [isBreakdownLoading, setIsBreakdownLoading] = useState(true)
@@ -379,7 +421,10 @@ function MembersPageContent() {
   }, [dateFrom, dateTo, refreshKey])
 
   const hasActiveFilters =
-    activeFilter !== DEFAULT_STATUS || Boolean(search) || Boolean(dateRange)
+    activeFilter !== DEFAULT_STATUS ||
+    Boolean(activeLevel) ||
+    Boolean(search) ||
+    Boolean(dateRange)
   // Nothing to filter — no members exist at all (not just for the current
   // filter combination) — so disable the controls rather than let the user
   // open filters with no possible effect. Never disable while a filter is
@@ -516,11 +561,19 @@ function MembersPageContent() {
 
         <section className="space-y-3">
           <div className="flex flex-col gap-3 rounded-xl border border-border bg-card/60 p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
-            <MemberFilters
-              active={activeFilter}
-              onChange={updateFilter}
-              disabled={filtersDisabled}
-            />
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <MemberFilters
+                active={activeFilter}
+                onChange={updateFilter}
+                disabled={filtersDisabled}
+              />
+              <MemberLevelFilter
+                value={activeLevel}
+                onChange={updateLevel}
+                levels={levelOptions}
+                disabled={filtersDisabled}
+              />
+            </div>
             <MemberSearch
               value={search}
               onChange={updateSearch}
