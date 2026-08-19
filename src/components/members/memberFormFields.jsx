@@ -99,13 +99,20 @@ const NAME_FIELDS = [
     label: "First Name",
     placeholder: "e.g. Juan",
     required: true,
+    capitalize: true,
   },
-  { name: "middleName", label: "Middle Name", placeholder: "Optional" },
+  {
+    name: "middleName",
+    label: "Middle Name",
+    placeholder: "Optional",
+    capitalize: true,
+  },
   {
     name: "lastName",
     label: "Last Name",
     placeholder: "e.g. Dela Cruz",
     required: true,
+    capitalize: true,
   },
 ]
 
@@ -128,7 +135,7 @@ const CONTACT_FIELDS = [
   {
     name: "address",
     label: "Address",
-    placeholder: "Street, City",
+    placeholder: "St., Brgy., City, Province",
     required: true,
   },
 ]
@@ -250,6 +257,7 @@ function FormField({ field, value, error, onChange, onBlur }) {
     digitsOnly,
     maxDigits,
     startsWith,
+    capitalize,
     ...inputProps
   } = field
 
@@ -259,6 +267,12 @@ function FormField({ field, value, error, onChange, onBlur }) {
     if (digitsOnly) next = next.replace(/\D/g, "")
     if (startsWith && next && !next.startsWith(startsWith)) return
     if (maxDigits) next = next.slice(0, maxDigits)
+    if (capitalize && next) {
+      next = next.replace(
+        /(^|\s)([a-z])/g,
+        (match, boundary, letter) => boundary + letter.toUpperCase()
+      )
+    }
 
     onChange(name, next)
   }
@@ -310,7 +324,7 @@ function AddressFormField({ field, value, error, onChange, onBlur }) {
         }}
         allowCreate
         clearable
-        placeholder="Street, City"
+        placeholder="St., Brgy., City, Province"
         searchPlaceholder="Search or type an address…"
         emptyText="No saved addresses"
         createLabel="Use"

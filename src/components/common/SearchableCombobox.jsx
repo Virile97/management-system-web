@@ -100,11 +100,15 @@ function SearchableCombobox({
       option,
     }))
     if (canCreate) {
-      items.push({
+      const createRow = {
         kind: "create",
         key: `__create__:${query.trim()}`,
         label: query.trim(),
-      })
+      }
+      // No exact match for the typed text — lead with the create action so
+      // it's not buried under partial matches. An exact match instead makes
+      // `canCreate` false, so this branch never fires when one exists.
+      items.unshift(createRow)
     }
     return items
   }, [filtered, canCreate, query])
