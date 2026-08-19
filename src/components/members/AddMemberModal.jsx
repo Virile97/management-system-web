@@ -246,7 +246,7 @@ function AddMemberModal({ open, onOpenChange }) {
               </div>
 
               <MultiSelectField
-                label="Group"
+                label="Ministries"
                 options={groupOptions}
                 value={form.groupIds}
                 onToggle={handleToggleGroup}
@@ -257,6 +257,14 @@ function AddMemberModal({ open, onOpenChange }) {
                 label="New believer"
                 description="Mark this member for New Believers Class"
                 checked={form.isNewBeliever}
+                onChange={handleChange}
+              />
+
+              <BooleanCheckboxField
+                name="needsUpdate"
+                label="Needs update"
+                description="Flag this member's record as needing a follow-up review"
+                checked={form.needsUpdate}
                 onChange={handleChange}
               />
             </>

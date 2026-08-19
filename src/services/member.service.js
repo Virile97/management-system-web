@@ -58,6 +58,7 @@ function normalizeMember(member) {
     status: member.status?.name ?? "—",
     level: member.level?.name ?? "—",
     levelId: member.levelId || member.level?.id || "",
+    needsUpdate: Boolean(member.needsUpdate),
   }
 }
 
@@ -139,6 +140,7 @@ function toCreateMemberPayload(form) {
   if (form.lighthouseGroup) payload.lighthouseGroupId = form.lighthouseGroup
   if (form.groupIds.length) payload.groupIds = form.groupIds
   payload.isNewBeliever = Boolean(form.isNewBeliever)
+  payload.needsUpdate = Boolean(form.needsUpdate)
 
   return payload
 }
@@ -168,6 +170,7 @@ function toUpdateMemberPayload(form) {
 
   payload.groupIds = form.groupIds
   payload.isNewBeliever = Boolean(form.isNewBeliever)
+  payload.needsUpdate = Boolean(form.needsUpdate)
 
   return payload
 }

@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 import { cn } from "@/lib/utils"
-import { QrCode } from "lucide-react"
+import { AlertCircle, QrCode } from "lucide-react"
 
 const statusStyles = {
   Active: "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400",
@@ -41,6 +41,7 @@ function MemberRow({
       className={cn(
         "border-b border-border transition-colors last:border-0",
         checked && "bg-primary/3",
+        member.needsUpdate && !checked && "bg-red-50 dark:bg-red-500/5",
         onOpen && !isDeleting && "cursor-pointer hover:bg-muted/40",
         isDeleting && "pointer-events-none opacity-50"
       )}
@@ -71,8 +72,14 @@ function MemberRow({
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#1e2a4a] text-xs font-semibold text-white ring-2 ring-background">
             {initials(member.name)}
           </div>
-          <p className="text-sm font-medium text-foreground">
+          <p className="flex items-center gap-1.5 text-sm font-medium text-foreground">
             {member.name}
+            {member.needsUpdate && (
+              <AlertCircle
+                className="h-3.5 w-3.5 shrink-0 text-red-500"
+                aria-label="Needs update"
+              />
+            )}
           </p>
         </div>
       </td>

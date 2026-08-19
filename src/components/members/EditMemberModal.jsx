@@ -48,6 +48,7 @@ function memberToForm(member) {
       member.lighthouseGroupId || member.lighthouseGroup?.id || "",
     groupIds: member.groups?.map((g) => g.id) || [],
     isNewBeliever: Boolean(member.isNewBeliever),
+    needsUpdate: Boolean(member.needsUpdate),
   }
 }
 
@@ -270,7 +271,7 @@ function EditMemberModal({ open, onOpenChange, memberId, onUpdated }) {
               </div>
 
               <MultiSelectField
-                label="Group"
+                label="Ministries"
                 options={groupOptions}
                 value={form.groupIds}
                 onToggle={handleToggleGroup}
@@ -281,6 +282,14 @@ function EditMemberModal({ open, onOpenChange, memberId, onUpdated }) {
                 label="New believer"
                 description="Mark this member for New Believers Class"
                 checked={form.isNewBeliever}
+                onChange={handleChange}
+              />
+
+              <BooleanCheckboxField
+                name="needsUpdate"
+                label="Needs update"
+                description="Flag this member's record as needing a follow-up review"
+                checked={form.needsUpdate}
                 onChange={handleChange}
               />
             </>

@@ -85,6 +85,7 @@ function buildInitialForm(selectFields) {
     age: "",
     groupIds: [],
     isNewBeliever: false,
+    needsUpdate: false,
     ...Object.fromEntries(selectFields.map((field) => [field.name, ""])),
   }
 }
@@ -154,7 +155,7 @@ function applyOptionalFieldConfig(field) {
 }
 
 function getFieldError(field, value) {
-  const { required, validate } = MEMBER_FORM_VALIDATORS[field]
+  const { required, validate } = MEMBER_FORM_VALIDATORS[field] || {}
 
   if (!value) return required ?? ""
   if (validate) return validate(value)

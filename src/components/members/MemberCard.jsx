@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 import { cn } from "@/lib/utils"
-import { QrCode } from "lucide-react"
+import { AlertCircle, QrCode } from "lucide-react"
 
 const statusStyles = {
   Active: "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400",
@@ -41,6 +41,7 @@ function MemberCard({
       className={cn(
         "flex flex-col gap-3 border-b border-border p-4 transition-colors last:border-0",
         checked && "bg-primary/3",
+        member.needsUpdate && !checked && "bg-red-50 dark:bg-red-500/5",
         onOpen && !isDeleting && "cursor-pointer active:bg-muted/40",
         isDeleting && "pointer-events-none opacity-50"
       )}
@@ -63,8 +64,14 @@ function MemberCard({
             {initials(member.name)}
           </div>
           <div className="min-w-0">
-            <p className="truncate text-sm font-medium text-foreground">
+            <p className="flex items-center gap-1.5 truncate text-sm font-medium text-foreground">
               {member.name}
+              {member.needsUpdate && (
+                <AlertCircle
+                  className="h-3.5 w-3.5 shrink-0 text-red-500"
+                  aria-label="Needs update"
+                />
+              )}
             </p>
           </div>
         </div>
