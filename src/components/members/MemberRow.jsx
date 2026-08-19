@@ -1,5 +1,10 @@
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 import { AlertCircle, QrCode } from "lucide-react"
 
@@ -41,7 +46,6 @@ function MemberRow({
       className={cn(
         "border-b border-border transition-colors last:border-0",
         checked && "bg-primary/3",
-        member.needsUpdate && !checked && "bg-red-50 dark:bg-red-500/5",
         onOpen && !isDeleting && "cursor-pointer hover:bg-muted/40",
         isDeleting && "pointer-events-none opacity-50"
       )}
@@ -75,10 +79,18 @@ function MemberRow({
           <p className="flex items-center gap-1.5 text-sm font-medium text-foreground">
             {member.name}
             {member.needsUpdate && (
-              <AlertCircle
-                className="h-3.5 w-3.5 shrink-0 text-red-500"
-                aria-label="Needs update"
-              />
+              <Tooltip>
+                <TooltipTrigger
+                  onClick={(event) => event.stopPropagation()}
+                  className="shrink-0 cursor-default"
+                  aria-label="Needs update"
+                >
+                  <AlertCircle className="h-3.5 w-3.5 text-red-500" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  This member needs an update
+                </TooltipContent>
+              </Tooltip>
             )}
           </p>
         </div>

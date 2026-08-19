@@ -188,11 +188,12 @@ function createMember(form) {
   )
 }
 
-function updateMember(id, form) {
-  return fetchJson(
+async function updateMember(id, form) {
+  const updated = await fetchJson(
     APP_API_ENDPOINTS.MEMBER_BY_ID(id),
     mutationOptions("PATCH", toUpdateMemberPayload(form))
   )
+  return normalizeMember(updated)
 }
 
 function deleteMember(id, signal) {

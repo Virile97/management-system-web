@@ -42,6 +42,7 @@ import {
   PROCESS_TYPES,
   enqueueDeleteMembers,
   selectPendingMemberDeleteIds,
+  selectPendingMemberUpdateIds,
   useProcessQueueStore,
 } from "@/stores/processQueue.store"
 import { Plus, QrCode, Trash2, FileDown } from "lucide-react"
@@ -88,6 +89,7 @@ function MembersPageContent() {
     query,
     setMembers,
     cacheMembers,
+    updateCachedMember,
     getCachedMembers,
     removeCachedMembers,
   } = useMembersStore(
@@ -97,6 +99,7 @@ function MembersPageContent() {
       query: state.query,
       setMembers: state.setMembers,
       cacheMembers: state.cacheMembers,
+      updateCachedMember: state.updateCachedMember,
       getCachedMembers: state.getCachedMembers,
       removeCachedMembers: state.removeCachedMembers,
     }))
@@ -149,9 +152,12 @@ function MembersPageContent() {
   const pendingDeleteIds = useProcessQueueStore(
     useShallow(selectPendingMemberDeleteIds)
   )
+  const pendingUpdateIds = useProcessQueueStore(
+    useShallow(selectPendingMemberUpdateIds)
+  )
   const deletingMemberIds = useMemo(
-    () => new Set(pendingDeleteIds),
-    [pendingDeleteIds]
+    () => new Set([...pendingDeleteIds, ...pendingUpdateIds]),
+    [pendingDeleteIds, pendingUpdateIds]
   )
   const activeDeleteCount = pendingDeleteIds.length
   const isFirstCompleted = useRef(true)
@@ -174,13 +180,16 @@ function MembersPageContent() {
     if (memberId) removeCachedMembers([memberId])
   }, [lastCompleted, removeCachedMembers])
 
-  // Refresh when a queued create finishes (still one refetch per create).
+  // Refresh when a queued create or update finishes (one refetch per job).
   useEffect(() => {
     if (skipCreateRefresh.current) {
       skipCreateRefresh.current = false
       return
     }
-    if (lastCompleted?.type === PROCESS_TYPES.MEMBERS_CREATE_MEMBER) {
+    if (
+      lastCompleted?.type === PROCESS_TYPES.MEMBERS_CREATE_MEMBER ||
+      lastCompleted?.type === PROCESS_TYPES.MEMBERS_UPDATE_MEMBER
+    ) {
       setRefreshKey((key) => key + 1)
     }
   }, [lastCompleted])
@@ -615,7 +624,7 @@ function MembersPageContent() {
         open={isEditParam && Boolean(editMemberIdParam)}
         onOpenChange={(open) => !open && closeEditMember()}
         memberId={editMemberIdParam}
-        onUpdated={() => setRefreshKey((key) => key + 1)}
+        onUpdated={(updated) => updated && updateCachedMember(updated)}
       />
       <PrintQrModal
         open={printMember !== null}

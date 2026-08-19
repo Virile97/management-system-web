@@ -4,7 +4,11 @@ import {
   deleteTransaction,
   formatDeleteError,
 } from "@/services/finance.service"
-import { bulkDeleteMembers, createMember } from "@/services/member.service"
+import {
+  bulkDeleteMembers,
+  createMember,
+  updateMember,
+} from "@/services/member.service"
 import { createSoulWinningRecord } from "@/services/soulWinning.service"
 
 /** Shared app-wide background process queue. */
@@ -12,6 +16,7 @@ const PROCESS_TYPES = {
   FINANCE_CREATE_TRANSACTION: "finance.createTransaction",
   FINANCE_DELETE_TRANSACTION: "finance.deleteTransaction",
   MEMBERS_CREATE_MEMBER: "members.createMember",
+  MEMBERS_UPDATE_MEMBER: "members.updateMember",
   MEMBERS_DELETE_MEMBER: "members.deleteMember",
   SOUL_WINNING_CREATE_RECORD: "soulWinning.createRecord",
 }
@@ -34,6 +39,8 @@ const useProcessQueueStore = createProcessQueue({
       }
     },
     [PROCESS_TYPES.MEMBERS_CREATE_MEMBER]: (payload) => createMember(payload),
+    [PROCESS_TYPES.MEMBERS_UPDATE_MEMBER]: ({ id, form }) =>
+      updateMember(id, form),
     [PROCESS_TYPES.MEMBERS_DELETE_MEMBER]: async ({ id }) => {
       const result = await bulkDeleteMembers([id])
       const blocked = result?.blocked || []
@@ -102,6 +109,32 @@ function enqueueCreateMember({ form, label }) {
     display: {
       title: name,
       subtitle: form?.email || "New member",
+      tone: "positive",
+    },
+  })
+}
+
+/**
+ * High-level helper for editing members without blocking the modal — the
+ * modal closes immediately on save and the update drains through the queue,
+ * same flow as enqueueCreateMember.
+ */
+function enqueueUpdateMember({ id, form, label }) {
+  const name =
+    label ||
+    [form?.firstName, form?.middleName, form?.lastName]
+      .filter(Boolean)
+      .join(" ")
+      .trim() ||
+    form?.email ||
+    "Member"
+
+  return useProcessQueueStore.getState().enqueue({
+    type: PROCESS_TYPES.MEMBERS_UPDATE_MEMBER,
+    payload: { id, form },
+    display: {
+      title: name,
+      subtitle: "Update member",
       tone: "positive",
     },
   })
@@ -210,6 +243,9 @@ function createPendingDeleteIdSelector(processType) {
 const selectPendingMemberDeleteIds = createPendingDeleteIdSelector(
   PROCESS_TYPES.MEMBERS_DELETE_MEMBER
 )
+const selectPendingMemberUpdateIds = createPendingDeleteIdSelector(
+  PROCESS_TYPES.MEMBERS_UPDATE_MEMBER
+)
 const selectPendingTransactionDeleteIds = createPendingDeleteIdSelector(
   PROCESS_TYPES.FINANCE_DELETE_TRANSACTION
 )
@@ -218,10 +254,12 @@ export {
   useProcessQueueStore,
   PROCESS_TYPES,
   selectPendingMemberDeleteIds,
+  selectPendingMemberUpdateIds,
   selectPendingTransactionDeleteIds,
   enqueueCreateTransaction,
   enqueueDeleteTransactions,
   enqueueCreateMember,
+  enqueueUpdateMember,
   enqueueDeleteMembers,
   enqueueCreateSoulWinningRecord,
 }

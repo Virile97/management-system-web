@@ -1,18 +1,14 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { toast } from "sonner"
 import { Dialog, DialogContent, DialogFooter } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { MEMBER_FORM_VALIDATORS } from "@/utils/validators"
 import { calculateAge, toDateInputValue } from "@/utils/helpers"
-import {
-  updateMember,
-  getMemberFormConfig,
-  getMemberById,
-} from "@/services/member.service"
+import { getMemberFormConfig, getMemberById } from "@/services/member.service"
 import { useMemberFormStore } from "@/stores/memberForm.store"
 import { useAddressBookStore } from "@/stores/addressBook.store"
+import { enqueueUpdateMember } from "@/stores/processQueue.store"
 import {
   MemberDialogHeader,
   buildSelectFields,
@@ -52,7 +48,7 @@ function memberToForm(member) {
   }
 }
 
-function EditMemberModal({ open, onOpenChange, memberId, onUpdated }) {
+function EditMemberModal({ open, onOpenChange, memberId }) {
   const config = useMemberFormStore((state) => state.config)
   const setConfig = useMemberFormStore((state) => state.setConfig)
   const addAddress = useAddressBookStore((state) => state.addAddress)
@@ -61,8 +57,6 @@ function EditMemberModal({ open, onOpenChange, memberId, onUpdated }) {
 
   const [errors, setErrors] = useState({})
   const [form, setForm] = useState(null)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [submitError, setSubmitError] = useState("")
 
   useEffect(() => {
     if (!open || !memberId) return
@@ -138,11 +132,10 @@ function EditMemberModal({ open, onOpenChange, memberId, onUpdated }) {
   function resetState() {
     setForm(null)
     setErrors({})
-    setSubmitError("")
     setConfigError("")
   }
 
-  async function handleSubmit() {
+  function handleSubmit() {
     const nextErrors = Object.fromEntries(
       Object.keys(MEMBER_FORM_VALIDATORS).map((field) => [
         field,
@@ -154,23 +147,13 @@ function EditMemberModal({ open, onOpenChange, memberId, onUpdated }) {
     const hasErrors = Object.values(nextErrors).some(Boolean)
     if (hasErrors) return
 
-    setSubmitError("")
-    setIsSubmitting(true)
-
-    try {
-      await updateMember(memberId, form)
-      addAddress(form.address)
-      resetState()
-      onUpdated?.()
-      onOpenChange(false)
-      toast.success("Member updated")
-    } catch (err) {
-      setSubmitError(
-        err?.message || "Unable to update member. Please try again."
-      )
-    } finally {
-      setIsSubmitting(false)
-    }
+    // Queue the update so the modal closes immediately and the member's row
+    // stays locked (via selectPendingMemberUpdateIds) until it drains —
+    // same flow as AddMemberModal's queued create.
+    addAddress(form.address)
+    enqueueUpdateMember({ id: memberId, form })
+    resetState()
+    onOpenChange(false)
   }
 
   function handleOpenChange(next) {
@@ -295,7 +278,6 @@ function EditMemberModal({ open, onOpenChange, memberId, onUpdated }) {
             </>
           )}
 
-          {submitError && <p className="text-sm text-red-500">{submitError}</p>}
         </div>
 
         <DialogFooter className="mx-0 mb-0 flex-col-reverse justify-end gap-3 rounded-b-xl border-t border-border bg-transparent px-4 py-4 sm:flex-row sm:px-6 sm:py-5">
@@ -304,7 +286,6 @@ function EditMemberModal({ open, onOpenChange, memberId, onUpdated }) {
             variant="outline"
             className="h-10 rounded-lg px-5"
             onClick={() => handleOpenChange(false)}
-            disabled={isSubmitting}
           >
             Cancel
           </Button>
@@ -312,9 +293,9 @@ function EditMemberModal({ open, onOpenChange, memberId, onUpdated }) {
             type="button"
             className="h-10 rounded-lg bg-[#1e2a4a] px-5 text-white hover:bg-[#1e2a4a]/90"
             onClick={handleSubmit}
-            disabled={isSubmitting || !isFormReady}
+            disabled={!isFormReady}
           >
-            {isSubmitting ? "Saving..." : "Save Changes"}
+            Save Changes
           </Button>
         </DialogFooter>
       </DialogContent>

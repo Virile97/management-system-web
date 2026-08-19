@@ -136,10 +136,7 @@ function TransactionTable({
           <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search transactions..."
-            className={cn(
-              "h-10 rounded-lg bg-card pl-9 sm:h-8",
-              search && "pr-9"
-            )}
+            className={cn("h-10 rounded-lg bg-card pl-9", search && "pr-9")}
             value={search}
             disabled={filtersDisabled}
             onChange={(event) => onSearchChange(event.target.value)}

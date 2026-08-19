@@ -26,6 +26,17 @@ const useMembersStore = create(
           for (const member of members) cache[member.id] = member
           return { cache }
         }),
+      // Patches a single member in both the accumulated cache and the
+      // currently displayed list after an edit, so the update is reflected
+      // immediately instead of waiting for the next full refetch (which the
+      // search fast-path can bypass indefinitely).
+      updateCachedMember: (member) =>
+        set((state) => ({
+          cache: { ...state.cache, [member.id]: member },
+          members: state.members.map((m) =>
+            m.id === member.id ? member : m
+          ),
+        })),
       // Deleted members must be evicted from the accumulated search-fast-path
       // cache too, or a still-active search keeps serving them from cache
       // instead of hitting the API — the delete succeeds server-side but the

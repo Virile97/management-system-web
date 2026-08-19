@@ -17,7 +17,7 @@ function MemberLevelFilter({ value, onChange, levels = [], disabled = false }) {
       placeholder="Filter by level"
       searchPlaceholder="Search level…"
       emptyText="No levels found"
-      className="w-full sm:w-56 [&_button]:h-10 sm:[&_button]:h-8"
+      className="w-full sm:w-56 [&_button]:h-10"
     />
   )
 }

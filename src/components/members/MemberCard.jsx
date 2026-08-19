@@ -41,7 +41,6 @@ function MemberCard({
       className={cn(
         "flex flex-col gap-3 border-b border-border p-4 transition-colors last:border-0",
         checked && "bg-primary/3",
-        member.needsUpdate && !checked && "bg-red-50 dark:bg-red-500/5",
         onOpen && !isDeleting && "cursor-pointer active:bg-muted/40",
         isDeleting && "pointer-events-none opacity-50"
       )}
