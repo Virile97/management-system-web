@@ -486,6 +486,12 @@ function SoulWinningPageContent() {
       ? Number(stats.totalSoulsWon)
       : recordsMeta.total || 0
 
+  const activeSectionLoading =
+    (activeTab === "records" && isRecordsLoading) ||
+    (activeTab === "leaderboard" && isWinnersLoading) ||
+    (activeTab === "trend" && isTrendsLoading)
+  const isPeriodLoading = isOverviewLoading || activeSectionLoading
+
   return (
     <div className="bg-background px-3 py-4 sm:p-6 md:p-8">
       <div className="mx-auto max-w-6xl">
@@ -518,6 +524,7 @@ function SoulWinningPageContent() {
             onCustomClick={() => setIsDateRangeOpen(true)}
             clearable={periodDrivesFilter}
             onClear={clearPeriodFilter}
+            disabled={isPeriodLoading}
           />
         </div>
 
@@ -553,7 +560,11 @@ function SoulWinningPageContent() {
         </div>
 
         <div className="mt-4 sm:mt-6">
-          <SectionTabs active={activeTab} onChange={setActiveTab} />
+          <SectionTabs
+            active={activeTab}
+            onChange={setActiveTab}
+            disabled={activeSectionLoading}
+          />
         </div>
 
         {activeTab === "records" && (
@@ -568,6 +579,7 @@ function SoulWinningPageContent() {
               winner={winnerFilter}
               onWinnerChange={updateWinnerFilter}
               resultCount={recordsMeta.total || 0}
+              disabled={isRecordsLoading}
             />
             {recordsError ? (
               <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">

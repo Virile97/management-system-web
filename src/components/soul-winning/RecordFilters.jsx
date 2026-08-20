@@ -27,6 +27,7 @@ function RecordFilters({
   winner = null,
   onWinnerChange,
   resultCount,
+  disabled = false,
 }) {
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
@@ -41,13 +42,15 @@ function RecordFilters({
             )}
             value={search}
             onChange={(event) => onSearchChange(event.target.value)}
+            disabled={disabled}
           />
           {search ? (
             <button
               type="button"
               onClick={() => onSearchChange("")}
               aria-label="Clear search"
-              className="absolute top-1/2 right-2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted-foreground/15 hover:text-foreground"
+              disabled={disabled}
+              className="absolute top-1/2 right-2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted-foreground/15 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -55,7 +58,7 @@ function RecordFilters({
         </div>
 
         <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-row sm:items-center sm:gap-3">
-          <Select value={status} onValueChange={onStatusChange}>
+          <Select value={status} onValueChange={onStatusChange} disabled={disabled}>
             <SelectTrigger className="w-full rounded-lg bg-card data-[size=default]:h-10 sm:w-44">
               <Filter className="h-4 w-4 text-muted-foreground" />
               <SelectValue>
@@ -80,6 +83,7 @@ function RecordFilters({
               onChange={onWinnerChange}
               placeholder="Filter by soul winner..."
               className="bg-card hover:bg-card"
+              disabled={disabled}
             />
           </div>
         </div>

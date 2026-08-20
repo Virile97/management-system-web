@@ -17,6 +17,7 @@ function PeriodTabs({
   onClear,
   clearable = false,
   periods = DEFAULT_PERIODS,
+  disabled = false,
 }) {
   function handleClick(period) {
     if (period === "Custom") {
@@ -32,9 +33,10 @@ function PeriodTabs({
           <button
             key={period}
             type="button"
+            disabled={disabled}
             onClick={() => handleClick(period)}
             className={cn(
-              "h-9 shrink-0 rounded-lg px-3 text-sm transition-colors sm:h-auto sm:py-1.5",
+              "h-9 shrink-0 rounded-lg px-3 text-sm transition-colors sm:h-auto sm:py-1.5 disabled:cursor-not-allowed disabled:opacity-50",
               active === period
                 ? "bg-[#1e2a4a] font-medium text-white"
                 : "font-normal text-muted-foreground hover:text-foreground"
@@ -47,9 +49,10 @@ function PeriodTabs({
         {clearable && (
           <button
             type="button"
+            disabled={disabled}
             onClick={onClear}
             aria-label="Clear filter"
-            className="ml-1.5 inline-flex h-9 shrink-0 items-center gap-1 rounded-md px-2 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground sm:h-auto sm:py-1.5"
+            className="ml-1.5 inline-flex h-9 shrink-0 items-center gap-1 rounded-md px-2 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50 sm:h-auto sm:py-1.5"
           >
             <X className="h-3 w-3" />
             Clear filter

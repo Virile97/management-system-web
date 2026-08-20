@@ -12,16 +12,17 @@ const tabs = [
   { key: "trend", label: "Trend Chart", shortLabel: "Trend", icon: TrendingUp },
 ]
 
-function SectionTabs({ active, onChange }) {
+function SectionTabs({ active, onChange, disabled = false }) {
   return (
     <div className="flex w-full items-center gap-1 rounded-xl bg-muted p-1 sm:w-fit">
       {tabs.map((tab) => (
         <button
           key={tab.key}
           type="button"
+          disabled={disabled}
           onClick={() => onChange(tab.key)}
           className={cn(
-            "flex h-10 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-lg px-2 text-sm font-medium transition-colors sm:h-auto sm:flex-none sm:gap-2 sm:px-4 sm:py-2",
+            "flex h-10 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-lg px-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 sm:h-auto sm:flex-none sm:gap-2 sm:px-4 sm:py-2",
             active === tab.key
               ? "bg-card text-foreground/85 shadow-sm"
               : "text-muted-foreground hover:text-foreground"

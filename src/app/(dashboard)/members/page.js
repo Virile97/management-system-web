@@ -90,7 +90,6 @@ function MembersPageContent() {
     setMembers,
     cacheMembers,
     updateCachedMember,
-    getCachedMembers,
     removeCachedMembers,
   } = useMembersStore(
     useShallow((state) => ({
@@ -100,7 +99,6 @@ function MembersPageContent() {
       setMembers: state.setMembers,
       cacheMembers: state.cacheMembers,
       updateCachedMember: state.updateCachedMember,
-      getCachedMembers: state.getCachedMembers,
       removeCachedMembers: state.removeCachedMembers,
     }))
   )
@@ -128,22 +126,6 @@ function MembersPageContent() {
 
     return () => controller.abort()
   }, [setFormConfig])
-
-  // Accumulates every member ever fetched (any page/filter), so a new search
-  // can be answered from state first without hitting the API.
-  function searchCache(query, status, level) {
-    const needle = query.trim().toLowerCase()
-    if (!needle) return null
-
-    const matches = []
-    for (const member of getCachedMembers()) {
-      if (status !== DEFAULT_STATUS && member.status !== status) continue
-      if (level && member.levelId !== level) continue
-      const haystack = `${member.name} ${member.email || ""}`.toLowerCase()
-      if (haystack.includes(needle)) matches.push(member)
-    }
-    return matches.length > 0 ? matches : null
-  }
 
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false)
   const [isExportOpen, setIsExportOpen] = useState(false)
@@ -319,24 +301,6 @@ function MembersPageContent() {
     const unregister = registerAbortController(controller)
 
     async function loadMembers() {
-      // Search-only fast path: answer from the accumulated cache when possible,
-      // skipping the API call entirely. Pagination against the API is unaffected.
-      // Disabled while a date range is active — the cache was accumulated
-      // without any date filtering, so it can't answer a ranged query correctly.
-      if (debouncedSearch && !hasDateRange) {
-        const cached = searchCache(debouncedSearch, activeFilter, activeLevel)
-        if (cached) {
-          setMembers(
-            cached,
-            { total: cached.length, totalPages: 1 },
-            currentQuery
-          )
-          setIsLoading(false)
-          setError("")
-          return
-        }
-      }
-
       setIsLoading(true)
       setError("")
       try {
@@ -368,7 +332,8 @@ function MembersPageContent() {
         }
 
         // Only cache when unranged — ranged results are a subset that would
-        // otherwise pollute the cache used by the (range-free) search fast path.
+        // otherwise pollute the accumulated member cache used elsewhere (e.g.
+        // Print QR / export selections across pages).
         if (!hasDateRange) cacheMembers(data)
         setMembers(data, resolvedMeta, currentQuery)
       } catch (err) {

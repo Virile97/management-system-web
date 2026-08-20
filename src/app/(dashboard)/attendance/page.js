@@ -116,7 +116,6 @@ function AttendancePageContent() {
     setSummary,
     setLevels,
     cacheItems,
-    getCachedItems,
     patchItem,
   } = useAttendanceStore(
     useShallow((state) => ({
@@ -129,7 +128,6 @@ function AttendancePageContent() {
       setSummary: state.setSummary,
       setLevels: state.setLevels,
       cacheItems: state.cacheItems,
-      getCachedItems: state.getCachedItems,
       patchItem: state.patchItem,
     }))
   )
@@ -210,29 +208,6 @@ function AttendancePageContent() {
     updateParams({ limit: nextSize, page: 1 })
   }
 
-  /**
-   * Search fast-path: filter rows already cached for this range (and level).
-   * Returns null when nothing matches so the caller can fall through to the API.
-   */
-  function searchCache(needle, level) {
-    const trimmed = needle.trim().toLowerCase()
-    if (!trimmed) return null
-
-    const matches = []
-    for (const item of getCachedItems(cacheKey)) {
-      if (level !== DEFAULT_LEVEL && item.level !== level) continue
-      if (
-        String(item.name || "")
-          .toLowerCase()
-          .includes(trimmed)
-      ) {
-        matches.push(item)
-      }
-    }
-
-    return matches.length > 0 ? matches : null
-  }
-
   useEffect(() => {
     const currentQuery = {
       from: dateFrom,
@@ -270,25 +245,6 @@ function AttendancePageContent() {
     let active = true
 
     const load = async () => {
-      const searchValue = debouncedSearch.trim()
-
-      if (searchValue) {
-        const cached = searchCache(searchValue, activeLevel)
-
-        if (cached) {
-          if (!active) return
-          lastQueryRef.current = currentQuery
-          setAttendance(
-            cached,
-            { page: 1, limit: pageSize, total: cached.length, totalPages: 1 },
-            currentQuery
-          )
-          setIsLoading(false)
-          setError("")
-          return
-        }
-      }
-
       setError("")
 
       try {
