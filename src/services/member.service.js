@@ -56,6 +56,7 @@ function normalizeMember(member) {
         })
       : "—",
     status: member.status?.name ?? "—",
+    statusId: member.statusId || member.status?.id || "",
     level: member.level?.name ?? "—",
     levelId: member.levelId || member.level?.id || "",
     needsUpdate: Boolean(member.needsUpdate),

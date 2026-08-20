@@ -12,6 +12,7 @@ import {
 } from "@/services/member.service"
 import { useMemberFormStore } from "@/stores/memberForm.store"
 import { useAddressBookStore } from "@/stores/addressBook.store"
+import { useMembersStore } from "@/stores/members.store"
 import { enqueueUpdateMember } from "@/stores/processQueue.store"
 import {
   MemberDialogHeader,
@@ -55,9 +56,15 @@ function memberToForm(member) {
 // Inverse of memberToForm — merges edited form values back onto the raw
 // member (resolving id-only fields to the {id, name}/{id, role} shapes
 // normalizeMember expects), so the table can be patched optimistically
-// without an extra fetch after a queued update completes.
+// without an extra fetch after a queued update completes. `rawMember` may
+// itself already be normalized (e.g. reused from the members store cache),
+// so its `status`/`level`/`lighthouseGroup` fields can't be trusted as
+// fallback objects — only use them as a fallback when they're still the
+// {id, name} shape.
 function formToMember(form, config, rawMember) {
   const findById = (items, id) => items?.find((item) => item.id === id)
+  const asOption = (value) =>
+    value && typeof value === "object" ? value : undefined
 
   return {
     ...rawMember,
@@ -72,13 +79,14 @@ function formToMember(form, config, rawMember) {
     age: form.age === "" ? null : Number(form.age),
     gender: form.gender,
     statusId: form.status,
-    status: findById(config?.statuses, form.status) || rawMember.status,
+    status:
+      findById(config?.statuses, form.status) || asOption(rawMember.status),
     levelId: form.level,
-    level: findById(config?.levels, form.level) || rawMember.level,
+    level: findById(config?.levels, form.level) || asOption(rawMember.level),
     lighthouseGroupId: form.lighthouseGroup,
     lighthouseGroup:
       findById(config?.lighthouseGroups, form.lighthouseGroup) ||
-      rawMember.lighthouseGroup,
+      asOption(rawMember.lighthouseGroup),
     groups: form.groupIds
       .map((id) => findById(config?.groups, id))
       .filter(Boolean),
@@ -91,6 +99,13 @@ function EditMemberModal({ open, onOpenChange, memberId, onUpdated }) {
   const config = useMemberFormStore((state) => state.config)
   const setConfig = useMemberFormStore((state) => state.setConfig)
   const addAddress = useAddressBookStore((state) => state.addAddress)
+  // The member is normally already in hand (list row or detail page) and
+  // accumulates in this cache — reuse it instead of refetching by id so the
+  // modal opens instantly. Only genuinely missing entries (e.g. a stale/empty
+  // cache) fall back to a fetch.
+  const cachedMember = useMembersStore((state) =>
+    memberId ? state.cache[memberId] : null
+  )
   const [isConfigLoading, setIsConfigLoading] = useState(false)
   const [configError, setConfigError] = useState("")
 
@@ -111,7 +126,9 @@ function EditMemberModal({ open, onOpenChange, memberId, onUpdated }) {
           config
             ? Promise.resolve(config)
             : getMemberFormConfig(controller.signal),
-          getMemberById(memberId, controller.signal),
+          cachedMember
+            ? Promise.resolve(cachedMember)
+            : getMemberById(memberId, controller.signal),
         ])
 
         if (controller.signal.aborted) return
@@ -129,6 +146,7 @@ function EditMemberModal({ open, onOpenChange, memberId, onUpdated }) {
 
     load()
     return () => controller.abort()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, memberId])
 
   const selectFields = config ? buildSelectFields(config) : []
