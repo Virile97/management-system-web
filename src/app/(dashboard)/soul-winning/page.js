@@ -3,6 +3,14 @@
 import { Suspense, useEffect, useMemo, useRef, useState } from "react"
 import { useRouter, usePathname, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { PeriodTabs } from "@/components/soul-winning/PeriodTabs"
 import { SoulStatsCards } from "@/components/soul-winning/SoulStatsCards"
 import { SoulWinningGoal } from "@/components/soul-winning/SoulWinningGoal"
@@ -22,6 +30,7 @@ import {
   setSoulWinningGoal,
   listSoulWinningRecords,
   baptizeSoulWinningRecord,
+  bulkDeleteSoulWinningRecords,
   listSoulWinningWinners,
   getSoulWinningTrends,
   resolveGoalYear,
@@ -35,7 +44,7 @@ import {
   PROCESS_TYPES,
   useProcessQueueStore,
 } from "@/stores/processQueue.store"
-import { Plus } from "lucide-react"
+import { Plus, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 
 const DEFAULT_SECTION = "records"
@@ -92,6 +101,20 @@ function SoulWinningPageContent() {
   })
   const [isRecordsLoading, setIsRecordsLoading] = useState(false)
   const [recordsError, setRecordsError] = useState("")
+
+  const [selectedById, setSelectedById] = useState(() => new Map())
+  const selectedRecordIds = useMemo(
+    () => new Set(selectedById.keys()),
+    [selectedById]
+  )
+  const [isDeleteSelectedOpen, setIsDeleteSelectedOpen] = useState(false)
+  const [isDeletingRecords, setIsDeletingRecords] = useState(false)
+
+  // Selections don't carry meaning across a new fetch (page/filter change,
+  // or a delete's own refresh) — clear them whenever the visible rows change.
+  useEffect(() => {
+    setSelectedById(new Map())
+  }, [records])
 
   const [winners, setWinners] = useState([])
   const [totalSoulsShared, setTotalSoulsShared] = useState(0)
@@ -483,6 +506,54 @@ function SoulWinningPageContent() {
     refreshAfterMutationWithSnapshot(data?.snapshot)
   }
 
+  function toggleSelectRecord(record) {
+    setSelectedById((prev) => {
+      const next = new Map(prev)
+      if (next.has(record.id)) {
+        next.delete(record.id)
+      } else {
+        next.set(record.id, record)
+      }
+      return next
+    })
+  }
+
+  function toggleSelectAllRecords(pageRows) {
+    setSelectedById((prev) => {
+      const allSelected = pageRows.every((record) => prev.has(record.id))
+      const next = new Map(prev)
+      pageRows.forEach((record) => {
+        if (allSelected) {
+          next.delete(record.id)
+        } else {
+          next.set(record.id, record)
+        }
+      })
+      return next
+    })
+  }
+
+  async function handleConfirmBulkDelete() {
+    setIsDeletingRecords(true)
+    try {
+      const ids = Array.from(selectedRecordIds)
+      const result = await bulkDeleteSoulWinningRecords(ids)
+      toast.success(
+        `Deleted ${result.deletedCount} record${result.deletedCount === 1 ? "" : "s"}`
+      )
+      setSelectedById(new Map())
+      setIsDeleteSelectedOpen(false)
+      setOverviewKey((key) => key + 1)
+      setRecordsKey((key) => key + 1)
+      if (activeTab === "leaderboard") setWinnersKey((key) => key + 1)
+      if (activeTab === "trend") setTrendsKey((key) => key + 1)
+    } catch (err) {
+      toast.error(err?.message || "Unable to delete records")
+    } finally {
+      setIsDeletingRecords(false)
+    }
+  }
+
   const goal = overview?.goal || null
   const stats = overview?.stats || null
   const retention = overview?.retention || null
@@ -593,6 +664,33 @@ function SoulWinningPageContent() {
                 {recordsError}
               </p>
             ) : null}
+            {selectedRecordIds.size > 0 && (
+              <div className="flex flex-col gap-3 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm font-medium text-foreground">
+                  {selectedRecordIds.size} record
+                  {selectedRecordIds.size === 1 ? "" : "s"} selected
+                </p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-9 gap-1.5 rounded-lg bg-card text-destructive hover:bg-destructive/10 hover:text-destructive"
+                    onClick={() => setIsDeleteSelectedOpen(true)}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    Delete
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-9 rounded-lg"
+                    onClick={() => setSelectedById(new Map())}
+                  >
+                    Clear
+                  </Button>
+                </div>
+              </div>
+            )}
             <RecordsTable
               records={records}
               isLoading={isRecordsLoading}
@@ -606,6 +704,9 @@ function SoulWinningPageContent() {
               }
               onBaptize={setBaptizeRecord}
               onEdit={setEditRecord}
+              selected={selectedRecordIds}
+              onToggleSelect={toggleSelectRecord}
+              onToggleSelectAll={toggleSelectAllRecords}
             />
           </div>
         )}
@@ -688,6 +789,43 @@ function SoulWinningPageContent() {
           })
         }}
       />
+
+      <Dialog
+        open={isDeleteSelectedOpen}
+        onOpenChange={setIsDeleteSelectedOpen}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              Delete {selectedRecordIds.size} record
+              {selectedRecordIds.size === 1 ? "" : "s"}?
+            </DialogTitle>
+            <DialogDescription>
+              This will permanently remove the selected soul winning record
+              {selectedRecordIds.size === 1 ? "" : "s"}. If a record is
+              linked to a baptized member, the member is not affected — only
+              the record of how they were won is deleted. This action cannot
+              be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteSelectedOpen(false)}
+              disabled={isDeletingRecords}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="bg-destructive text-white hover:bg-destructive/90"
+              onClick={handleConfirmBulkDelete}
+              disabled={isDeletingRecords}
+            >
+              {isDeletingRecords ? "Deleting…" : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

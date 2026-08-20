@@ -2,6 +2,7 @@
 
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import { SortableTh } from "@/components/common/SortableTh"
 import { Pagination } from "@/components/common/Pagination"
 import { useTableSort } from "@/hooks/use-table-sort"
@@ -132,6 +133,9 @@ function RecordsTable({
   onPageSizeChange,
   onBaptize,
   onEdit,
+  selected,
+  onToggleSelect,
+  onToggleSelectAll,
 }) {
   const { sortedRows, sortKey, sortDirection, toggleSort } = useTableSort(
     records,
@@ -141,6 +145,11 @@ function RecordsTable({
 
   const from = total === 0 ? 0 : (page - 1) * pageSize + 1
   const to = Math.min(page * pageSize, total)
+  const enableSelection = Boolean(onToggleSelect)
+  const allSelected =
+    enableSelection &&
+    sortedRows.length > 0 &&
+    sortedRows.every((row) => selected?.has(row.id))
 
   if (isLoading) {
     return <RecordsTableSkeleton />
@@ -151,13 +160,22 @@ function RecordsTable({
       <table className="hidden w-full border-collapse md:table">
         <thead>
           <tr className="border-b border-border bg-muted/60">
+            {enableSelection && (
+              <th className="w-10 py-3 pl-4">
+                <Checkbox
+                  checked={allSelected}
+                  onCheckedChange={() => onToggleSelectAll?.(sortedRows)}
+                  aria-label="Select all records on this page"
+                />
+              </th>
+            )}
             <SortableTh
               label="Date"
               sortKey="date"
               activeKey={sortKey}
               direction={sortDirection}
               onSort={toggleSort}
-              className="pl-4"
+              className={enableSelection ? "" : "pl-4"}
             />
             <SortableTh
               label="Convert"
@@ -205,7 +223,18 @@ function RecordsTable({
               key={record.id}
               className="border-b border-border last:border-0"
             >
-              <td className="py-4 pl-4 align-top text-sm text-foreground/80">
+              {enableSelection && (
+                <td className="py-4 pl-4 align-top">
+                  <Checkbox
+                    checked={Boolean(selected?.has(record.id))}
+                    onCheckedChange={() => onToggleSelect?.(record)}
+                    aria-label={`Select ${record.convertName}`}
+                  />
+                </td>
+              )}
+              <td
+                className={`py-4 align-top text-sm text-foreground/80 ${enableSelection ? "pr-4" : "pl-4"}`}
+              >
                 {formatDisplayDate(record.date)}
               </td>
               <td className="py-4 pr-4 align-top">
@@ -279,6 +308,14 @@ function RecordsTable({
           >
             <div className="flex items-start justify-between gap-3">
               <div className="flex min-w-0 items-center gap-3">
+                {enableSelection && (
+                  <Checkbox
+                    checked={Boolean(selected?.has(record.id))}
+                    onCheckedChange={() => onToggleSelect?.(record)}
+                    aria-label={`Select ${record.convertName}`}
+                    className="shrink-0"
+                  />
+                )}
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#1e2a4a] text-xs font-semibold text-white">
                   {initials(record.convertName)}
                 </div>

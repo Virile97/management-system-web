@@ -200,6 +200,15 @@ function baptizeSoulWinningRecord(id, payload = {}, signal) {
   })
 }
 
+function bulkDeleteSoulWinningRecords(ids, signal) {
+  return fetchJson(APP_API_ENDPOINTS.SOUL_WINNING_RECORDS_BULK_DELETE, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getCsrfHeader() },
+    body: JSON.stringify({ ids }),
+    signal,
+  })
+}
+
 function listSoulWinningWinners(
   { period = "This Month", from = "", to = "", page = 1, limit = 20, search = "" } = {},
   signal
@@ -370,6 +379,7 @@ export {
   createSoulWinningRecord,
   updateSoulWinningRecord,
   baptizeSoulWinningRecord,
+  bulkDeleteSoulWinningRecords,
   listSoulWinningWinners,
   getSoulWinningTrends,
 }
@@ -381,6 +391,7 @@ export default {
   createSoulWinningRecord,
   updateSoulWinningRecord,
   baptizeSoulWinningRecord,
+  bulkDeleteSoulWinningRecords,
   listSoulWinningWinners,
   getSoulWinningTrends,
 }
