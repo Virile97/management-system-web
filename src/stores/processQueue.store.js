@@ -9,7 +9,10 @@ import {
   createMember,
   updateMember,
 } from "@/services/member.service"
-import { createSoulWinningRecord } from "@/services/soulWinning.service"
+import {
+  createSoulWinningRecord,
+  updateSoulWinningRecord,
+} from "@/services/soulWinning.service"
 
 /** Shared app-wide background process queue. */
 const PROCESS_TYPES = {
@@ -19,6 +22,7 @@ const PROCESS_TYPES = {
   MEMBERS_UPDATE_MEMBER: "members.updateMember",
   MEMBERS_DELETE_MEMBER: "members.deleteMember",
   SOUL_WINNING_CREATE_RECORD: "soulWinning.createRecord",
+  SOUL_WINNING_UPDATE_RECORD: "soulWinning.updateRecord",
 }
 
 const useProcessQueueStore = createProcessQueue({
@@ -56,6 +60,8 @@ const useProcessQueueStore = createProcessQueue({
     },
     [PROCESS_TYPES.SOUL_WINNING_CREATE_RECORD]: (payload) =>
       createSoulWinningRecord(payload),
+    [PROCESS_TYPES.SOUL_WINNING_UPDATE_RECORD]: ({ id, payload }) =>
+      updateSoulWinningRecord(id, payload),
   },
 })
 
@@ -219,6 +225,23 @@ function enqueueCreateSoulWinningRecord({ payload, label, winnersLabel }) {
   })
 }
 
+/**
+ * High-level helper for editing a soul winning record without blocking the
+ * modal — same flow as enqueueUpdateMember: the modal closes immediately on
+ * save and the update drains through the queue.
+ */
+function enqueueUpdateSoulWinningRecord({ id, payload, label }) {
+  return useProcessQueueStore.getState().enqueue({
+    type: PROCESS_TYPES.SOUL_WINNING_UPDATE_RECORD,
+    payload: { id, payload },
+    display: {
+      title: label || "Soul winning record",
+      subtitle: "Update record",
+      tone: "positive",
+    },
+  })
+}
+
 function createPendingDeleteIdSelector(processType) {
   return (state) => {
     const ids = []
@@ -249,6 +272,9 @@ const selectPendingMemberUpdateIds = createPendingDeleteIdSelector(
 const selectPendingTransactionDeleteIds = createPendingDeleteIdSelector(
   PROCESS_TYPES.FINANCE_DELETE_TRANSACTION
 )
+const selectPendingSoulWinningUpdateIds = createPendingDeleteIdSelector(
+  PROCESS_TYPES.SOUL_WINNING_UPDATE_RECORD
+)
 
 export {
   useProcessQueueStore,
@@ -256,11 +282,13 @@ export {
   selectPendingMemberDeleteIds,
   selectPendingMemberUpdateIds,
   selectPendingTransactionDeleteIds,
+  selectPendingSoulWinningUpdateIds,
   enqueueCreateTransaction,
   enqueueDeleteTransactions,
   enqueueCreateMember,
   enqueueUpdateMember,
   enqueueDeleteMembers,
   enqueueCreateSoulWinningRecord,
+  enqueueUpdateSoulWinningRecord,
 }
 export default useProcessQueueStore

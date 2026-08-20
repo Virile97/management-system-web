@@ -6,7 +6,7 @@ import { SortableTh } from "@/components/common/SortableTh"
 import { Pagination } from "@/components/common/Pagination"
 import { useTableSort } from "@/hooks/use-table-sort"
 import { cn } from "@/lib/utils"
-import { Droplets } from "lucide-react"
+import { Droplets, Pencil } from "lucide-react"
 import { RecordsTableSkeleton } from "@/components/soul-winning/SoulWinningSkeletons"
 
 const statusStyles = {
@@ -131,6 +131,7 @@ function RecordsTable({
   onPageChange,
   onPageSizeChange,
   onBaptize,
+  onEdit,
 }) {
   const { sortedRows, sortKey, sortDirection, toggleSort } = useTableSort(
     records,
@@ -241,19 +242,29 @@ function RecordsTable({
                 {record.notes || "—"}
               </td>
               <td className="py-4 pr-4 align-top">
-                {record.canBaptize ? (
+                <div className="flex items-center gap-2">
                   <Button
                     type="button"
                     variant="outline"
-                    className="h-8 gap-1.5 rounded-lg px-2.5 text-xs"
-                    onClick={() => onBaptize?.(record)}
+                    size="icon"
+                    className="h-8 w-8 rounded-lg"
+                    onClick={() => onEdit?.(record)}
+                    aria-label={`Edit ${record.convertName}`}
                   >
-                    <Droplets className="h-3.5 w-3.5" />
-                    Baptize
+                    <Pencil className="h-3.5 w-3.5" />
                   </Button>
-                ) : (
-                  <span className="text-xs text-muted-foreground">—</span>
-                )}
+                  {record.canBaptize ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="h-8 gap-1.5 rounded-lg px-2.5 text-xs"
+                      onClick={() => onBaptize?.(record)}
+                    >
+                      <Droplets className="h-3.5 w-3.5" />
+                      Baptize
+                    </Button>
+                  ) : null}
+                </div>
               </td>
             </tr>
           ))}
@@ -313,17 +324,28 @@ function RecordsTable({
               ) : null}
             </div>
 
-            {record.canBaptize ? (
+            <div className="flex items-center gap-2">
               <Button
                 type="button"
                 variant="outline"
-                className="h-9 gap-1.5 rounded-lg"
-                onClick={() => onBaptize?.(record)}
+                className="h-9 flex-1 gap-1.5 rounded-lg"
+                onClick={() => onEdit?.(record)}
               >
-                <Droplets className="h-3.5 w-3.5" />
-                Mark as Baptized
+                <Pencil className="h-3.5 w-3.5" />
+                Edit
               </Button>
-            ) : null}
+              {record.canBaptize ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-9 flex-1 gap-1.5 rounded-lg"
+                  onClick={() => onBaptize?.(record)}
+                >
+                  <Droplets className="h-3.5 w-3.5" />
+                  Mark as Baptized
+                </Button>
+              ) : null}
+            </div>
           </div>
         ))}
       </div>

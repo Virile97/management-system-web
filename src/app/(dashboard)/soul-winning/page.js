@@ -13,9 +13,9 @@ import { RecordsTable } from "@/components/soul-winning/RecordsTable"
 import { Leaderboard } from "@/components/soul-winning/Leaderboard"
 import { SoulTrendChart } from "@/components/soul-winning/SoulTrendChart"
 import { RecordSoulWonModal } from "@/components/soul-winning/RecordSoulWonModal"
+import { EditSoulWonModal } from "@/components/soul-winning/EditSoulWonModal"
 import { BaptizeModal } from "@/components/soul-winning/BaptizeModal"
 import { DateRangeFilterModal } from "@/components/soul-winning/DateRangeFilterModal"
-import { useDebounce } from "@/hooks/use-debounce"
 import { register as registerAbortController } from "@/lib/abort-registry"
 import {
   getSoulWinningOverview,
@@ -77,7 +77,6 @@ function SoulWinningPageContent() {
   const periodTo = period === "Custom" ? periodToParam : ""
 
   const [search, setSearch] = useState(searchParam)
-  const debouncedSearch = useDebounce(search, 300)
 
   const [overview, setOverview] = useState(null)
   const [isOverviewLoading, setIsOverviewLoading] = useState(true)
@@ -120,6 +119,7 @@ function SoulWinningPageContent() {
   const [trendsKey, setTrendsKey] = useState(0)
 
   const [isRecordSoulOpen, setIsRecordSoulOpen] = useState(false)
+  const [editRecord, setEditRecord] = useState(null)
   const [baptizeRecord, setBaptizeRecord] = useState(null)
   const [isDateRangeOpen, setIsDateRangeOpen] = useState(false)
   const lastCompleted = useProcessQueueStore((state) => state.lastCompleted)
@@ -272,12 +272,11 @@ function SoulWinningPageContent() {
     setSearch(searchParam)
   }, [searchParam])
 
-  // Debounced search → URL.
-  useEffect(() => {
-    if (debouncedSearch === searchParam) return
-    updateParams({ search: debouncedSearch, page: 1 })
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- URL write only on debounce change
-  }, [debouncedSearch])
+  function submitSearch(overrideValue) {
+    const nextSearch = overrideValue ?? search
+    if (nextSearch === searchParam) return
+    updateParams({ search: nextSearch, page: 1 })
+  }
 
   // Overview (goal / stats / retention) — period for KPIs; year for annual goal.
   useEffect(() => {
@@ -469,6 +468,13 @@ function SoulWinningPageContent() {
     }
   }
 
+  function handleRecordUpdated(nextRecord) {
+    setRecords((prev) =>
+      prev.map((row) => (row.id === nextRecord.id ? nextRecord : row))
+    )
+    setEditRecord(null)
+  }
+
   async function handleBaptizeConfirm(payload) {
     if (!baptizeRecord?.id) return
     const data = await baptizeSoulWinningRecord(baptizeRecord.id, payload)
@@ -572,6 +578,7 @@ function SoulWinningPageContent() {
             <RecordFilters
               search={search}
               onSearchChange={setSearch}
+              onSearchSubmit={submitSearch}
               status={status}
               onStatusChange={(next) =>
                 updateParams({ status: next, page: 1 })
@@ -598,6 +605,7 @@ function SoulWinningPageContent() {
                 updateParams({ limit: nextSize, page: 1 })
               }
               onBaptize={setBaptizeRecord}
+              onEdit={setEditRecord}
             />
           </div>
         )}
@@ -645,6 +653,15 @@ function SoulWinningPageContent() {
       <RecordSoulWonModal
         open={isRecordSoulOpen}
         onOpenChange={setIsRecordSoulOpen}
+      />
+
+      <EditSoulWonModal
+        open={Boolean(editRecord)}
+        onOpenChange={(open) => {
+          if (!open) setEditRecord(null)
+        }}
+        record={editRecord}
+        onUpdated={handleRecordUpdated}
       />
 
       <BaptizeModal

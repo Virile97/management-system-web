@@ -63,7 +63,9 @@ function MemberSearchModal({
   const [results, setResults] = useState([])
   const [isSearching, setIsSearching] = useState(false)
   const [error, setError] = useState("")
+  const [activeIndex, setActiveIndex] = useState(-1)
   const inputRef = useRef(null)
+  const itemRefs = useRef([])
   const debouncedQuery = useDebounce(query.trim(), 300)
   const useCustomSearch = typeof searchFn === "function"
   const showSuggestions = !debouncedQuery && suggestions.length > 0
@@ -146,6 +148,33 @@ function MemberSearchModal({
 
   const listItems = showSuggestions ? suggestions : results
 
+  useEffect(() => {
+    setActiveIndex(-1)
+  }, [listItems.length, showSuggestions])
+
+  useEffect(() => {
+    if (activeIndex < 0) return
+    itemRefs.current[activeIndex]?.scrollIntoView({ block: "nearest" })
+  }, [activeIndex])
+
+  function handleInputKeyDown(event) {
+    if (listItems.length === 0) return
+
+    if (event.key === "ArrowDown") {
+      event.preventDefault()
+      setActiveIndex((prev) => (prev + 1) % listItems.length)
+    } else if (event.key === "ArrowUp") {
+      event.preventDefault()
+      setActiveIndex((prev) => (prev <= 0 ? listItems.length - 1 : prev - 1))
+    } else if (event.key === "Enter") {
+      if (activeIndex < 0) return
+      event.preventDefault()
+      handleSelect(listItems[activeIndex])
+    } else if (event.key === "Escape") {
+      setActiveIndex(-1)
+    }
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
@@ -175,6 +204,7 @@ function MemberSearchModal({
               className="h-10 rounded-lg border-border bg-background pl-9 pr-9 shadow-none"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
+              onKeyDown={handleInputKeyDown}
               autoComplete="off"
               autoFocus
             />
@@ -216,12 +246,15 @@ function MemberSearchModal({
                     )}
                   >
                     <button
+                      ref={(el) => (itemRefs.current[index] = el)}
                       type="button"
                       className={cn(
                         "flex w-full flex-col items-start gap-0.5 px-4 py-3 text-left transition-colors hover:bg-muted sm:px-5",
-                        index === listItems.length - 1 && "rounded-b-xl"
+                        index === listItems.length - 1 && "rounded-b-xl",
+                        index === activeIndex && "bg-muted"
                       )}
                       onClick={() => handleSelect(result)}
+                      onMouseEnter={() => setActiveIndex(index)}
                     >
                       <span className="text-sm font-medium text-foreground/85">
                         {result.name}

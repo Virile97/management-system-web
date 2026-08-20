@@ -71,6 +71,7 @@ async function listMembers(
     levelId = "",
     from = "",
     to = "",
+    excludeDeceased = false,
   } = {},
   signal
 ) {
@@ -84,6 +85,7 @@ async function listMembers(
   if (levelId) params.set("levelId", levelId)
   if (from) params.set("from", from)
   if (to) params.set("to", to)
+  if (excludeDeceased) params.set("excludeDeceased", "true")
 
   const { data, meta } = await fetchWithMeta(
     `${APP_API_ENDPOINTS.MEMBERS}?${params}`,
@@ -211,9 +213,21 @@ function bulkDeleteMembers(ids) {
   )
 }
 
+/** For member pickers where a deceased member must never be selectable
+ * (e.g. soul winner search) — matches MemberSearchModal's `searchFn`
+ * contract (query, signal) => member[]. */
+async function searchActiveMembers(search, signal) {
+  const { data } = await listMembers(
+    { page: 1, limit: 20, search, excludeDeceased: true },
+    signal
+  )
+  return data
+}
+
 export {
   normalizeMember,
   listMembers,
+  searchActiveMembers,
   getMemberBreakdown,
   createMember,
   updateMember,

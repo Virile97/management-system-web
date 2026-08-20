@@ -379,6 +379,7 @@ export default {
   setSoulWinningGoal,
   listSoulWinningRecords,
   createSoulWinningRecord,
+  updateSoulWinningRecord,
   baptizeSoulWinningRecord,
   listSoulWinningWinners,
   getSoulWinningTrends,

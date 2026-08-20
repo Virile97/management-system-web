@@ -9,8 +9,8 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { MemberDatePicker } from "@/components/members/MemberDatePicker"
 import { toDateInputValue } from "@/utils/helpers"
 import { Droplets, X } from "lucide-react"
 
@@ -73,13 +73,11 @@ function BaptizeModal({ open, onOpenChange, record, onConfirm }) {
 
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="baptized-at">Baptism Date</Label>
-            <Input
+            <MemberDatePicker
               id="baptized-at"
-              type="date"
-              className="h-10 rounded-lg"
               value={baptizedAt}
+              onChange={setBaptizedAt}
               disabled={isSubmitting}
-              onChange={(event) => setBaptizedAt(event.target.value)}
             />
           </div>
 

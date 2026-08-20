@@ -18,6 +18,7 @@ import { SOUL_WINNING_EVENT_OPTIONS } from "@/utils/constants"
 import { Heart, Search, X } from "lucide-react"
 import { enqueueCreateSoulWinningRecord } from "@/stores/processQueue.store"
 import { useAddressBookStore } from "@/stores/addressBook.store"
+import { searchActiveMembers } from "@/services/member.service"
 function emptyForm() {
   return {
     soulWinners: [],
@@ -371,6 +372,7 @@ function RecordSoulWonModal({ open, onOpenChange }) {
         open={isWinnerPickerOpen}
         onOpenChange={setIsWinnerPickerOpen}
         onSelect={addSoulWinner}
+        searchFn={searchActiveMembers}
       />
     </>
   )

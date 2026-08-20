@@ -22,6 +22,7 @@ const STATUS_OPTIONS = [
 function RecordFilters({
   search,
   onSearchChange,
+  onSearchSubmit,
   status = "all",
   onStatusChange,
   winner = null,
@@ -29,13 +30,24 @@ function RecordFilters({
   resultCount,
   disabled = false,
 }) {
+  function handleClear() {
+    onSearchChange("")
+    onSearchSubmit?.("")
+  }
+
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
       <div className="flex flex-col gap-3 sm:flex-1 sm:flex-row sm:items-center sm:gap-3">
-        <div className="relative w-full sm:max-w-xs sm:flex-1">
+        <form
+          className="relative w-full sm:max-w-xs sm:flex-1"
+          onSubmit={(event) => {
+            event.preventDefault()
+            onSearchSubmit?.()
+          }}
+        >
           <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search converts or winners..."
+            placeholder="Search people..."
             className={cn(
               "h-10 rounded-lg bg-card pl-9",
               search && "pr-9"
@@ -47,7 +59,7 @@ function RecordFilters({
           {search ? (
             <button
               type="button"
-              onClick={() => onSearchChange("")}
+              onClick={handleClear}
               aria-label="Clear search"
               disabled={disabled}
               className="absolute top-1/2 right-2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted-foreground/15 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
@@ -55,7 +67,7 @@ function RecordFilters({
               <X className="h-3.5 w-3.5" />
             </button>
           ) : null}
-        </div>
+        </form>
 
         <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-row sm:items-center sm:gap-3">
           <Select value={status} onValueChange={onStatusChange} disabled={disabled}>

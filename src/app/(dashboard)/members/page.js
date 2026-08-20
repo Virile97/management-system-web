@@ -24,7 +24,6 @@ import { ExportMembersReportModal } from "@/components/members/ExportMembersRepo
 import { MemberStatusSummary } from "@/components/members/MemberStatusSummary"
 import { DateRangeButton } from "@/components/common/DateRangeButton"
 import { DateRangeFilterModal } from "@/components/soul-winning/DateRangeFilterModal"
-import { useDebounce } from "@/hooks/use-debounce"
 import { formatDateRangeLabel, toDateRangeStrings } from "@/utils/helpers"
 import { register as registerAbortController } from "@/lib/abort-registry"
 import {
@@ -81,7 +80,7 @@ function MembersPageContent() {
   const editMemberIdParam = searchParams.get("memberId")
 
   const [search, setSearch] = useState("")
-  const debouncedSearch = useDebounce(search, 300)
+  const [submittedSearch, setSubmittedSearch] = useState("")
 
   const {
     members,
@@ -251,8 +250,10 @@ function MembersPageContent() {
     updateParams({ level: nextLevel })
   }
 
-  function updateSearch(nextSearch) {
-    setSearch(nextSearch)
+  function submitSearch(overrideValue) {
+    const nextSearch = overrideValue ?? search
+    if (nextSearch === submittedSearch) return
+    setSubmittedSearch(nextSearch)
     goToPage(1)
   }
 
@@ -278,7 +279,7 @@ function MembersPageContent() {
       limit: pageSize,
       status: activeFilter,
       level: activeLevel,
-      search: debouncedSearch,
+      search: submittedSearch,
       from: dateFrom,
       to: dateTo,
     }
@@ -308,7 +309,7 @@ function MembersPageContent() {
           {
             page,
             limit: pageSize,
-            search: debouncedSearch,
+            search: submittedSearch,
             status: activeFilter === DEFAULT_STATUS ? "" : activeFilter,
             levelId: activeLevel,
             from: dateFrom,
@@ -354,7 +355,7 @@ function MembersPageContent() {
     pageSize,
     activeFilter,
     activeLevel,
-    debouncedSearch,
+    submittedSearch,
     dateFrom,
     dateTo,
     refreshKey,
@@ -396,7 +397,7 @@ function MembersPageContent() {
   const hasActiveFilters =
     activeFilter !== DEFAULT_STATUS ||
     Boolean(activeLevel) ||
-    Boolean(search) ||
+    Boolean(submittedSearch) ||
     Boolean(dateRange)
   // Nothing to filter — no members exist at all (not just for the current
   // filter combination) — so disable the controls rather than let the user
@@ -549,7 +550,8 @@ function MembersPageContent() {
             </div>
             <MemberSearch
               value={search}
-              onChange={updateSearch}
+              onChange={setSearch}
+              onSubmit={submitSearch}
               disabled={filtersDisabled}
             />
           </div>
@@ -604,7 +606,7 @@ function MembersPageContent() {
         open={isExportOpen}
         onOpenChange={setIsExportOpen}
         statusFilter={activeFilter}
-        search={debouncedSearch}
+        search={submittedSearch}
         dateFrom={dateFrom}
         dateTo={dateTo}
         dateRangeLabel={dateRange ? formatDateRangeLabel(dateRange) : ""}
